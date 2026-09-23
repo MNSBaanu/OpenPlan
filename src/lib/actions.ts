@@ -7,14 +7,14 @@ const U = OP.util, C = OP.charts, IO = OP.io;
 
 const W = window as any;
 const FS = !!W.showSaveFilePicker;
-const TYPES = [{ description: 'OpenPlan project', accept: { 'application/json': ['.json'] } }];
+const TYPES = [{ description: 'OpenPlan project', accept: { 'application/x-openplan': ['.openplan'] } }];
 let handle: any = null;
 
 async function saveFile(as: boolean) {
   const st = S();
-  if (!FS) { U.download(U.slug(st.p.name) + '.openplan.json', IO.toJSON(st.p), 'application/json'); st.toast('Project file downloaded'); return; }
+  if (!FS) { U.download(U.slug(st.p.name) + '.openplan', IO.toJSON(st.p), 'application/x-openplan'); st.toast('Project file downloaded'); return; }
   try {
-    if (as || !handle) handle = await W.showSaveFilePicker({ suggestedName: U.slug(st.p.name) + '.openplan.json', types: TYPES });
+    if (as || !handle) handle = await W.showSaveFilePicker({ suggestedName: U.slug(st.p.name) + '.openplan', types: TYPES });
     const w = await handle.createWritable();
     await w.write(IO.toJSON(st.p));
     await w.close();
@@ -24,15 +24,25 @@ async function saveFile(as: boolean) {
   }
 }
 
+async function openHandle(h: any) {
+  const file = await h.getFile();
+  S().replaceProject(IO.parseAny(await file.text()), 'Opened ' + file.name);
+  handle = /\.(openplan|json)$/i.test(file.name) ? h : null;
+}
+
 async function openFile() {
   try {
-    const [h] = await W.showOpenFilePicker({ types: [{ description: 'Project files', accept: { 'application/json': ['.json'], 'application/xml': ['.xml'] } }] });
-    const file = await h.getFile();
-    S().replaceProject(IO.parseAny(await file.text()), 'Opened ' + file.name);
-    handle = /\.json$/i.test(file.name) ? h : null;
+    const [h] = await W.showOpenFilePicker({ types: [{ description: 'Project files', accept: { 'application/x-openplan': ['.openplan'], 'application/json': ['.json'], 'application/xml': ['.xml'] } }] });
+    await openHandle(h);
   } catch (e: any) {
     if (e.name !== 'AbortError') S().toast('Could not open file: ' + e.message, true);
   }
+}
+
+export function handleLaunchFiles() {
+  W.launchQueue?.setConsumer((params: any) => {
+    if (params.files?.length) openHandle(params.files[0]).catch((e: any) => S().toast('Could not open file: ' + e.message, true));
+  });
 }
 
 export function scopeRows(st: Store) {
@@ -102,7 +112,7 @@ export function runAction(a: string) {
 function pickFile(insert: boolean) {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.json,.xml,application/json,text/xml';
+  input.accept = '.openplan,.json,.xml,application/json,text/xml';
   input.onchange = () => {
     const file = input.files && input.files[0];
     if (!file) return;

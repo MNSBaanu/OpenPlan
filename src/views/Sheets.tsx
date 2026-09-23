@@ -110,8 +110,8 @@ export function WorkloadView() {
       <div className="view-head"><h1>Workload</h1><span className="sub">Peak daily allocation per week — red cells exceed availability (max units, working days, vacations)</span></div>
       <div className="toolbar">
         <div className="legend">
-          <span><i style={{ background: '#deebf7' }} />Light</span><span><i style={{ background: '#9dc3e6' }} />Heavy</span>
-          <span><i style={{ background: '#ffc7ce' }} />Overallocated</span><span><i className="hatch" />Not available</span>
+          <span><i style={{ background: '#e8eaff' }} />Light</span><span><i style={{ background: '#a5acf5' }} />Heavy</span>
+          <span><i style={{ background: '#ffe0e6' }} />Overallocated</span><span><i className="hatch" />Not available</span>
         </div>
         <span className="spacer" />
         <button className="btn" onClick={levelAll}><Icon name="balance" />Level All</button>
