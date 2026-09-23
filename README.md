@@ -96,19 +96,14 @@ One-time setup:
    - `VERCEL_TOKEN`: the token
    - `VERCEL_ORG_ID`: the `orgId`
    - `VERCEL_PROJECT_ID`: the `projectId`
-5. To count visitors, add `VITE_GOATCOUNTER` with your GoatCounter site code under **Project › Settings › Environment Variables** in Vercel. `.env` is not committed, so the build reads the code from there.
 
 If you imported the repository into Vercel, turn off Vercel's own Git deployments (**Project › Settings › Git**) so each push deploys only once.
 
-### Visitor counts (optional)
+### Visitor counts
 
-OpenPlan can count visitors with [GoatCounter](https://www.goatcounter.com), a free analytics service that uses no cookies. It counts visits to the landing page (`/`) and to the app (`/app`) separately. Project data is never sent.
+OpenPlan counts visitors with [GoatCounter](https://www.goatcounter.com), a free analytics service that uses no cookies. The script tag is in `index.html`. It counts visits to the landing page (`/`) and to the app (`/app`) separately. Project data is never sent.
 
-1. Create a free account at goatcounter.com and choose a site code, for example `openplan`.
-2. Copy `.env.example` to `.env` and set `VITE_GOATCOUNTER=openplan`.
-3. Run `npm run build` and deploy `dist/`. Visits appear on your GoatCounter dashboard.
-
-GoatCounter ignores visits from `localhost`, so only the deployed site is counted.
+To use your own GoatCounter account, change `mnsbaanu` in the `data-goatcounter` address in `index.html` to your site code. GoatCounter ignores visits from `localhost`, so only the deployed site is counted.
 
 ## Usage
 

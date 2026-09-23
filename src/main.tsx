@@ -8,16 +8,7 @@ import { useStore } from './store';
 import { handleLaunchFiles } from './lib/actions';
 import './styles.css';
 
-const GOATCOUNTER = import.meta.env.VITE_GOATCOUNTER;
 const W = window as any;
-if (GOATCOUNTER) {
-  W.goatcounter = { path: () => (location.hash === '#app' ? '/app' : '/') };
-  const s = document.createElement('script');
-  s.async = true;
-  s.src = 'https://gc.zgo.at/count.js';
-  s.dataset.goatcounter = 'https://' + GOATCOUNTER + '.goatcounter.com/count';
-  document.head.appendChild(s);
-}
 
 function Root() {
   const [inApp, setInApp] = useState(location.hash === '#app');
