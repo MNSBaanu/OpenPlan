@@ -1,62 +1,113 @@
-![OpenPlan](public/assets/openplan-logo.svg)
+<div align="center">
 
-A free project planner that runs in the browser. You can use it to build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and a budget without a paid licence.
+<img src="public/assets/openplan-logo.png" alt="OpenPlan" height="64">
+
+**A free project planner that runs in the browser.**
+
+Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and a budget without a paid licence.
+
+![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
+
+</div>
+
+---
+
+## Table of contents
+
+- [About](#about)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Usage](#usage)
+- [Project structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+
+## About
+
+OpenPlan is a project management tool for students and small teams who need to plan a project with the standard techniques (WBS, Gantt chart, critical path method, resource allocation and budgeting) but don't have access to paid desktop software.
+
+It runs entirely in the browser and has no server or account. Projects are saved on your own computer.
 
 ## Features
 
 - **Gantt chart**: an outline of summary tasks and subtasks, FS/SS/FF/SF links with lag, milestones, constraints, deadlines, split tasks and a timeline strip. You can drag bars to move tasks, resize them or link them.
 - **Critical path**: forward and backward passes that give ES, EF, LS, LF, total slack and free slack.
-- **Network diagram** (activity on node), **WBS chart** and **team org chart**. Each one exports to PNG or SVG.
-- **Resources**: work, material and cost resources, calendars, vacations, rate changes, the workload heatmap and resource leveling.
+- **Diagrams**: a network diagram (activity on node), a WBS chart and a team org chart. Each one exports to PNG or SVG.
+- **Resources**: work, material and cost resources, calendars, vacations, rate changes, a workload heatmap and resource leveling.
 - **Tracking**: baselines, % complete, actual dates, a status date and earned value (SPI, CPI, EAC).
 - **Budget and reports**: cost by work package and by resource, monthly and cumulative cost, and 10 ready-made reports.
-- **Clean, friendly interface**: a tabbed toolbar with icons that you can hide to get more room, a full-screen File menu, keyboard shortcuts, undo and redo, and light and dark themes in an indigo and teal colour scheme.
+- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, and import or export project XML and CSV.
+- **Interface**: a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, and light and dark themes.
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| UI | React 18, TypeScript |
+| State | Zustand |
+| Build | Vite 5 |
+| Scheduling and charts | Plain JavaScript modules rendering SVG (`src/core/`) |
+| Storage | Browser localStorage, and the File System Access API for project files |
 
 ## Getting started
 
-You need [Node.js](https://nodejs.org) 18 or later.
+### Prerequisites
+
+- [Node.js](https://nodejs.org) 18 or later
+
+### Installation
 
 ```bash
+git clone https://github.com/MNSBaanu/OpenPlan.git
+cd OpenPlan
 npm install
+```
+
+### Run in development
+
+```bash
 npm run dev        # http://localhost:5173
 ```
 
-Production build:
+### Build for production
 
 ```bash
 npm run build      # outputs to dist/
-npm run preview    # serves dist/ locally
+npm run preview    # serves dist/ at http://localhost:4173
 ```
 
-`dist/` uses relative paths, so you can host it anywhere static files are served, such as GitHub Pages or Netlify. Opening `dist/index.html` directly from disk does not work in most browsers.
+### Deployment
 
-## Where your data is stored
+`dist/` uses relative paths, so it can be hosted on any static host, such as GitHub Pages or Netlify. Opening `dist/index.html` directly from disk does not work in most browsers.
 
-OpenPlan has no server or database. Your work stays on your own computer.
+## Usage
+
+### Saving your work
 
 - **Autosave**: every change is saved in the browser's localStorage. That copy exists only in the browser and computer you are using, and clearing your browser data deletes it.
-- **Project files**: **File › Save** (Ctrl+S) writes an `.openplan` file. In Chrome and Edge, the first save asks where to put the file, and later saves write back to that same file. **Save As** makes a copy. Other browsers download the file instead.
-- **File › Open** loads an `.openplan` file, an older `.json` project file or a project XML file.
+- **Save** (Ctrl+S) writes an `.openplan` file. In Chrome and Edge, the first save asks where to put the file, and later saves write back to that same file. **Save As** makes a copy. Other browsers download the file instead.
+- **Open** loads an `.openplan` file, an older `.json` project file or a project XML file.
 
 Keep a project file for anything important.
 
-## Open `.openplan` files by double-clicking
+### Opening files by double-clicking
 
-In Chrome or Edge, you can install OpenPlan as an app. After that, double-clicking an `.openplan` file opens it in OpenPlan, the same way draw.io opens `.drawio` files.
+In Chrome or Edge, install OpenPlan as an app. After that, double-clicking an `.openplan` file opens it in OpenPlan.
 
-1. Open OpenPlan from a hosted HTTPS address (such as GitHub Pages or Netlify) or from `localhost`.
-2. Click the **Install** icon in the address bar, or open the browser menu and choose **Cast, save and share › Install page as app**.
-3. Double-click any `.openplan` file. The first time, the browser asks whether OpenPlan may open this file type. Choose **Allow**.
+1. Open OpenPlan from an HTTPS address or from `localhost`.
+2. Click the **Install** icon in the address bar, or choose **Cast, save and share › Install page as app** from the browser menu.
+3. Double-click an `.openplan` file. The first time, choose **Allow** when the browser asks whether OpenPlan may open this file type.
 
-The file opens in the OpenPlan window, and Ctrl+S saves straight back to it. In other browsers, open files with **File › Open** instead.
+### Toolbar
 
-## Using the toolbar
+- The **Task**, **Resource**, **Report**, **Project** and **View** tabs each show a set of commands. **Format** appears when the Gantt chart is open.
+- **File** opens the menu for new, open, save, export and print.
+- **Hide toolbar** (or Ctrl+F1, or double-clicking a tab) collapses the toolbar to its tabs. While it is hidden, clicking a tab shows the commands over your work.
 
-- The tabs along the top (**Task**, **Resource**, **Report**, **Project**, **View**) each show a group of commands. **Format** appears when the Gantt chart is open.
-- **File** opens the full-screen menu for new, open, save, export and print.
-- **Hide toolbar** (or Ctrl+F1, or double-clicking a tab) collapses the toolbar to the tab row. While it is hidden, clicking a tab shows the commands over your work. They hide again after you run a command or click elsewhere.
-
-## Import and export
+### Import and export
 
 | Format | Support |
 |---|---|
@@ -65,28 +116,44 @@ The file opens in the OpenPlan window, and Ctrl+S saves straight back to it. In 
 | CSV | Export the task list |
 | PNG / SVG / PDF | Chart images, and printing to PDF |
 
-## Keyboard shortcuts
+### Keyboard shortcuts
 
 | Keys | Action |
 |---|---|
 | Ctrl+S | Save |
-| Ctrl+F1 | Hide / show the toolbar |
 | Ctrl+Z / Ctrl+Y | Undo / redo |
-| Alt+Shift+→ / ← | Indent / outdent the selected tasks |
+| Ctrl+F1 | Hide or show the toolbar |
+| Alt+Shift+→ / ← | Indent or outdent the selected tasks |
 | Insert | Insert a task |
 | Delete | Delete the selected tasks |
 | ↑ / ↓ | Move between rows while editing |
 
-## Tech stack
-
-React 18, TypeScript, Vite and Zustand. The scheduling engine and chart renderers are plain JavaScript modules in `src/core/`.
+## Project structure
 
 ```
-src/
-  core/        scheduling engine, MSPDI/CSV import-export, SVG charts, sample project
-  components/  toolbar, title/status bar, File menu, dialogs, task details panel
-  views/       Gantt, network/WBS/org diagrams, resource sheet, workload, budget, reports
-  lib/         task commands, grid columns/filters, file actions
-  store.ts     app state, undo/redo, autosave
+OpenPlan/
+├── public/
+│   ├── assets/              logo, favicon and app icons
+│   └── manifest.webmanifest app install and .openplan file handling
+├── src/
+│   ├── core/                scheduling engine, XML/CSV import-export, SVG charts, sample project
+│   ├── components/          toolbar, title and status bars, File menu, dialogs, task details panel
+│   ├── views/               Gantt, diagrams, resource sheet, workload, budget, reports
+│   ├── lib/                 task commands, grid columns and filters, file actions
+│   ├── store.ts             app state, undo/redo, autosave
+│   ├── App.tsx              layout and keyboard shortcuts
+│   └── main.tsx             entry point
+├── index.html
+├── package.json
+└── vite.config.ts
 ```
 
+## Contributing
+
+1. Fork the repository and create a branch: `git checkout -b feature/my-change`
+2. Make your changes and check that `npm run build` passes.
+3. Commit, push, and open a pull request.
+
+## License
+
+No license has been chosen yet. Until one is added, all rights are reserved by the author.

@@ -6,7 +6,7 @@ import Icon from './Icon';
 import type { ViewName } from '../types';
 
 const U = OP.util;
-const LOGO_MARK = './assets/openplan-mark.svg';
+const LOGO_MARK = './assets/openplan-mark.png';
 
 /* ---------- title bar ---------- */
 
@@ -126,7 +126,7 @@ export function Backstage() {
   } else if (page === 'print') {
     body = <><h1>Print</h1><Tile icon="printer" title={'Print ' + viewName} sub="Use “Save as PDF” in the print dialog to create a PDF" act="print" /></>;
   } else if (page === 'about') {
-    body = <><h1>About</h1><img src="./assets/openplan-logo.svg" alt="OpenPlan" height={48} />
+    body = <><h1>About</h1><img src="./assets/openplan-logo.png" alt="OpenPlan" height={48} />
       <p className="bs-note">Free, browser-based project planning: Gantt chart, critical path, network diagram, WBS, resources, leveling, baselines, tracking, earned value and reports.</p>
       <Tile icon="info" title="Keyboard shortcuts and help" sub="Editing tips for the task table and Gantt chart" act="about" /></>;
   } else {
