@@ -83,6 +83,23 @@ npm run preview    # serves dist/ at http://localhost:4173
 
 `dist/` uses relative paths, so it can be hosted on any static host, such as GitHub Pages or Netlify. Opening `dist/index.html` directly from disk does not work in most browsers.
 
+#### Vercel (automatic)
+
+`.github/workflows/vercel.yml` deploys to [Vercel](https://vercel.com). Every push to `main` goes to production, and every pull request gets a preview URL.
+
+One-time setup:
+
+1. Create the Vercel project. Either import the repository at vercel.com/new, or run `npx vercel link` in the project folder.
+2. Create a token at **vercel.com › Account Settings › Tokens**.
+3. Find the IDs in `.vercel/project.json` (created by `vercel link`), or under **Project › Settings › General**.
+4. In GitHub, go to **Settings › Secrets and variables › Actions** and add three repository secrets:
+   - `VERCEL_TOKEN`: the token
+   - `VERCEL_ORG_ID`: the `orgId`
+   - `VERCEL_PROJECT_ID`: the `projectId`
+5. To count visitors, add `VITE_GOATCOUNTER` with your GoatCounter site code under **Project › Settings › Environment Variables** in Vercel. `.env` is not committed, so the build reads the code from there.
+
+If you imported the repository into Vercel, turn off Vercel's own Git deployments (**Project › Settings › Git**) so each push deploys only once.
+
 ### Visitor counts (optional)
 
 OpenPlan can count visitors with [GoatCounter](https://www.goatcounter.com), a free analytics service that uses no cookies. It counts visits to the landing page (`/`) and to the app (`/app`) separately. Project data is never sent.
