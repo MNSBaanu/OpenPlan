@@ -5,6 +5,36 @@ import type { Project } from '../types';
 
 const U = OP.util, C = OP.charts, IO = OP.io;
 
+const W = window as any;
+const FS = !!W.showSaveFilePicker;
+const TYPES = [{ description: 'OpenPlan project', accept: { 'application/json': ['.json'] } }];
+let handle: any = null;
+
+async function saveFile(as: boolean) {
+  const st = S();
+  if (!FS) { U.download(U.slug(st.p.name) + '.openplan.json', IO.toJSON(st.p), 'application/json'); st.toast('Project file downloaded'); return; }
+  try {
+    if (as || !handle) handle = await W.showSaveFilePicker({ suggestedName: U.slug(st.p.name) + '.openplan.json', types: TYPES });
+    const w = await handle.createWritable();
+    await w.write(IO.toJSON(st.p));
+    await w.close();
+    st.toast('Saved to ' + handle.name);
+  } catch (e: any) {
+    if (e.name !== 'AbortError') st.toast('Could not save: ' + e.message, true);
+  }
+}
+
+async function openFile() {
+  try {
+    const [h] = await W.showOpenFilePicker({ types: [{ description: 'Project files', accept: { 'application/json': ['.json'], 'application/xml': ['.xml'] } }] });
+    const file = await h.getFile();
+    S().replaceProject(IO.parseAny(await file.text()), 'Opened ' + file.name);
+    handle = /\.json$/i.test(file.name) ? h : null;
+  } catch (e: any) {
+    if (e.name !== 'AbortError') S().toast('Could not open file: ' + e.message, true);
+  }
+}
+
 export function scopeRows(st: Store) {
   if (st.netScope === 'all') return st.s.rows;
   const r = st.s.rows.find((x: any) => String(x.task.uid) === String(st.netScope));
@@ -41,12 +71,13 @@ export function runAction(a: string) {
   st.setUI({ menu: null, backstage: false });
   switch (a) {
     case 'new':
-      if (confirm('Start a new blank project? The current one can be restored with Undo.')) st.replaceProject(OP.model.blank(), 'New project created');
+      if (confirm('Start a new blank project? The current one can be restored with Undo.')) { handle = null; st.replaceProject(OP.model.blank(), 'New project created'); }
       break;
-    case 'sample': st.replaceProject(OP.demo(), 'Sample project loaded'); break;
-    case 'open': pickFile(false); break;
+    case 'sample': handle = null; st.replaceProject(OP.demo(), 'Sample project loaded'); break;
+    case 'open': if (FS) openFile(); else pickFile(false); break;
     case 'insert': pickFile(true); break;
-    case 'save': U.download(name + '.openplan.json', IO.toJSON(st.p), 'application/json'); st.toast('Project file downloaded'); break;
+    case 'save': saveFile(false); break;
+    case 'saveas': saveFile(true); break;
     case 'xml': U.download(name + '.xml', IO.toMSPDI(st.p), 'application/xml'); st.toast('MS Project XML downloaded — open it in ProjectLibre or MS Project'); break;
     case 'csv': U.download(name + '-tasks.csv', '﻿' + IO.toCSV(st.p), 'text/csv'); st.toast('CSV downloaded'); break;
     case 'mpp': case 'pod': st.openDialog('convert', { kind: a }); break;

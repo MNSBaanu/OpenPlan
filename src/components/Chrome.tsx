@@ -112,7 +112,8 @@ export function Backstage() {
       <p className="bs-note">To open an .mpp or .pod file, open it in MS Project or ProjectLibre first and save it as XML.</p></>;
   } else if (page === 'save') {
     body = <><h1>Save</h1>
-      <Tile icon="save" title="Save Project File" sub="Download an OpenPlan (.json) file you can open again later (Ctrl+S)" act="save" />
+      <Tile icon="save" title="Save" sub="Save to an OpenPlan (.json) file on your computer; Ctrl+S saves back to the same file" act="save" />
+      <Tile icon="save" title="Save As…" sub="Save a copy under a new name or location" act="saveas" />
       <p className="bs-note">{st.saved ? 'Your work is also saved automatically in this browser.' : 'Browser storage is unavailable: download a project file to keep your work.'}</p></>;
   } else if (page === 'export') {
     body = <><h1>Export</h1>
