@@ -1,8 +1,6 @@
-# OpenPlan
+![OpenPlan](public/assets/openplan-logo.svg)
 
 A free project planner that runs in the browser. You can use it to build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and a budget without a paid licence.
-
-![OpenPlan](public/assets/openplan-logo.svg)
 
 ## Features
 
