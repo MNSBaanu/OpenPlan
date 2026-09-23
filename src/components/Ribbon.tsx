@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import OP from '../core';
 import { useStore, S, focusKey, type Store } from '../store';
 import { COL_GROUPS, COLS, menuData, toggleCol } from '../lib/grid';
@@ -9,7 +9,7 @@ import Icon from './Icon';
 import type { ViewName } from '../types';
 
 const U = OP.util;
-const TABS: [string, string][] = [['task', 'Task'], ['resource', 'Resource'], ['report', 'Report'], ['project', 'Project'], ['view', 'View'], ['format', 'Format']];
+const TABS: [string, string, string][] = [['task', 'Task', 'gantt'], ['resource', 'Resource', 'users'], ['report', 'Report', 'report'], ['project', 'Project', 'target'], ['view', 'View', 'layers'], ['format', 'Format', 'sparkle']];
 
 /* ---------- building blocks ---------- */
 
@@ -287,7 +287,7 @@ function FormatTab({ st }: { st: Store }) {
     </Group>
     <Group label="Gantt Chart Style">
       <div className="swatches">
-        {['blue', 'green', 'orange', 'gray'].map(c => (
+        {['teal', 'indigo', 'amber', 'slate'].map(c => (
           <button key={c} className={'swatch sw-' + c + (st.bars === c ? ' on' : '')} title={c + ' bars'} onClick={() => st.setUI({ bars: c })}><i /><i /></button>
         ))}
       </div>
@@ -305,19 +305,39 @@ export default function Ribbon() {
   const tools = st.view === 'gantt';
   const tab = st.tab === 'format' && !tools ? 'task' : st.tab;
   const Body = { task: TaskTab, resource: ResourceTab, report: ReportTab, project: ProjectTab, view: ViewTab, format: FormatTab }[tab] || TaskTab;
-  return <>
-    <nav className="ribbon-tabs" aria-label="Ribbon">
-      <button className="rtab file" onClick={() => st.setUI({ backstage: true, bsPage: 'info', menu: null })}>File</button>
-      {TABS.filter(([k]) => k !== 'format' || tools).map(([k, label]) => <Fragment key={k}>
-        {k === 'format' && <span className="rtab-ctx">Gantt Chart Tools</span>}
-        <button className={'rtab' + (tab === k ? ' on' : '') + (k === 'format' ? ' ctx' : '')}
-          onClick={() => st.setUI({ tab: k, ribbonMin: st.ribbonMin && tab === k ? false : st.ribbonMin })}>{label}</button>
-      </Fragment>)}
+  const [peek, setPeek] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (!st.ribbonMin) setPeek(false); }, [st.ribbonMin]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'F1') { e.preventDefault(); S().setUI({ ribbonMin: !S().ribbonMin }); }
+      else if (e.key === 'Escape') setPeek(false);
+    };
+    const onDown = (e: MouseEvent) => { if (!wrap.current?.contains(e.target as Node)) setPeek(false); };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('mousedown', onDown);
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('mousedown', onDown); };
+  }, []);
+  const onTab = (k: string) => {
+    if (st.ribbonMin) setPeek(!(peek && tab === k));
+    st.setUI({ tab: k });
+  };
+  const onCommand = (e: React.MouseEvent) => {
+    const b = (e.target as Element).closest('button');
+    if (peek && b && !b.classList.contains('drop')) setPeek(false);
+  };
+  return <div className="ribbon-wrap" ref={wrap}>
+    <nav className="ribbon-tabs" aria-label="Toolbar">
+      <button className="rtab file" onClick={() => st.setUI({ backstage: true, bsPage: 'info', menu: null })}><Icon name="menu" />File</button>
+      {TABS.filter(([k]) => k !== 'format' || tools).map(([k, label, icon]) => (
+        <button key={k} className={'rtab' + (tab === k ? ' on' : '')}
+          onClick={() => onTab(k)} onDoubleClick={() => st.setUI({ ribbonMin: !st.ribbonMin })}><Icon name={icon} />{label}</button>
+      ))}
       <span className="rtab-fill" />
-      <button className="rb-collapse" title={st.ribbonMin ? 'Expand the ribbon' : 'Collapse the ribbon'} onClick={() => st.setUI({ ribbonMin: !st.ribbonMin })}>
-        <Icon name={st.ribbonMin ? 'chevD' : 'up'} />
+      <button className="rb-collapse" title={(st.ribbonMin ? 'Show' : 'Hide') + ' the toolbar (Ctrl+F1)'} onClick={() => st.setUI({ ribbonMin: !st.ribbonMin })}>
+        <Icon name={st.ribbonMin ? 'chevD' : 'up'} />{st.ribbonMin ? 'Show toolbar' : 'Hide toolbar'}
       </button>
     </nav>
-    <div className={'ribbon' + (st.ribbonMin ? ' min' : '')}><Body st={st} /></div>
-  </>;
+    <div className={'ribbon' + (st.ribbonMin ? ' min' : '') + (peek ? ' peek' : '')} onClick={onCommand}><Body st={st} /></div>
+  </div>;
 }
