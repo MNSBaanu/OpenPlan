@@ -5,68 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OpenPlan</title>
   <meta name="description" content="Free, browser-based project planner: WBS, Gantt chart, network diagram, resources and budget.">
-  <link rel="icon" type="image/svg+xml" href="assets/openplan-mark.svg">
-  <link rel="stylesheet" href="css/app.css">
+  <link rel="icon" type="image/svg+xml" href="./assets/openplan-mark.svg">
 </head>
 <body>
-  <header class="titlebar">
-    <div class="qat">
-      <img class="app-icon" src="assets/openplan-mark.svg" alt="">
-      <button class="qat-btn" data-act="save" title="Save (Ctrl+S)" aria-label="Save"><span data-icon="save"></span></button>
-      <button class="qat-btn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo"></button>
-      <button class="qat-btn" id="redoBtn" title="Redo (Ctrl+Y)" aria-label="Redo"></button>
-    </div>
-    <div class="title" id="titleText">OpenPlan</div>
-    <div class="tb-right">
-      <button class="qat-btn" id="themeBtn" title="Dark / light" aria-label="Toggle dark mode"></button>
-      <button class="qat-btn icon-btn" data-act="about" title="About OpenPlan" aria-label="About"></button>
-    </div>
-  </header>
-
-  <nav class="ribbon-tabs" id="ribbonTabs" aria-label="Ribbon"></nav>
-  <div class="ribbon" id="ribbon"></div>
-
-  <div class="layout">
-    <div class="viewbar" aria-hidden="true"><span id="viewLabel">Gantt Chart</span></div>
-    <main id="main"></main>
-    <aside class="drawer" id="drawer"></aside>
-  </div>
-
-  <footer class="statusbar">
-    <span>Ready</span>
-    <span class="sb-sep"></span>
-    <span class="hide-sm">New Tasks : Auto Scheduled</span>
-    <span class="sb-sep hide-sm"></span>
-    <span class="save-state" id="saveState"></span>
-    <span class="spacer"></span>
-    <div class="sb-views" id="sbViews">
-      <button data-view="gantt" title="Gantt Chart" aria-label="Gantt Chart"><span data-icon="gantt"></span></button>
-      <button data-view="resources" title="Resource Sheet" aria-label="Resource Sheet"><span data-icon="users"></span></button>
-      <button data-view="network" title="Network Diagram" aria-label="Network Diagram"><span data-icon="network"></span></button>
-      <button data-view="reports" title="Reports" aria-label="Reports"><span data-icon="report"></span></button>
-    </div>
-    <div class="sb-zoom" title="Timescale zoom">
-      <span class="z-btn" data-zstep="-1">−</span>
-      <input type="range" id="zoomSlider" min="0" max="3" step="1" aria-label="Timescale zoom">
-      <span class="z-btn" data-zstep="1">+</span>
-    </div>
-  </footer>
-
-  <div class="backstage" id="backstage" hidden></div>
-  <dialog id="dlg"></dialog>
-  <input type="file" id="fileInput" accept=".json,.xml,application/json,text/xml" hidden>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <script src="js/core.js"></script>
-  <script src="js/demo.js"></script>
-  <script src="js/io.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/gantt-view.js"></script>
-  <script src="js/drawer.js"></script>
-  <script src="js/views.js"></script>
-  <script src="js/reports.js"></script>
-  <script src="js/ribbon.js"></script>
-  <script>OP.app.start();</script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

@@ -1,0 +1,101 @@
+import OP from '../core';
+import { S, VIEW_NAMES, type Store } from '../store';
+import { gridItems } from './grid';
+import type { Project } from '../types';
+
+const U = OP.util, C = OP.charts, IO = OP.io;
+
+export function scopeRows(st: Store) {
+  if (st.netScope === 'all') return st.s.rows;
+  const r = st.s.rows.find((x: any) => String(x.task.uid) === String(st.netScope));
+  return r ? r.leaves.map((i: number) => st.s.rows[i]) : st.s.rows;
+}
+
+// SVG markup for the current view (null when the view is not a picture).
+export function viewSvgString(st: Store): string | null {
+  if (st.view === 'gantt') {
+    return C.gantt({ p: st.p, s: st.s, rows: gridItems(st), zoom: st.zoom, critical: st.critical, table: true, flat: st.group !== 'none', baseline: st.showBaseline && !!st.p.baseline }).svg;
+  }
+  if (!st.s.rows.length && st.view !== 'org') return null;
+  if (st.view === 'network') {
+    const sr = st.netScope === 'all' ? null : st.s.rows.find((x: any) => String(x.task.uid) === String(st.netScope));
+    const title = sr ? sr.wbs + ' ' + sr.task.name : st.p.name + ' — activity network';
+    return C.network({ p: st.p, s: st.s, rows: scopeRows(st), critical: st.critical, dates: st.netDates, title }).svg;
+  }
+  if (st.view === 'wbs') return C.wbs({ p: st.p, s: st.s, depth: st.wbsDepth }).svg;
+  if (st.view === 'org') {
+    const people = st.p.resources.filter(r => r.kind === 'Work');
+    return people.length ? C.org({ p: { resources: people, currency: st.p.currency } }).svg : null;
+  }
+  return null;
+}
+
+export const hasImage = (st: Store) => ['gantt', 'network', 'wbs', 'org'].includes(st.view);
+
+function svgElement(str: string): SVGSVGElement {
+  return new DOMParser().parseFromString(str, 'image/svg+xml').documentElement as unknown as SVGSVGElement;
+}
+
+export function runAction(a: string) {
+  const st = S(), name = U.slug(st.p.name);
+  st.setUI({ menu: null, backstage: false });
+  switch (a) {
+    case 'new':
+      if (confirm('Start a new blank project? The current one can be restored with Undo.')) st.replaceProject(OP.model.blank(), 'New project created');
+      break;
+    case 'sample': st.replaceProject(OP.demo(), 'Sample project loaded'); break;
+    case 'open': pickFile(false); break;
+    case 'insert': pickFile(true); break;
+    case 'save': U.download(name + '.openplan.json', IO.toJSON(st.p), 'application/json'); st.toast('Project file downloaded'); break;
+    case 'xml': U.download(name + '.xml', IO.toMSPDI(st.p), 'application/xml'); st.toast('MS Project XML downloaded — open it in ProjectLibre or MS Project'); break;
+    case 'csv': U.download(name + '-tasks.csv', '﻿' + IO.toCSV(st.p), 'text/csv'); st.toast('CSV downloaded'); break;
+    case 'mpp': case 'pod': st.openDialog('convert', { kind: a }); break;
+    case 'png': case 'svg': {
+      const svg = viewSvgString(st);
+      if (!svg) { st.toast('Switch to Gantt, Network, WBS or Team Chart to export an image.'); return; }
+      if (a === 'png') IO.exportPNG(svgElement(svg), name + '-' + st.view);
+      else IO.exportSVG(svgElement(svg), name + '-' + st.view);
+      break;
+    }
+    case 'print': {
+      const svg = viewSvgString(st);
+      if (svg) IO.printSVG(svgElement(svg), st.p.name + ' — ' + VIEW_NAMES[st.view]);
+      else window.print();
+      break;
+    }
+    case 'settings': st.openDialog('settings'); break;
+    case 'about': st.openDialog('about'); break;
+  }
+}
+
+function pickFile(insert: boolean) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,.xml,application/json,text/xml';
+  input.onchange = () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const st = S();
+      try {
+        const p: Project = IO.parseAny(String(reader.result));
+        if (insert) {
+          let uid = 0;
+          st.commit(pp => { uid = IO.insertProject(pp, p); });
+          st.select([uid], uid);
+          st.toast('Inserted ' + file.name + ' as a subproject');
+        } else st.replaceProject(p, 'Opened ' + file.name);
+      } catch (e: any) {
+        st.toast('Could not open file: ' + e.message, true);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+export function downloadXml() {
+  const st = S();
+  U.download(U.slug(st.p.name) + '.xml', IO.toMSPDI(st.p), 'application/xml');
+}

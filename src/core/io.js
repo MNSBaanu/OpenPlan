@@ -1,3 +1,4 @@
+import OP from './core.js';
 /* File formats: OpenPlan JSON, MS Project XML (MSPDI), CSV, and SVG/PNG image export. */
 OP.io = (function () {
   var U = OP.util, M = OP.model;
