@@ -16,7 +16,7 @@ export function TitleBar() {
   return (
     <header className="titlebar">
       <div className="qat">
-        <img className="app-icon" src={LOGO_MARK} alt="" />
+        <button className="qat-btn home" title="OpenPlan home" aria-label="OpenPlan home" onClick={() => { location.hash = ''; }}><img className="app-icon" src={LOGO_MARK} alt="" /></button>
         <button className="qat-btn" title="Save (Ctrl+S)" aria-label="Save" onClick={() => runAction('save')}><Icon name="save" /></button>
         <button className="qat-btn" title="Undo (Ctrl+Z)" aria-label="Undo" disabled={!st.undo.length} onClick={st.undoAct}><Icon name="undo" /></button>
         <button className="qat-btn" title="Redo (Ctrl+Y)" aria-label="Redo" disabled={!st.redo.length} onClick={st.redoAct}><Icon name="redo" /></button>

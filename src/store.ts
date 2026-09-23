@@ -194,3 +194,9 @@ export function focusKey(fk: string, select = true) {
     if (select && el.select) try { el.select(); } catch { /* not selectable */ }
   });
 }
+
+export function ask(message: string, onOk: () => void, okLabel = 'OK', title = 'Please confirm') {
+  S().openDialog('confirm', { message, onOk, okLabel, title });
+}
+
+OP.notify = (text: string) => S().toast(text, true);

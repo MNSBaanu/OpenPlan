@@ -83,6 +83,16 @@ npm run preview    # serves dist/ at http://localhost:4173
 
 `dist/` uses relative paths, so it can be hosted on any static host, such as GitHub Pages or Netlify. Opening `dist/index.html` directly from disk does not work in most browsers.
 
+### Visitor counts (optional)
+
+OpenPlan can count visitors with [GoatCounter](https://www.goatcounter.com), a free analytics service that uses no cookies. It counts visits to the landing page (`/`) and to the app (`/app`) separately. Project data is never sent.
+
+1. Create a free account at goatcounter.com and choose a site code, for example `openplan`.
+2. Copy `.env.example` to `.env` and set `VITE_GOATCOUNTER=openplan`.
+3. Run `npm run build` and deploy `dist/`. Visits appear on your GoatCounter dashboard.
+
+GoatCounter ignores visits from `localhost`, so only the deployed site is counted.
+
 ## Usage
 
 ### Saving your work

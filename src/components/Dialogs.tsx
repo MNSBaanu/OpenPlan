@@ -200,6 +200,14 @@ function AboutDialog() {
   );
 }
 
+function ConfirmDialog({ title, message, okLabel, onOk }: { title: string; message: string; okLabel: string; onOk: () => void }) {
+  return (
+    <Modal title={title} okLabel={okLabel} onSubmit={() => { S().closeDialog(); onOk(); return false; }}>
+      <p className="confirm-msg">{message}</p>
+    </Modal>
+  );
+}
+
 export default function DialogHost() {
   const dialog = useStore(s => s.dialog);
   if (!dialog) return null;
@@ -209,6 +217,7 @@ export default function DialogHost() {
     case 'resource': return <ResourceDialog uid={dialog.props.uid} />;
     case 'convert': return <ConvertDialog kind={dialog.props.kind} />;
     case 'about': return <AboutDialog />;
+    case 'confirm': return <ConfirmDialog {...dialog.props} />;
     default: return null;
   }
 }

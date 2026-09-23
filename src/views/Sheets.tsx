@@ -1,5 +1,5 @@
 import OP from '../core';
-import { useStore } from '../store';
+import { ask, useStore } from '../store';
 import { addResource, levelAll } from '../lib/taskOps';
 import Field from '../components/Field';
 import Icon from '../components/Icon';
@@ -17,12 +17,13 @@ export function ResourcesView() {
   const edit = (uid: number, fn: (r: Resource) => void) => st.commit(pp => { fn(pp.resources.find(x => x.uid === uid)!); });
   const remove = (r: Resource) => {
     const used = p.tasks.some(t => t.assignments.some(a => a.res === r.uid));
-    if (used && !confirm('Remove ' + (r.name || 'this resource') + ' and all their task assignments?')) return;
-    st.commit(pp => {
+    const run = () => st.commit(pp => {
       pp.resources = pp.resources.filter(x => x.uid !== r.uid);
       pp.resources.forEach(x => { if (x.reportsTo === r.uid) x.reportsTo = null; });
       pp.tasks.forEach(t => { t.assignments = t.assignments.filter(a => a.res !== r.uid); });
     });
+    if (used) ask('Remove ' + (r.name || 'this resource') + ' and all their task assignments?', run, 'Remove');
+    else run();
   };
 
   return (

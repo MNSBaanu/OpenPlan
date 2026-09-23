@@ -1,5 +1,5 @@
 import OP from '../core';
-import { S, VIEW_NAMES, type Store } from '../store';
+import { S, VIEW_NAMES, ask, type Store } from '../store';
 import { gridItems } from './grid';
 import type { Project } from '../types';
 
@@ -41,7 +41,9 @@ async function openFile() {
 
 export function handleLaunchFiles() {
   W.launchQueue?.setConsumer((params: any) => {
-    if (params.files?.length) openHandle(params.files[0]).catch((e: any) => S().toast('Could not open file: ' + e.message, true));
+    if (!params.files?.length) return;
+    location.hash = 'app';
+    openHandle(params.files[0]).catch((e: any) => S().toast('Could not open file: ' + e.message, true));
   });
 }
 
@@ -81,7 +83,7 @@ export function runAction(a: string) {
   st.setUI({ menu: null, backstage: false });
   switch (a) {
     case 'new':
-      if (confirm('Start a new blank project? The current one can be restored with Undo.')) { handle = null; st.replaceProject(OP.model.blank(), 'New project created'); }
+      ask('Start a new blank project? The current one can be restored with Undo.', () => { handle = null; S().replaceProject(OP.model.blank(), 'New project created'); }, 'New project');
       break;
     case 'sample': handle = null; st.replaceProject(OP.demo(), 'Sample project loaded'); break;
     case 'open': if (FS) openFile(); else pickFile(false); break;

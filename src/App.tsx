@@ -2,10 +2,9 @@ import { useEffect } from 'react';
 import { useStore, S, VIEW_NAMES } from './store';
 import { runAction } from './lib/actions';
 import * as ops from './lib/taskOps';
-import { TitleBar, StatusBar, Toast, Backstage } from './components/Chrome';
+import { TitleBar, StatusBar, Backstage } from './components/Chrome';
 import Ribbon from './components/Ribbon';
 import Drawer from './components/Drawer';
-import DialogHost from './components/Dialogs';
 import GanttView from './views/GanttView';
 import { NetworkView, WbsView, OrgView } from './views/Diagrams';
 import { ResourcesView, WorkloadView } from './views/Sheets';
@@ -41,10 +40,8 @@ function onKeyDown(e: KeyboardEvent) {
 
 export default function App() {
   const view = useStore(s => s.view);
-  const theme = useStore(s => s.theme);
   const bars = useStore(s => s.bars);
 
-  useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => { document.documentElement.setAttribute('data-bars', bars); }, [bars]);
   useEffect(() => {
     // Close an open ribbon menu when clicking anywhere outside it.
@@ -67,7 +64,5 @@ export default function App() {
     </div>
     <StatusBar />
     <Backstage />
-    <DialogHost />
-    <Toast />
   </>;
 }

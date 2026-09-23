@@ -1,5 +1,5 @@
 import OP from '../core';
-import { S, focusKey, rowByUid } from '../store';
+import { ask, S, focusKey, rowByUid } from '../store';
 import type { Project, Task } from '../types';
 
 const U = OP.util, M = OP.model;
@@ -191,9 +191,9 @@ export function deleteSelected() {
   if (!blocks.length) return;
   const uids: number[] = [];
   blocks.forEach(i => { for (let k = i; k < M.subtreeEnd(st.p, i); k++) uids.push(st.p.tasks[k].uid); });
-  if (uids.length > 1 && !confirm('Delete ' + uids.length + ' tasks (including subtasks)?')) return;
-  st.commit(p => { M.removeTasks(p, uids); });
-  st.select([]);
+  const run = () => { S().commit(p => { M.removeTasks(p, uids); }); S().select([]); };
+  if (uids.length > 1) ask('Delete ' + uids.length + ' tasks (including subtasks)?', run, 'Delete');
+  else run();
 }
 
 export function setPercent(uid: number, v: number) {
@@ -242,15 +242,18 @@ export function updateAsScheduled() {
 }
 
 export function setBaseline() {
-  const st = S();
-  if (st.p.baseline && !confirm('Replace the existing baseline with the current plan?')) return;
-  st.setUI({ showBaseline: true });
-  st.commit(p => { OP.setBaseline(p); if (p.status === 'Draft') p.status = 'Baselined'; });
-  st.toast('Baseline saved — variances and earned value are now measured against it');
+  const run = () => {
+    const st = S();
+    st.setUI({ showBaseline: true });
+    st.commit(p => { OP.setBaseline(p); if (p.status === 'Draft') p.status = 'Baselined'; });
+    st.toast('Baseline saved — variances and earned value are now measured against it');
+  };
+  if (S().p.baseline) ask('Replace the existing baseline with the current plan?', run, 'Replace');
+  else run();
 }
 
 export function clearBaseline() {
-  if (confirm('Clear the baseline?')) S().commit(p => { p.baseline = null; });
+  ask('Clear the baseline?', () => S().commit(p => { p.baseline = null; }), 'Clear');
 }
 
 export function levelAll() {

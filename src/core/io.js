@@ -414,13 +414,16 @@ OP.io = (function () {
       ctx.drawImage(img, 0, 0, w, h);
       c.toBlob(function (b) { U.download(name + '.png', b); }, 'image/png');
     };
-    img.onerror = function () { alert('Could not create the image. Try the SVG export instead.'); };
+    img.onerror = function () { OP.notify('Could not create the image. Try the SVG export instead.'); };
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(standaloneSVG(svg));
   }
 
   function printSVG(svg, title) {
-    var w = window.open('', '_blank');
-    if (!w) { alert('Allow pop-ups to print.'); return; }
+    var f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
+    document.body.appendChild(f);
+    var w = f.contentWindow;
+    w.onafterprint = function () { setTimeout(function () { f.remove(); }, 0); };
     w.document.write('<!doctype html><title>' + U.esc(title) + '</title><style>@page{size:landscape;margin:10mm}body{margin:0}svg{width:100%;height:auto}</style>' +
       standaloneSVG(svg));
     w.document.close();
