@@ -1,3 +1,4 @@
+import OP from './core.js';
 /* Sample project used to demonstrate the tool. */
 OP.demo = function () {
   var M = OP.model;

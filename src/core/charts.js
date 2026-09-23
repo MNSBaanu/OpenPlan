@@ -1,3 +1,4 @@
+import OP from './core.js';
 /* SVG renderers: Gantt chart, network (AON) diagram, WBS chart, organisation chart, cost charts. */
 OP.charts = (function () {
   var U = OP.util, esc = U.esc;

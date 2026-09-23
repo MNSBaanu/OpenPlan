@@ -3,8 +3,7 @@
  * Scheduling uses the critical path method: a forward pass for early dates,
  * a backward pass for late dates, then total/free slack and the critical path.
  */
-var OP = window.OP || {};
-window.OP = OP;
+const OP = {};
 
 /* ---------- utilities ---------- */
 
@@ -722,3 +721,5 @@ function levelPass(p, movedSet) {
     if (k) s = OP.schedule(p);
   }
 }
+
+export default OP;
