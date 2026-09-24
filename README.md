@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/assets/openplan-logo.png" alt="OpenPlan" height="64">
+<img src="public/assets/OpenPlan.png" alt="OpenPlan" height="64">
 
 **A free project planner that runs in the browser.**
 
@@ -8,7 +8,7 @@ Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and
 
 ![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6-646cff?logo=vite&logoColor=white)
 
 </div>
 
@@ -40,7 +40,7 @@ It runs entirely in the browser and has no server or account. Projects are saved
 - **Resources**: work, material and cost resources, calendars, vacations, rate changes, a workload heatmap and resource leveling.
 - **Tracking**: baselines, % complete, actual dates, a status date and earned value (SPI, CPI, EAC).
 - **Budget and reports**: cost by work package and by resource, monthly and cumulative cost, and 10 ready-made reports.
-- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, and import or export project XML and CSV.
+- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import and export project XML, and export CSV.
 - **Interface**: a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, and light and dark themes.
 
 ## Tech stack
@@ -49,7 +49,7 @@ It runs entirely in the browser and has no server or account. Projects are saved
 |---|---|
 | UI | React 18, TypeScript |
 | State | Zustand |
-| Build | Vite 5 |
+| Build | Vite 6 |
 | Scheduling and charts | Plain JavaScript modules rendering SVG (`src/core/`) |
 | Storage | Browser localStorage, and the File System Access API for project files |
 
@@ -183,4 +183,4 @@ OpenPlan is made by [MNS Baanu](https://github.com/MNSBaanu).
 
 ## License
 
-No license has been chosen yet. Until one is added, all rights are reserved by MNS Baanu.
+OpenPlan is released under the [MIT License](LICENSE).
