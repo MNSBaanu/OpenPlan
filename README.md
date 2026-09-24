@@ -23,6 +23,7 @@ Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and
 - [Usage](#usage)
 - [Project structure](#project-structure)
 - [Contributing](#contributing)
+- [Author](#author)
 - [License](#license)
 
 ## About
@@ -176,6 +177,10 @@ OpenPlan/
 2. Make your changes and check that `npm run build` passes.
 3. Commit, push, and open a pull request.
 
+## Author
+
+OpenPlan is made by [MNS Baanu](https://github.com/MNSBaanu).
+
 ## License
 
-No license has been chosen yet. Until one is added, all rights are reserved by the author.
+No license has been chosen yet. Until one is added, all rights are reserved by MNS Baanu.
