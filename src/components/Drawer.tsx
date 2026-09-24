@@ -1,9 +1,9 @@
 import OP from '../core';
-import { useStore, type Store } from '../store';
+import { useApp, type Store } from '../store';
 import * as ops from '../lib/taskOps';
-import Field from './Field';
+import Field, { DateField } from './Field';
 import Icon from './Icon';
-import type { Project, Row, Task } from '../types';
+import type { Project, Resource, Row, Task } from '../types';
 
 const U = OP.util, M = OP.model;
 const VIEWS = ['gantt', 'network', 'wbs'];
@@ -11,14 +11,16 @@ const VIEWS = ['gantt', 'network', 'wbs'];
 function Stat({ v, k }: { v: React.ReactNode; k: string }) { return <div className="stat"><b>{v}</b><span>{k}</span></div>; }
 const varDays = (v: number) => (v > 0 ? '+' : '') + U.num(v) + 'd';
 
+const defaultUnits = (res: Resource) => (res.kind === 'Work' ? Math.min(100, res.maxUnits) : res.kind === 'Material' ? 1 : 0);
+
 function Opts({ map }: { map: Record<string, string> }) {
   return <>{Object.entries(map).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</>;
 }
 
 export default function Drawer() {
-  const st = useStore();
+  const st = useApp();
   const t = st.sel.length === 1 ? st.p.tasks.find(x => x.uid === st.sel[0]) : null;
-  const r: Row = t && st.s.rows.find((x: Row) => x.task.uid === t.uid);
+  const r = t ? st.s.rows.find((x: Row) => x.task.uid === t.uid) : undefined;
   if (!st.drawer || !t || !r || !VIEWS.includes(st.view)) return null;
   return <DrawerBody st={st} t={t} r={r} />;
 }
@@ -45,7 +47,7 @@ function DrawerBody({ st, t, r }: { st: Store; t: Task; r: Row }) {
     const next = { ...t.preds[k], ...patch };
     const trial: Project = U.clone(p);
     ops.findTask(trial, uid).preds[k] = next;
-    if (OP.schedule(trial).cycle.length) { st.toast('That link would create a dependency loop.', true); return; }
+    if (OP.schedule(trial, { cycleOnly: true }).cycle.length) { st.toast('That link would create a dependency loop.', true); return; }
     edit(x => { x.preds[k] = next; });
   };
   const addPred = () => {
@@ -106,21 +108,19 @@ function DrawerBody({ st, t, r }: { st: Store; t: Task; r: Row }) {
                 else if (!x.constraintDate) x.constraintDate = U.iso(r.startDn);
               });
             }}><Opts map={M.CONSTRAINTS} /></select></label>
-            <label className="field"><span>Constraint date</span><input className="inp" type="date" disabled={!dated} value={t.constraintDate}
-              onChange={e => { const v = e.target.value; edit(x => { x.constraintDate = v; if (v && x.constraint === 'ASAP') x.constraint = 'SNET'; }); }} /></label>
+            <label className="field"><span>Constraint date</span><DateField className="inp" disabled={!dated} value={t.constraintDate}
+              onCommit={v => { edit(x => { x.constraintDate = v; if (v && x.constraint === 'ASAP') x.constraint = 'SNET'; }); }} /></label>
           </div>
           <div className="row2">
-            <label className="field"><span>Deadline</span><input className="inp" type="date" data-fk="d:deadline" value={t.deadline} onChange={e => set('deadline', e.target.value)} /></label>
+            <label className="field"><span>Deadline</span><DateField className="inp" fk="d:deadline" value={t.deadline} onCommit={v => set('deadline', v)} /></label>
             <label className="field"><span>Priority (0–1000)</span><Field className="inp" type="number" min={0} max={1000} step={50} value={String(t.priority)}
               onCommit={v => { set('priority', Math.max(0, Math.min(1000, Math.round(+v || 0)))); }} /></label>
           </div>
           <div className="row2">
-            <label className="field"><span>Actual start</span><input className="inp" type="date" value={t.actualStart} onChange={e => {
-              const v = e.target.value;
+            <label className="field"><span>Actual start</span><DateField className="inp" value={t.actualStart} onCommit={v => {
               edit(x => { x.actualStart = v; if (!v) { x.percent = 0; x.actualFinish = ''; } });
             }} /></label>
-            <label className="field"><span>Actual finish</span><input className="inp" type="date" value={t.actualFinish} onChange={e => {
-              const v = e.target.value;
+            <label className="field"><span>Actual finish</span><DateField className="inp" value={t.actualFinish} onCommit={v => {
               edit(x => { x.actualFinish = v; if (v) { x.percent = 100; if (!x.actualStart) x.actualStart = U.iso(r.startDn); } else if (x.percent >= 100) x.percent = 99; });
             }} /></label>
           </div>
@@ -176,8 +176,12 @@ function DrawerBody({ st, t, r }: { st: Store; t: Task; r: Row }) {
               const res = p.resources.find(x => x.uid === a.res);
               return (
                 <div className="mini-row asg" key={k}>
-                  <select className="sel" value={a.res} onChange={e => { const v = +e.target.value; edit(x => { x.assignments[k].res = v; }); }}>
-                    {p.resources.map(x => <option key={x.uid} value={x.uid}>{(x.name || '(unnamed)') + (x.kind !== 'Work' ? ' (' + x.kind.toLowerCase() + ')' : '')}</option>)}
+                  <select className="sel" value={a.res} aria-label="Resource" onChange={e => {
+                    const v = +e.target.value, nr = p.resources.find(x => x.uid === v);
+                    if (!nr) return;
+                    edit((x, pp) => { ops.changeAssignments(pp, x, () => { x.assignments[k] = { res: v, units: defaultUnits(nr) }; }); });
+                  }}>
+                    {p.resources.filter(x => x.uid === a.res || !t.assignments.some(b => b.res === x.uid)).map(x => <option key={x.uid} value={x.uid}>{(x.name || '(unnamed)') + (x.kind !== 'Work' ? ' (' + x.kind.toLowerCase() + ')' : '')}</option>)}
                   </select>
                   <label className="unit-inp"><Field className="inp" type="number" min={0} step={res && res.kind === 'Work' ? 5 : 1} value={String(a.units)}
                     onCommit={v => { edit((x, pp) => { ops.setUnits(pp, x, k, Math.max(0, +v || 0)); }); }} /><span>{unitLabel(a.res)}</span></label>
@@ -189,7 +193,7 @@ function DrawerBody({ st, t, r }: { st: Store; t: Task; r: Row }) {
               ? <select className="sel" data-fk="d:addres" value="" disabled={!free.length} onChange={e => {
                   const v = +e.target.value, res = p.resources.find(x => x.uid === v);
                   if (!res) return;
-                  edit((x, pp) => { ops.changeAssignments(pp, x, () => { x.assignments.push({ res: v, units: res.kind === 'Work' ? Math.min(100, res.maxUnits) : res.kind === 'Material' ? 1 : 0 }); }); });
+                  edit((x, pp) => { ops.changeAssignments(pp, x, () => { x.assignments.push({ res: v, units: defaultUnits(res) }); }); });
                 }}>
                   <option value="">{free.length ? '+ Assign a resource…' : 'All resources assigned'}</option>
                   {free.map(x => <option key={x.uid} value={x.uid}>{x.name} — {x.kind === 'Work' ? (x.role || x.type) + ' (' + x.maxUnits + '%)' : x.kind}</option>)}
@@ -205,10 +209,10 @@ function DrawerBody({ st, t, r }: { st: Store; t: Task; r: Row }) {
               {t.splits.map((sp, k) => (
                 <div className="mini-row split" key={k}>
                   <span className="muted small">After</span>
-                  <Field className="inp" type="number" min={0.5} step={0.5} value={String(sp.at)} onCommit={v => { edit(x => { x.splits[k].at = Math.max(0.5, +v || 0.5); }); }} />
+                  <Field className="inp" type="number" min={0.5} step={0.5} value={String(sp.at)} onCommit={v => { edit(x => { x.splits[k].at = Math.max(0.5, Math.min(x.duration - 0.5, +v || 0.5)); }); }} />
                   <span className="muted small">days, pause</span>
                   <Field className="inp" type="number" min={0.5} step={0.5} value={String(sp.gap)} onCommit={v => { edit(x => { x.splits[k].gap = Math.max(0.5, +v || 0.5); }); }} />
-                  <span className="muted small">days</span>
+                  <span className="muted small">days{sp.at >= t.duration ? ' (after the task ends: ignored)' : ''}</span>
                   <button className="icon-btn" aria-label="Remove split" onClick={() => edit(x => { x.splits.splice(k, 1); })}><Icon name="x" /></button>
                 </div>
               ))}
