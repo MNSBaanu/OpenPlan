@@ -1,5 +1,5 @@
 import OP from '../core';
-import { S, VIEW_NAMES, ask, type Store } from '../store';
+import { S, VIEW_NAMES, ask, PREV_STORE, type Store } from '../store';
 import { gridItems } from './grid';
 import type { Project } from '../types';
 
@@ -85,12 +85,21 @@ export function runAction(a: string) {
     case 'new':
       ask('Start a new blank project? The current one can be restored with Undo.', () => { handle = null; S().replaceProject(OP.model.blank(), 'New project created'); }, 'New project');
       break;
-    case 'sample': handle = null; st.replaceProject(OP.demo(), 'Sample project loaded'); break;
+    case 'sample':
+      ask('Open the sample project? The current one can be restored from File › Open › Restore Previous Project.', () => { handle = null; S().replaceProject(OP.demo(), 'Sample project loaded'); }, 'Open sample');
+      break;
+    case 'restore': {
+      let text: string | null = null;
+      try { text = localStorage.getItem(PREV_STORE); } catch { /* storage unavailable */ }
+      if (!text) { st.toast('There is no previous project to restore.'); break; }
+      try { handle = null; st.replaceProject(IO.fromJSON(text), 'Previous project restored'); } catch (e: any) { st.toast('Could not restore: ' + e.message, true); }
+      break;
+    }
     case 'open': if (FS) openFile(); else pickFile(false); break;
     case 'insert': pickFile(true); break;
     case 'save': saveFile(false); break;
     case 'saveas': saveFile(true); break;
-    case 'xml': U.download(name + '.xml', IO.toMSPDI(st.p), 'application/xml'); st.toast('MS Project XML downloaded — open it in ProjectLibre or MS Project'); break;
+    case 'xml': downloadXml(); st.toast('MS Project XML downloaded — open it in ProjectLibre or MS Project'); break;
     case 'csv': U.download(name + '-tasks.csv', '﻿' + IO.toCSV(st.p), 'text/csv'); st.toast('CSV downloaded'); break;
     case 'mpp': case 'pod': st.openDialog('convert', { kind: a }); break;
     case 'png': case 'svg': {
@@ -124,10 +133,10 @@ function pickFile(insert: boolean) {
       try {
         const p: Project = IO.parseAny(String(reader.result));
         if (insert) {
-          let uid = 0;
-          st.commit(pp => { uid = IO.insertProject(pp, p); });
-          st.select([uid], uid);
-          st.toast('Inserted ' + file.name + ' as a subproject');
+          let res = { uid: 0, warnings: [] as string[] };
+          st.commit(pp => { res = IO.insertProject(pp, p); });
+          st.select([res.uid], res.uid);
+          st.toast('Inserted ' + file.name + ' as a subproject' + (res.warnings.length ? '. Note: ' + res.warnings.join('; ') + '.' : ''), res.warnings.length > 0);
         } else st.replaceProject(p, 'Opened ' + file.name);
       } catch (e: any) {
         st.toast('Could not open file: ' + e.message, true);
