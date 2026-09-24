@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import '@fontsource-variable/inter';
 import OP from '../core';
 import { useApp, S, ask } from '../store';
@@ -7,6 +7,8 @@ import type { Schedule } from '../types';
 
 const C = OP.charts;
 const REPO = 'https://github.com/MNSBaanu/OpenPlan';
+// The page title from index.html; the app replaces it with the project name.
+const PAGE_TITLE = document.title;
 
 export const enterApp = () => { location.hash = 'app'; };
 const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -105,6 +107,7 @@ function Preview({ sample }: { sample: ReturnType<typeof useSample> }) {
 export default function Landing() {
   const st = useApp();
   const sample = useSample();
+  useEffect(() => { document.title = PAGE_TITLE; }, []);
   return (
     <div className="landing">
       <header className="lp-nav">

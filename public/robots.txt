@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://openplan.vercel.app/sitemap.xml

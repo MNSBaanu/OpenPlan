@@ -19,7 +19,6 @@ author: MNS Baanu
 - Source: [GitHub](https://github.com/MNSBaanu/OpenPlan)
 - Setup and usage: [[README]]
 - Licence: [[LICENSE]] (MIT)
-- Coursework document: `ASE CW02.docx` (git-ignored)
 
 ## Tech stack
 | Layer | Technology |
@@ -98,3 +97,4 @@ src/
   - Remaining items are listed under Open issues. `AUDIT.md` was deleted.
 - **2026-09-24** Landing page upgrade: stats row, "Who it's for", FAQ, and an "Open source under the MIT License" mention in the footer. Square corners everywhere, new logo.
 - **2026-09-24** Removed MS Project XML import/export and the .mpp/.pod export dialogs. Logo shown without a background tile; footer centred.
+- **2026-09-24** SEO: title and description, canonical URL, Open Graph and Twitter tags with `og-image.png`, WebApplication JSON-LD, noscript fallback, `robots.txt` and `sitemap.xml` for https://openplan.vercel.app.
