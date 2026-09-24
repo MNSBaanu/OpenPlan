@@ -155,7 +155,7 @@ function groupKeys(st: Store, r: Row): string[] {
   if (g === 'priority') return ['Priority ' + t.priority];
   if (g === 'type') return [M.TASK_TYPES[t.type] || t.type];
   if (g === 'resource') {
-    const names = t.assignments.map((a: any) => { const res = st.p.resources.find(x => x.uid === a.res); return res ? res.name || '(unnamed)' : null; }).filter(Boolean);
+    const names = t.assignments.map((a: any) => { const res = st.p.resources.find(x => x.uid === a.res); return res ? res.name || '(unnamed)' : null; }).filter((n): n is string => !!n);
     return names.length ? names : ['Unassigned'];
   }
   const m = /^cf:(.+)$/.exec(g);
@@ -181,7 +181,7 @@ export function gridItems(st: Store): (Row | GroupItem)[] {
         groups[k].push(r);
       });
     });
-    order.sort();
+    order.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     const out: (Row | GroupItem)[] = [];
     order.forEach(k => {
       const list = groups[k].sort(cmp), key = 'g:' + k;
