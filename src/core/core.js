@@ -15,11 +15,12 @@ OP.util = (function () {
   function parseDate(s) {
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
     if (!m) return null;
-    return Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 864e5);
+    var dn = Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 864e5);
+    return iso(dn) === m[1] + '-' + m[2] + '-' + m[3] ? dn : null;
   }
   function toDate(dn) { return new Date(dn * 864e5); }
   function iso(dn) { return toDate(dn).toISOString().slice(0, 10); }
-  function weekday(dn) { return (dn + 4) % 7; }
+  function weekday(dn) { return ((dn + 4) % 7 + 7) % 7; }
   function fmt(dn) {
     if (dn == null) return '';
     var d = toDate(dn);
@@ -35,10 +36,10 @@ OP.util = (function () {
     return Math.round(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) / 864e5);
   }
   function money(v, cur) {
-    return (cur ? cur + ' ' : '') + Math.round(v || 0).toLocaleString('en-US');
+    return (cur ? cur + ' ' : '') + Math.round(v || 0).toLocaleString();
   }
   function num(v, dp) {
-    return (+v || 0).toLocaleString('en-US', { maximumFractionDigits: dp == null ? 1 : dp });
+    return (+v || 0).toLocaleString(undefined, { maximumFractionDigits: dp == null ? 1 : dp });
   }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -72,7 +73,7 @@ OP.Calendar = function (startDn, holidays) {
   this.isWorking = function (dn) { var w = OP.util.weekday(dn); return w !== 0 && w !== 6 && !hol[dn]; };
   var first = startDn;
   var guard = 0;
-  while (!this.isWorking(first) && guard++ < 60) first++;
+  while (!this.isWorking(first) && guard++ < 3660) first++;
   this.first = first;
   this.days = [first];
 };
@@ -88,9 +89,14 @@ OP.Calendar.prototype.date = function (n) {
 // Index of the first working day on or after the given date.
 OP.Calendar.prototype.indexOf = function (dn) {
   if (dn <= this.first) return 0;
-  var i = 0;
-  while (this.date(i) < dn) i++;
-  return i;
+  var hi = 1;
+  while (this.date(hi) < dn) hi *= 2;
+  var lo = 0;
+  while (lo < hi) {
+    var mid = (lo + hi) >> 1;
+    if (this.days[mid] < dn) lo = mid + 1; else hi = mid;
+  }
+  return lo;
 };
 
 // Early-finish index for a finish date: number of working days up to and including it.
@@ -158,19 +164,85 @@ OP.model = (function () {
     return r;
   }
 
-  // Bring files from older versions up to date and fill any missing fields.
+  // Bring files from older versions up to date, fill missing fields and coerce every value to its expected type.
   function normalize(p) {
     var base = blank();
     for (var k in base) if (p[k] == null) p[k] = base[k];
+    ['name', 'organization', 'manager', 'status', 'issueDate', 'start', 'statusDate', 'currency'].forEach(function (k) { p[k] = str(p[k]); });
+    p.budget = Math.max(0, num(p.budget, 0));
+    p.hoursPerDay = Math.max(1, Math.min(24, num(p.hoursPerDay, 8)));
+    p.holidays = arr(p.holidays).map(str);
+    p.customFields = arr(p.customFields).filter(isObj).map(function (f) {
+      return { id: str(f.id), name: str(f.name), type: f.type === 'number' ? 'number' : 'text' };
+    });
+    p.tasks = arr(p.tasks).filter(isObj);
+    p.resources = arr(p.resources).filter(isObj);
+    var maxUid = 0;
+    p.tasks.concat(p.resources).forEach(function (o) { maxUid = Math.max(maxUid, uidOf(o)); });
+    p.nextUid = Math.max(Math.floor(num(p.nextUid, 1)), maxUid + 1);
+    [p.tasks, p.resources].forEach(function (list) {
+      var seen = {};
+      list.forEach(function (o) {
+        var u = uidOf(o);
+        if (!u || seen[u]) u = p.nextUid++;
+        seen[u] = true;
+        o.uid = u;
+      });
+    });
     p.tasks.forEach(function (t) {
       if (t.snet && !t.constraintDate) { t.constraint = 'SNET'; t.constraintDate = t.snet; }
       delete t.snet;
       fill(t, TASK_DEFAULTS);
+      ['name', 'notes', 'constraintDate', 'deadline', 'actualStart', 'actualFinish'].forEach(function (k) { t[k] = str(t[k]); });
+      t.level = Math.max(1, Math.floor(num(t.level, 1)));
+      t.duration = Math.max(0, num(t.duration, 1));
+      t.milestone = !!t.milestone;
+      t.percent = Math.max(0, Math.min(100, num(t.percent, 0)));
+      t.effortDriven = !!t.effortDriven;
+      t.fixedCost = num(t.fixedCost, 0);
+      t.levelDelay = Math.max(0, num(t.levelDelay, 0));
+      t.priority = Math.max(0, Math.min(1000, num(t.priority, 500)));
+      if (!CONSTRAINTS[t.constraint]) t.constraint = 'ASAP';
+      if (!TASK_TYPES[t.type]) t.type = 'FixedUnits';
+      t.preds = arr(t.preds).filter(isObj).map(function (l) {
+        return { uid: uidOf(l), type: LINK_TYPES.indexOf(l.type) >= 0 ? l.type : 'FS', lag: num(l.lag, 0) };
+      }).filter(function (l) { return l.uid; });
+      t.assignments = arr(t.assignments).filter(isObj).map(function (a) {
+        return { res: uidOf({ uid: a.res }), units: Math.max(0, num(a.units, 0)) };
+      }).filter(function (a) { return a.res; });
+      t.splits = arr(t.splits).filter(isObj).map(function (x) { return { at: num(x.at, 0), gap: Math.max(0, num(x.gap, 0)) }; });
+      var custom = {};
+      if (isObj(t.custom)) for (var c in t.custom) {
+        var v = t.custom[c];
+        if (typeof v === 'string' || (typeof v === 'number' && isFinite(v))) custom[c] = v;
+      }
+      t.custom = custom;
     });
-    p.resources.forEach(function (r) { fill(r, RES_DEFAULTS); });
+    p.resources.forEach(function (r) {
+      fill(r, RES_DEFAULTS);
+      ['name', 'initials', 'role', 'materialLabel'].forEach(function (k) { r[k] = str(r[k]); });
+      if (RES_TYPES.indexOf(r.type) < 0) r.type = 'Full-time';
+      if (RES_KINDS.indexOf(r.kind) < 0) r.kind = 'Work';
+      r.maxUnits = Math.max(1, num(r.maxUnits, 100));
+      r.rate = Math.max(0, num(r.rate, 0));
+      r.costPerUse = Math.max(0, num(r.costPerUse, 0));
+      r.rates = arr(r.rates).filter(isObj).map(function (e) { return { from: str(e.from), rate: Math.max(0, num(e.rate, 0)) }; });
+      r.workDays = arr(r.workDays).map(Number).filter(function (d) { return d >= 0 && d <= 6 && d === Math.floor(d); });
+      r.vacations = arr(r.vacations).map(str);
+      r.reportsTo = uidOf({ uid: r.reportsTo }) || null;
+    });
+    if (!isObj(p.baseline) || !isObj(p.baseline.tasks)) p.baseline = null;
+    else p.baseline.savedAt = str(p.baseline.savedAt);
     p.version = 2;
+    normalizeLevels(p);
     return p;
   }
+
+  function isObj(o) { return o != null && typeof o === 'object' && !Array.isArray(o); }
+  function arr(v) { return Array.isArray(v) ? v : []; }
+  function str(v) { return v == null ? '' : String(v); }
+  function num(v, d) { v = +v; return isFinite(v) ? v : d; }
+  function uidOf(o) { var u = +o.uid; return u > 0 && u === Math.floor(u) ? u : 0; }
 
   function isSummary(p, i) {
     return i + 1 < p.tasks.length && p.tasks[i + 1].level > p.tasks[i].level;
@@ -279,7 +351,7 @@ OP.model = (function () {
 
 /* ---------- scheduler (critical path method) ---------- */
 
-OP.schedule = function (p) {
+OP.schedule = function (p, opts) {
   var U = OP.util, M = OP.model;
   var tasks = p.tasks, n = tasks.length;
   var cal = new OP.Calendar(U.parseDate(p.start) || U.todayDn(), p.holidays);
@@ -363,6 +435,7 @@ OP.schedule = function (p) {
     });
   }
   var cycle = stuck.filter(function (i) { return onLoop[i]; });
+  if (opts && opts.cycleOnly) return { cycle: cycle.map(function (i) { return i + 1; }) };
 
   // Earliest start allowed by one link, given the predecessor's dates.
   function linkStart(e, sp) {
@@ -475,8 +548,9 @@ OP.schedule = function (p) {
   // Resource loading and cost.
   var status = U.parseDate(p.statusDate) || U.todayDn();
   var statusIdx = cal.finishIndex(status);
-  var load = {}, contrib = {};
-  p.resources.forEach(function (res) { load[res.uid] = {}; contrib[res.uid] = {}; });
+  var load = {}, contrib = {}, agg = {}, dayCost = {};
+  p.resources.forEach(function (res) { load[res.uid] = {}; contrib[res.uid] = {}; agg[res.uid] = { work: 0, cost: 0, qty: 0 }; });
+  function addDayCost(day, v) { dayCost[day] = (dayCost[day] || 0) + v; }
   var base = p.baseline && p.baseline.tasks || null;
   rows.forEach(function (r) {
     var t = r.task;
@@ -485,29 +559,45 @@ OP.schedule = function (p) {
     r.material = {};
     if (r.summary) return;
     r.segs = segments(r.i);
-    var d = dur(r.i);
-    r.cost += +t.fixedCost || 0;
+    var d = dur(r.i), flat = +t.fixedCost || 0;
     t.assignments.forEach(function (as) {
-      var res = resByUid[as.res];
+      var res = resByUid[as.res], ag = agg[as.res];
       if (!res) return;
-      if (res.kind === 'Cost') { r.cost += +as.units || 0; return; }
-      r.cost += +res.costPerUse || 0;
+      if (res.kind === 'Cost') { flat += +as.units || 0; ag.cost += +as.units || 0; return; }
+      var once = +res.costPerUse || 0;
       if (res.kind === 'Material') {
-        r.cost += (+as.units || 0) * (+res.rate || 0);
+        once += (+as.units || 0) * (+res.rate || 0);
+        ag.qty += +as.units || 0;
         r.material[res.uid] = (r.material[res.uid] || 0) + (+as.units || 0);
-        return;
       }
+      flat += once;
+      ag.cost += once;
+      if (res.kind === 'Material') return;
       var perDay = as.units / 100 * hpd;
       r.work += perDay * d;
+      ag.work += perDay * d;
       r.segs.forEach(function (sg) {
         for (var day = Math.floor(sg[0]); day < Math.ceil(sg[1]); day++) {
           var frac = Math.min(sg[1], day + 1) - Math.max(sg[0], day);
           if (frac <= 0) continue;
           load[res.uid][day] = (load[res.uid][day] || 0) + as.units;
           (contrib[res.uid][day] = contrib[res.uid][day] || []).push(r.i);
-          r.cost += perDay * frac * M.rateOn(res, cal.date(day));
+          var c = perDay * frac * M.rateOn(res, cal.date(day));
+          r.cost += c;
+          ag.cost += c;
+          addDayCost(day, c);
         }
       });
+    });
+    r.cost += flat;
+    // Fixed, per-use, material and cost-resource amounts are spread over the days actually worked.
+    var worked = r.segs.reduce(function (a, sg) { return a + Math.max(0, sg[1] - sg[0]); }, 0);
+    if (flat && !worked) addDayCost(Math.floor(r.es), flat);
+    else if (flat) r.segs.forEach(function (sg) {
+      for (var day = Math.floor(sg[0]); day < Math.ceil(sg[1]); day++) {
+        var frac = Math.min(sg[1], day + 1) - Math.max(sg[0], day);
+        if (frac > 0) addDayCost(day, flat * frac / worked);
+      }
     });
     // Tracking: actual cost follows % complete; earned value needs a baseline.
     var pct = Math.max(0, Math.min(100, +t.percent || 0)) / 100;
@@ -589,29 +679,12 @@ OP.schedule = function (p) {
       var dn = cal.date(day);
       return vac[dn] || wd.indexOf(U.weekday(dn)) < 0 ? 0 : res.maxUnits;
     };
-    var peak = 0, overDays = [], work = 0, cost = 0, qty = 0, L = load[res.uid];
+    var peak = 0, overDays = [], L = load[res.uid], ag = agg[res.uid];
     for (var dd in L) {
       if (L[dd] > peak) peak = L[dd];
       if (L[dd] > capOn(+dd) + 1e-9) overDays.push(+dd);
     }
-    rows.forEach(function (r) {
-      if (r.summary) return;
-      r.task.assignments.forEach(function (a) {
-        if (a.res !== res.uid) return;
-        if (res.kind === 'Cost') { cost += +a.units || 0; return; }
-        cost += +res.costPerUse || 0;
-        if (res.kind === 'Material') { qty += +a.units || 0; cost += (+a.units || 0) * (+res.rate || 0); return; }
-        var perDay = a.units / 100 * hpd;
-        work += perDay * r.duration;
-        r.segs.forEach(function (sg) {
-          for (var day = Math.floor(sg[0]); day < Math.ceil(sg[1]); day++) {
-            var frac = Math.min(sg[1], day + 1) - Math.max(sg[0], day);
-            if (frac > 0) cost += perDay * frac * M.rateOn(res, cal.date(day));
-          }
-        });
-      });
-    });
-    resStats[res.uid] = { peak: peak, overDays: overDays.sort(function (x, y) { return x - y; }), over: overDays.length > 0, work: work, cost: cost, qty: qty, capOn: capOn };
+    resStats[res.uid] = { peak: peak, overDays: overDays.sort(function (x, y) { return x - y; }), over: overDays.length > 0, work: ag.work, cost: ag.cost, qty: ag.qty, capOn: capOn };
   });
   rows.forEach(function (r) {
     r.over = !r.summary && r.task.assignments.some(function (a) {
@@ -637,7 +710,7 @@ OP.schedule = function (p) {
 
   var hasTasks = leaves.length > 0;
   return {
-    rows: rows, edges: edges, cal: cal, load: load, contrib: contrib, resStats: resStats, ev: ev,
+    rows: rows, edges: edges, cal: cal, load: load, contrib: contrib, resStats: resStats, ev: ev, dayCost: dayCost,
     cycle: cycle.map(function (i) { return i + 1; }),
     duration: projEF,
     statusDn: status,
@@ -662,24 +735,24 @@ OP.setBaseline = function (p) {
 // Repeats the pass a few times because as-late-as-possible tasks can slide back into a conflict.
 OP.level = function (p) {
   p.tasks.forEach(function (t) { t.levelDelay = 0; });
-  var moved = {}, left = [];
+  var moved = {}, left = [], s2 = null;
   for (var pass = 0; pass < 4; pass++) {
-    levelPass(p, moved);
-    var s2 = OP.schedule(p);
+    levelPass(p, moved, s2);
+    s2 = OP.schedule(p);
     left = p.resources.filter(function (res) { return s2.resStats[res.uid].over; }).map(function (res) { return res.name || '(unnamed)'; });
     if (!left.length) break;
   }
   return { moved: Object.keys(moved).length, unresolved: left };
 };
 
-function levelPass(p, movedSet) {
+function levelPass(p, movedSet, s) {
   var resByUid = {}, usage = {}, placed = {}, n = 0;
   p.resources.forEach(function (r) { resByUid[r.uid] = r; usage[r.uid] = {}; });
-  var s = OP.schedule(p);
+  s = s || OP.schedule(p);
   var leaves = s.rows.filter(function (r) { return !r.summary; });
+  var predsOf = {};
+  s.edges.forEach(function (e) { (predsOf[e.to] = predsOf[e.to] || []).push(e.from); });
   while (n++ < leaves.length) {
-    var predsOf = {};
-    s.edges.forEach(function (e) { (predsOf[e.to] = predsOf[e.to] || []).push(e.from); });
     var ready = s.rows.filter(function (r) {
       return !r.summary && !placed[r.i] && (predsOf[r.i] || []).every(function (q) { return placed[q]; });
     });
