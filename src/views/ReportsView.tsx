@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import OP from '../core';
-import { useStore, type Store } from '../store';
+import { useApp, type Store } from '../store';
 import { runAction } from '../lib/actions';
 import Icon from '../components/Icon';
 import { Kpi } from './BudgetView';
@@ -106,7 +106,7 @@ const build: Record<string, (st: Store) => ReactNode> = {
     return <div key={r.uid}>
       <h3>{r.name || '(unnamed)'} <span className="muted small">{r.role || r.kind}</span></h3>
       <Table head={[['ID'], ['Task'], ['Start'], ['Finish'], ['Units', true], ['Work', true]]} rows={list.map((row: Row) => {
-        const a = row.task.assignments.find((x: any) => x.res === r.uid);
+        const a = row.task.assignments.find(x => x.res === r.uid)!;
         return [row.id, row.task.name, d(row.startDn), d(row.finishDn), r.kind === 'Work' ? a.units + '%' : U.num(a.units),
           r.kind === 'Work' ? U.num(a.units / 100 * st.p.hoursPerDay * row.duration) + 'h' : ''];
       })} />
@@ -120,7 +120,7 @@ const build: Record<string, (st: Store) => ReactNode> = {
         <Kpi k="BAC" v={money(ev.bac)} /><Kpi k="SPI" v={rt(ev.spi)} s={'SV ' + U.money(ev.sv)} />
         <Kpi k="CPI" v={rt(ev.cpi)} s={'CV ' + U.money(ev.cv)} /><Kpi k="EAC" v={money(ev.eac)} s={'VAC ' + U.money(ev.vac)} />
       </div>
-      <p className="muted">Status date {d(s.statusDn)}. BCWS = planned value, BCWP = earned value (baseline cost × % complete), ACWP = actual cost. SPI/CPI below 1.00 means behind schedule / over cost.</p>
+      <p className="muted">Status date {d(s.statusDn)}. BCWS = planned value, BCWP = earned value (baseline cost × % complete), ACWP = actual cost, estimated as planned cost × % complete (OpenPlan does not record actual spending), so CPI mainly reflects cost changes since the baseline. SPI/CPI below 1.00 means behind schedule / over cost.</p>
       <Table head={[['WBS'], ['Package'], ['BCWS', true], ['BCWP', true], ['ACWP', true], ['SV', true], ['CV', true], ['SPI', true], ['CPI', true]]}
         rows={s.rows.filter((r: Row) => r.task.level === 1).map((r: Row) => [r.wbs, r.task.name, U.money(r.bcws), U.money(r.bcwp), U.money(r.acwp), U.money(r.bcwp - r.bcws), U.money(r.bcwp - r.acwp),
           r.bcws ? (r.bcwp / r.bcws).toFixed(2) : '—', r.acwp ? (r.bcwp / r.acwp).toFixed(2) : '—'])}
@@ -130,8 +130,8 @@ const build: Record<string, (st: Store) => ReactNode> = {
   variance: st => {
     if (!st.p.baseline) return <NeedBaseline />;
     return <Table head={[['ID'], ['Task'], ['Start'], ['Baseline start'], ['Start var.', true], ['Finish'], ['Baseline finish'], ['Finish var.', true], ['Cost var.', true]]}
-      rows={st.s.rows.filter((r: Row) => r.base).map((r: Row) => [r.id, r.summary ? <b>{r.task.name}</b> : r.task.name, d(r.startDn), d(r.base.startDn), sd(r.startVar),
-        d(r.finishDn), d(r.base.finishDn), sd(r.finishVar), U.money(r.costVar)])} />;
+      rows={st.s.rows.filter((r: Row) => r.base).map((r: Row) => [r.id, r.summary ? <b>{r.task.name}</b> : r.task.name, d(r.startDn), d(r.base!.startDn), sd(r.startVar),
+        d(r.finishDn), d(r.base!.finishDn), sd(r.finishVar), U.money(r.costVar)])} />;
   },
   tasks: st => (
     <Table head={[['ID'], ['WBS'], ['Task'], ['Duration', true], ['Start'], ['Finish'], ['Predecessors'], ['Resources'], ['Cost', true]]}
@@ -142,7 +142,7 @@ const build: Record<string, (st: Store) => ReactNode> = {
 };
 
 export default function ReportsView() {
-  const st = useStore();
+  const st = useApp();
   const id = build[st.report] ? st.report : 'overview';
   const title = REPORTS.find(r => r[0] === id)![1];
   return (
