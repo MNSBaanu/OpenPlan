@@ -1,9 +1,9 @@
-import { useMemo, useRef, type MouseEvent as RMouseEvent } from 'react';
+import { useLayoutEffect, useMemo, useRef, type MouseEvent as RMouseEvent } from 'react';
 import OP from '../core';
-import { useStore, S, focusKey, rowByUid, type Store } from '../store';
+import { useApp, S, ask, focusKey, rowByUid, type Store } from '../store';
 import { activeCols, colDef, gridItems, menuData, type GroupItem } from '../lib/grid';
 import * as ops from '../lib/taskOps';
-import Field from '../components/Field';
+import Field, { DateField } from '../components/Field';
 import Icon from '../components/Icon';
 import type { Row } from '../types';
 
@@ -20,7 +20,7 @@ export function scrollToSelected() {
   chartEl.scrollLeft = Math.max(0, chartGeom.X(r ? r.startDn : st.s.startDn) - 60);
 }
 
-function taskUids(st: Store) { return gridItems(st).filter((x: any) => !x.group).map((r: Row) => r.task.uid); }
+function taskUids(st: Store) { return gridItems(st).filter((x): x is Row => !(x as GroupItem).group).map(r => r.task.uid); }
 
 function clickSelect(uid: number, e: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) {
   const st = S();
@@ -95,17 +95,20 @@ function Timeline({ st }: { st: Store }) {
     while (lanes[lane] != null && lanes[lane] >= r.startDn) lane++;
     lanes[lane] = r.finishDn;
     const l = pct(r.startDn);
-    return { r, lane: Math.min(lane, 2), l, w: Math.max(0.8, pct(r.finishDn + 1) - l) };
+    return { r, lane, l, w: Math.max(0.8, pct(r.finishDn + 1) - l) };
   });
+  // Lanes beyond the three styled ones stack below the track, which grows to fit them.
+  const extra = Math.max(0, lanes.length - 3);
+  const laneStyle = (lane: number) => (lane < 3 ? {} : { top: 57 + (lane - 3) * 18, height: 15 });
   const today = U.todayDn();
   const pick = (uid: number) => { st.select([uid], uid); requestAnimationFrame(scrollToSelected); };
   return (
     <div className="timeline">
       <div className="tl-inner">
         <div className="tl-date start">Start<b>{U.fmtLong(s.startDn)}</b></div>
-        <div className="tl-track">
+        <div className="tl-track" style={extra ? { height: 58 + extra * 18 } : undefined}>
           {phases.map(({ r, lane, l, w }: any) => (
-            <div key={r.task.uid} className={'tl-seg lane' + lane} style={{ left: l + '%', width: w + '%' }}
+            <div key={r.task.uid} className={'tl-seg lane' + (lane < 3 ? lane : 2)} style={{ left: l + '%', width: w + '%', ...laneStyle(lane) }}
               title={r.task.name + ': ' + U.fmt(r.startDn) + ' – ' + U.fmt(r.finishDn)} onClick={() => pick(r.task.uid)}>
               <span>{r.task.name}</span><small>{U.fmt(r.startDn)} – {U.fmt(r.finishDn)}</small>
             </div>
@@ -150,7 +153,7 @@ function Cell({ st, k, r, idx }: { st: Store; k: string; r: Row; idx: any }) {
           {r.summary && st.group === 'none'
             ? <button className="caret" aria-label="Expand or collapse" onClick={() => st.setUI({ collapsed: { ...st.collapsed, [uid]: !st.collapsed[uid] } })}><Icon name={st.collapsed[uid] ? 'chevR' : 'chevD'} /></button>
             : <span className="caret none" />}
-          <Field className="cell name" fk={uid + ':name'} value={t.name} placeholder="Task name" spellCheck={false}
+          <Field className="cell name" fk={uid + ':name'} value={t.name} placeholder="Task name" spellCheck={false} aria-label={'Task ' + r.id + ' name'}
             onFocus={focusSel} onCommit={v => commitCell('name', uid, v)} onNav={d => navFrom(uid, 'name', d)} />
         </div>
       </td>
@@ -165,20 +168,21 @@ function Cell({ st, k, r, idx }: { st: Store; k: string; r: Row; idx: any }) {
     );
   }
   if (k === 'preds') {
-    return <td><Field className="cell" fk={uid + ':preds'} value={M.formatPreds(st.p, t, idx)} spellCheck={false}
+    return <td><Field className="cell" fk={uid + ':preds'} value={M.formatPreds(st.p, t, idx)} spellCheck={false} aria-label={'Task ' + r.id + ' predecessors'}
       onFocus={focusSel} onCommit={v => commitCell('preds', uid, v)} onNav={d => navFrom(uid, 'preds', d)} /></td>;
   }
   const ro = !c.edit || (r.summary && c.sumRo);
-  const val = c.get ? c.get(r) : c.cf ? (t.custom[c.cf] == null ? '' : String(t.custom[c.cf])) : c.field ? String(t[c.field] ?? '') : '';
+  const fieldVal = c.field ? String((t as unknown as Record<string, unknown>)[c.field] ?? '') : '';
+  const val = c.get ? c.get(r) : c.cf ? (t.custom[c.cf] == null ? '' : String(t.custom[c.cf])) : fieldVal;
   if (ro) return <td className={'ro' + (c.num ? ' num' : '')}>{val}</td>;
-  const fk = uid + ':' + k;
-  if (c.edit === 'date') return <td><input className="cell" type="date" data-fk={fk} value={t[c.field!] || ''} onFocus={focusSel} onChange={e => commitCell(k, uid, e.target.value)} /></td>;
+  const fk = uid + ':' + k, label = 'Task ' + r.id + ' ' + c.t;
+  if (c.edit === 'date') return <td><DateField className="cell" fk={fk} value={fieldVal} aria-label={label} onFocus={focusSel} onCommit={v => { commitCell(k, uid, v); }} /></td>;
   if (c.edit === 'select') {
-    return <td><select className="cell" data-fk={fk} value={t[c.field!]} onFocus={focusSel} onChange={e => commitCell(k, uid, e.target.value)}>
+    return <td><select className="cell" data-fk={fk} value={fieldVal} aria-label={label} onFocus={focusSel} onChange={e => commitCell(k, uid, e.target.value)}>
       {Object.entries(c.options!).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
     </select></td>;
   }
-  return <td><Field className={'cell' + (c.num ? ' num' : '')} fk={fk} value={val} spellCheck={false}
+  return <td><Field className={'cell' + (c.num ? ' num' : '')} fk={fk} value={val} spellCheck={false} aria-label={label}
     onFocus={focusSel} onCommit={v => commitCell(k, uid, v)} onNav={d => navFrom(uid, k, d)} /></td>;
 }
 
@@ -263,11 +267,13 @@ function dragMove(e: PointerEvent) {
     drag.line.setAttribute('x2', e.clientX - drag.rect.left); drag.line.setAttribute('y2', e.clientY - drag.rect.top);
     setTip(e, 'Link to…');
   } else if (drag.mode === 'move') {
+    const cal = S().s.cal;
     drag.ghost.setAttribute('x', pos.s + days * g.ppd);
-    setTip(e, 'Start ' + U.fmt(drag.r.startDn + days));
+    setTip(e, 'Start ' + U.fmt(cal.date(cal.indexOf(drag.r.startDn + days))));
   } else {
+    const cal = S().s.cal, nf = Math.max(drag.r.startDn, drag.r.finishDn + days);
     drag.ghost.setAttribute('width', Math.max(g.ppd, pos.e - pos.s + days * g.ppd));
-    setTip(e, 'Finish ' + U.fmt(Math.max(drag.r.startDn, drag.r.finishDn + days)));
+    setTip(e, 'Finish ' + U.fmt(Math.max(drag.r.startDn, cal.date(Math.max(0, cal.finishIndex(nf) - 1)))));
   }
 }
 
@@ -280,21 +286,38 @@ function dragEnd(e: PointerEvent) {
   if (drag.mode === 'link') {
     const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.gbar') as SVGGElement | null;
     const tu = target ? +target.dataset.uid! : 0;
-    if (tu && ops.addLink(uid, tu)) st.toast('Linked ' + r.id + ' → ' + rowByUid(tu).id + ' (finish-to-start)');
+    if (tu && ops.addLink(uid, tu)) st.toast('Linked ' + r.id + ' → ' + rowByUid(tu)!.id + ' (finish-to-start)');
   } else if (drag.mode === 'move') {
     if (!days) return;
-    const ns = cal.date(cal.indexOf(r.startDn + days));
-    const hasActual = !!r.task.actualStart;
-    st.commit(p => {
-      const t = ops.findTask(p, uid);
-      if (t.actualStart) t.actualStart = U.iso(ns);
-      else { t.constraint = 'SNET'; t.constraintDate = U.iso(ns); }
-    });
-    st.toast(hasActual ? 'Actual start moved to ' + U.fmt(ns) : 'Start no earlier than ' + U.fmt(ns));
+    const ns = cal.date(cal.indexOf(r.startDn + days)), t0 = r.task;
+    const shift = cal.indexOf(ns) - cal.indexOf(r.startDn);
+    // Report when links keep the task from moving as far as it was dropped.
+    const report = (msg: string) => {
+      const after = rowByUid(uid);
+      st.toast(after && after.startDn > ns ? msg + '. Its predecessors keep it from starting before ' + U.fmt(after.startDn) + '.' : msg);
+    };
+    if (t0.actualStart) {
+      st.commit(p => { ops.findTask(p, uid).actualStart = U.iso(ns); });
+      report('Actual start moved to ' + U.fmt(ns));
+    } else if (t0.constraint === 'MSO' || t0.constraint === 'MFO') {
+      // Hard constraints move with the bar instead of being replaced.
+      st.commit(p => {
+        const t = ops.findTask(p, uid), cd = U.parseDate(t.constraintDate);
+        t.constraintDate = t.constraint === 'MSO' || cd == null ? U.iso(ns) : U.iso(cal.date(Math.max(0, cal.indexOf(cd) + shift)));
+      });
+      report(M.CONSTRAINTS[t0.constraint] + ' date moved');
+    } else {
+      const apply = () => {
+        S().commit(p => { const t = ops.findTask(p, uid); t.constraint = 'SNET'; t.constraintDate = U.iso(ns); });
+        report('Start no earlier than ' + U.fmt(ns));
+      };
+      if (t0.constraint === 'ASAP' || t0.constraint === 'SNET') apply();
+      else ask('Replace the “' + M.CONSTRAINTS[t0.constraint] + '” constraint with “Start no earlier than ' + U.fmt(ns) + '”?', apply, 'Replace');
+    }
   } else {
     if (!days) return;
     const nf = Math.max(r.startDn, r.finishDn + days);
-    const gaps = (r.task.splits || []).reduce((a: number, sp: any) => a + (+sp.gap || 0), 0);
+    const gaps = (r.task.splits || []).reduce((a: number, sp: any) => a + (sp.at > 0 && sp.at < r.duration ? +sp.gap || 0 : 0), 0);
     const nd = Math.max(1, cal.finishIndex(nf) - cal.indexOf(r.startDn) - gaps);
     st.commit(p => { ops.setDuration(p, ops.findTask(p, uid), nd); });
   }
@@ -303,17 +326,33 @@ function dragEnd(e: PointerEvent) {
 /* ---------- view ---------- */
 
 export default function GanttView() {
-  const st = useStore();
+  const st = useApp();
   const list = useMemo(() => gridItems(st), [st.s, st.filter, st.group, st.sort, st.collapsed]);
   const md = menuData(st);
   const gridRef = useRef<HTMLDivElement>(null);
   const syncing = useRef(false);
 
   const g = useMemo(() => C.gantt({
-    p: st.p, s: st.s, rows: list, zoom: st.zoom, critical: st.critical,
-    selected: Object.fromEntries(st.sel.map(u => [u, true])), baseline: st.showBaseline && !!st.p.baseline
-  }), [st.p, st.s, list, st.zoom, st.critical, st.sel, st.showBaseline]);
+    p: st.p, s: st.s, rows: list, zoom: st.zoom, critical: st.critical, baseline: st.showBaseline && !!st.p.baseline
+  }), [st.p, st.s, list, st.zoom, st.critical, st.showBaseline]);
   chartGeom = g;
+
+  // Selection highlight is drawn into the existing SVG so selecting does not rebuild the chart.
+  useLayoutEffect(() => {
+    const svg = chartEl?.querySelector('svg');
+    if (!svg) return;
+    svg.querySelectorAll('.gsel').forEach(n => n.remove());
+    const before = svg.querySelector('.gbar'), w = svg.getAttribute('width') || '0';
+    st.sel.forEach(uid => {
+      const ps = g.pos[uid];
+      if (!ps || !before) return;
+      const rc = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rc.setAttribute('class', 'gsel');
+      rc.setAttribute('x', '0'); rc.setAttribute('y', String(C.HDR + ps.row * C.ROW));
+      rc.setAttribute('width', w); rc.setAttribute('height', String(C.ROW));
+      svg.insertBefore(rc, before);
+    });
+  }, [g, st.sel]);
 
   const conflicts = st.s.rows.filter((r: Row) => r.conflict).length;
   const sync = (from: HTMLDivElement | null, to: HTMLDivElement | null) => {
@@ -364,6 +403,10 @@ export default function GanttView() {
           onScroll={e => sync(e.currentTarget, gridRef.current)}
           onClick={onChartClick}
           onDoubleClick={e => { if ((e.target as Element).closest('.gbar')) st.setUI({ drawer: true }); }}
+          onKeyDown={e => {
+            const b = (e.target as Element).closest('.gbar') as SVGGElement | null;
+            if (b && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); clickSelect(+b.dataset.uid!, e); st.setUI({ drawer: true }); }
+          }}
           onPointerDown={onChartPointerDown}
           dangerouslySetInnerHTML={{ __html: g.svg + '<div style="height:' + C.ROW * 2 + 'px"></div>' }} />
       </div>
