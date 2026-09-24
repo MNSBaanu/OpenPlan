@@ -1,15 +1,14 @@
 import OP from '../core';
-import { ask, useStore } from '../store';
+import { ask, useApp } from '../store';
 import { addResource, levelAll } from '../lib/taskOps';
 import Field from '../components/Field';
 import Icon from '../components/Icon';
 import type { Resource } from '../types';
 
 const U = OP.util, M = OP.model;
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function ResourcesView() {
-  const st = useStore(), p = st.p, stats = st.s.resStats, cur = p.currency;
+  const st = useApp(), p = st.p, stats = st.s.resStats, cur = p.currency;
   const counts: Record<string, number> = {};
   p.resources.forEach(r => { counts[r.type] = (counts[r.type] || 0) + 1; });
   const summary = M.RES_TYPES.filter((t: string) => counts[t]).map((t: string) => counts[t] + ' ' + t.toLowerCase()).join(' · ');
@@ -23,6 +22,24 @@ export function ResourcesView() {
       pp.tasks.forEach(t => { t.assignments = t.assignments.filter(a => a.res !== r.uid); });
     });
     if (used) ask('Remove ' + (r.name || 'this resource') + ' and all their task assignments?', run, 'Remove');
+    else run();
+  };
+  // A person cannot report to someone who (directly or indirectly) reports to them.
+  const reportsUnder = (uid: number, boss: number) => {
+    const seen = new Set<number>();
+    for (let q = p.resources.find(x => x.uid === boss); q && !seen.has(q.uid); q = p.resources.find(x => x.uid === q!.reportsTo)) {
+      if (q.uid === uid) return true;
+      seen.add(q.uid);
+    }
+    return false;
+  };
+  const setKind = (r: Resource, kind: Resource['kind']) => {
+    const run = () => st.commit(pp => {
+      pp.resources.find(x => x.uid === r.uid)!.kind = kind;
+      pp.tasks.forEach(t => t.assignments.forEach(a => { if (a.res === r.uid) a.units = kind === 'Work' ? 100 : kind === 'Material' ? 1 : 0; }));
+    });
+    const n = p.tasks.filter(t => t.assignments.some(a => a.res === r.uid)).length;
+    if (n) ask('Change ' + (r.name || 'this resource') + ' to a ' + kind.toLowerCase() + ' resource? Units on ' + n + ' assignment' + (n > 1 ? 's' : '') + ' will be reset.', run, 'Change');
     else run();
   };
 
@@ -48,7 +65,7 @@ export function ResourcesView() {
                 {p.resources.map(r => {
                   const s = stats[r.uid] || { work: 0, cost: 0, peak: 0, qty: 0 }, work = r.kind === 'Work';
                   const extra: string[] = [];
-                  if (work && r.workDays.join() !== '1,2,3,4,5') extra.push(r.workDays.map(d => DAY_NAMES[d]).join(' '));
+                  if (work && r.workDays.join() !== '1,2,3,4,5') extra.push(r.workDays.map(d => U.DAYS[d]).join(' '));
                   if (work && r.vacations.length) extra.push(r.vacations.length + ' day' + (r.vacations.length > 1 ? 's' : '') + ' off');
                   if (work && r.rates.length) extra.push(r.rates.length + ' rate change' + (r.rates.length > 1 ? 's' : ''));
                   return (
@@ -58,13 +75,7 @@ export function ResourcesView() {
                         {extra.length > 0 && <div className="muted small sub-note">{extra.join(' · ')}</div>}</td>
                       <td><Field className="inp" value={r.initials} onCommit={v => { edit(r.uid, x => { x.initials = v; }); }} /></td>
                       <td><Field className="inp" value={r.role} placeholder="e.g. Developer" onCommit={v => { edit(r.uid, x => { x.role = v; }); }} /></td>
-                      <td><select className="sel" value={r.kind} onChange={e => {
-                        const kind = e.target.value as Resource['kind'];
-                        st.commit(pp => {
-                          pp.resources.find(x => x.uid === r.uid)!.kind = kind;
-                          pp.tasks.forEach(t => t.assignments.forEach(a => { if (a.res === r.uid) a.units = kind === 'Work' ? 100 : kind === 'Material' ? 1 : 0; }));
-                        });
-                      }}>{M.RES_KINDS.map((k: string) => <option key={k}>{k}</option>)}</select></td>
+                      <td><select className="sel" value={r.kind} onChange={e => setKind(r, e.target.value as Resource['kind'])}>{M.RES_KINDS.map((k: string) => <option key={k}>{k}</option>)}</select></td>
                       <td><select className="sel" value={r.type} disabled={!work} onChange={e => { const v = e.target.value; edit(r.uid, x => { x.type = v; }); }}>
                         {M.RES_TYPES.map((t: string) => <option key={t}>{t}</option>)}</select></td>
                       <td>{work && <Field className="inp" type="number" min={1} max={1000} step={5} value={String(r.maxUnits)}
@@ -73,7 +84,7 @@ export function ResourcesView() {
                         onCommit={v => { edit(r.uid, x => { x.rate = Math.max(0, +v || 0); }); }} />}</td>
                       <td>{work && <select className="sel" value={r.reportsTo ?? ''} onChange={e => { const v = e.target.value; edit(r.uid, x => { x.reportsTo = v ? +v : null; }); }}>
                         <option value="">—</option>
-                        {p.resources.filter(o => o.uid !== r.uid && o.kind === 'Work').map(o => <option key={o.uid} value={o.uid}>{o.name || '(unnamed)'}</option>)}
+                        {p.resources.filter(o => o.uid !== r.uid && o.kind === 'Work' && !reportsUnder(r.uid, o.uid)).map(o => <option key={o.uid} value={o.uid}>{o.name || '(unnamed)'}</option>)}
                       </select>}</td>
                       <td className="num">{work ? U.num(s.work) + 'h' : r.kind === 'Material' ? U.num(s.qty) + ' ' + r.materialLabel : ''}</td>
                       <td className="num">{U.money(s.cost)}</td>
@@ -97,7 +108,7 @@ export function ResourcesView() {
 }
 
 export function WorkloadView() {
-  const st = useStore(), p = st.p, s = st.s;
+  const st = useApp(), p = st.p, s = st.s;
   const people = p.resources.filter(r => r.kind === 'Work');
   const weeks: { dn: number; days: number[] }[] = [];
   const wkIndex: Record<number, number> = {};
@@ -111,8 +122,8 @@ export function WorkloadView() {
       <div className="view-head"><h1>Workload</h1><span className="sub">Peak daily allocation per week — red cells exceed availability (max units, working days, vacations)</span></div>
       <div className="toolbar">
         <div className="legend">
-          <span><i style={{ background: '#e8eaff' }} />Light</span><span><i style={{ background: '#a5acf5' }} />Heavy</span>
-          <span><i style={{ background: '#ffe0e6' }} />Overallocated</span><span><i className="hatch" />Not available</span>
+          <span><i className="l1" />Light</span><span><i className="l3" />Heavy</span>
+          <span><i className="over" />Overallocated</span><span><i className="hatch" />Not available</span>
         </div>
         <span className="spacer" />
         <button className="btn" onClick={levelAll}><Icon name="balance" />Level All</button>
