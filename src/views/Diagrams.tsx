@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef } from 'react';
-import { useStore, S } from '../store';
+import { useApp, useStore, S } from '../store';
 import { runAction, viewSvgString } from '../lib/actions';
 import Icon from '../components/Icon';
 
@@ -14,16 +14,19 @@ function Canvas({ svg, nodeClass }: { svg: string; nodeClass?: string }) {
     el.setAttribute('width', String(Math.round(+el.dataset.w * zoom)));
     el.setAttribute('height', String(Math.round(+el.dataset.h! * zoom)));
   }, [svg, zoom]);
+  const pick = (target: EventTarget) => {
+    if (!nodeClass) return false;
+    const g = (target as Element).closest('.' + nodeClass) as SVGGElement | null;
+    if (!g) return false;
+    const uid = +g.dataset.uid!;
+    S().select([uid], uid);
+    S().setUI({ drawer: true });
+    return true;
+  };
   return (
     <div className="canvas" id="canvas" ref={ref} dangerouslySetInnerHTML={{ __html: svg }}
-      onClick={e => {
-        if (!nodeClass) return;
-        const g = (e.target as Element).closest('.' + nodeClass) as SVGGElement | null;
-        if (!g) return;
-        const uid = +g.dataset.uid!;
-        S().select([uid], uid);
-        S().setUI({ drawer: true });
-      }} />
+      onClick={e => { pick(e.target); }}
+      onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && pick(e.target)) e.preventDefault(); }} />
   );
 }
 
@@ -50,7 +53,7 @@ const Empty = ({ title, text }: { title: string; text: string }) => (
 );
 
 export function NetworkView() {
-  const st = useStore();
+  const st = useApp();
   const svg = useMemo(() => viewSvgString(st), [st.p, st.s, st.netScope, st.netDates, st.critical, st.view]);
   const tops = st.s.rows.filter((r: any) => r.summary && r.task.level === 1);
   return (
@@ -74,7 +77,7 @@ export function NetworkView() {
 }
 
 export function WbsView() {
-  const st = useStore();
+  const st = useApp();
   const svg = useMemo(() => viewSvgString(st), [st.p, st.s, st.wbsDepth, st.view]);
   const maxLv = st.s.rows.reduce((a: number, r: any) => Math.max(a, r.task.level), 1);
   const levels: number[] = [];
@@ -94,7 +97,7 @@ export function WbsView() {
 }
 
 export function OrgView() {
-  const st = useStore();
+  const st = useApp();
   const svg = useMemo(() => viewSvgString(st), [st.p, st.view]);
   return (
     <div className="view">
