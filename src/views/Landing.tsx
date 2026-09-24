@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import '@fontsource-variable/inter';
 import OP from '../core';
-import { useStore, S, ask } from '../store';
+import { useApp, S, ask } from '../store';
 import Icon from '../components/Icon';
 
 const C = OP.charts;
@@ -38,7 +38,7 @@ const SPEC: [string, string][] = [
   ['Resources', 'Work, material and cost resources, rates and rate changes, vacations, a weekly workload view and leveling.'],
   ['Tracking', 'Baselines, % complete, actual dates, a status date, and earned value: SPI, CPI and EAC.'],
   ['Cost', 'Budget versus planned cost, cost by work package and by resource, monthly and cumulative spend.'],
-  ['Output', '10 printable reports, PNG and SVG export of every chart, project XML and CSV import and export.']
+  ['Output', '10 printable reports, PNG and SVG export of every chart, project XML import and export, and CSV export.']
 ];
 
 function useSample() {
@@ -75,7 +75,7 @@ function Preview({ sample }: { sample: ReturnType<typeof useSample> }) {
       </div>
       <div className="lp-shot">
         <div className="lp-shot-bar">
-          <img src="./assets/openplan-mark.png" alt="" width={16} height={16} />
+          <img className="logo" src="./assets/OpenPlan.png" alt="" width={16} height={16} />
           <span>Library Booking App (Sample) — {cur[1]}</span>
         </div>
         <div className={'lp-shot-body ' + tab} role="tabpanel" dangerouslySetInnerHTML={{ __html: sample[tab] }} />
@@ -86,13 +86,13 @@ function Preview({ sample }: { sample: ReturnType<typeof useSample> }) {
 }
 
 export default function Landing() {
-  const st = useStore();
+  const st = useApp();
   const sample = useSample();
   return (
     <div className="landing">
       <header className="lp-nav">
         <a className="lp-brand" href="#" onClick={e => { e.preventDefault(); document.querySelector('.landing')?.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-          <img src="./assets/openplan-mark.png" alt="" width={26} height={26} />OpenPlan
+          <img className="logo" src="./assets/OpenPlan.png" alt="" width={26} height={26} />OpenPlan
         </a>
         <nav className="lp-links">
           <button onClick={() => scrollTo('how')}>How it works</button>
@@ -119,7 +119,7 @@ export default function Landing() {
             <button className="lp-btn lg" onClick={enterApp}>Start planning <Icon name="chevR" /></button>
             <button className="lp-btn lg ghost" onClick={openSample}>Try the sample project</button>
           </div>
-          <p className="lp-note">Free · No sign-up · Nothing to install · Your data stays on your computer</p>
+          <p className="lp-note">Free · No sign-up · Nothing to install · Your project data stays on your computer</p>
           <Preview sample={sample} />
         </section>
 
@@ -162,7 +162,7 @@ export default function Landing() {
         <section className="lp-block" id="files">
           <div className="lp-head">
             <h2>Your work stays with you</h2>
-            <p>OpenPlan has no server and no account. Here’s where your plans are kept.</p>
+            <p>OpenPlan has no server and no account. Here’s where your plans are kept. Anonymous visit counts (page, referrer, screen size, browser) are collected with cookie-free GoatCounter analytics; project data is never sent.</p>
           </div>
           <div className="lp-facts">
             <div><Icon name="save" /><h3>In your browser</h3><p>Every change is saved automatically on this device, so you can close the tab and continue later.</p></div>
