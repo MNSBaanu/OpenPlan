@@ -89,9 +89,8 @@ svg.i { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none;
   height: 32px; flex: none; display: flex; align-items: center; background: var(--brand); color: var(--title-text); padding: 0 6px; gap: 8px; user-select: none;
 }
 .qat, .tb-right { display: flex; align-items: center; gap: 2px; }
-.app-icon { width: 20px; height: 20px; margin: 0 6px 0 2px; background: #fff; object-fit: contain; padding: 1px; }
-/* The logo is dark on transparent, so it sits on a white tile to stay visible on dark backgrounds. */
-img.logo { background: #fff; object-fit: contain; padding: 2px; }
+.app-icon { width: 20px; height: 20px; margin: 0 6px 0 2px; object-fit: contain; }
+img.logo { object-fit: contain; }
 .qat-btn { width: 28px; height: 26px; border: 0; background: transparent; color: inherit; display: grid; place-items: center; cursor: pointer; }
 .qat-btn:hover { background: rgba(255, 255, 255, 0.18); }
 .qat-btn:disabled { opacity: 0.45; pointer-events: none; }
@@ -527,6 +526,19 @@ kbd { font: 11px Consolas, monospace; padding: 0 4px; border: 1px solid var(--bo
 .lp-shot-body svg { display: block; }
 .lp-shot-body:not(.gantt) svg { max-width: 100%; max-height: 100%; width: auto; height: auto; }
 .lp-caption { margin: 14px 0 0; font-size: 13.5px; color: var(--text-muted); }
+.lp-stats { list-style: none; margin: 56px auto 0; padding: 0; max-width: 900px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); background: var(--surface); }
+.lp-stats li { padding: 20px 12px; display: flex; flex-direction: column; gap: 2px; }
+.lp-stats li + li { border-left: 1px solid var(--border); }
+.lp-stats b { font-size: 30px; line-height: 1.1; color: var(--accent); }
+.lp-stats span { font-size: 13.5px; color: var(--text-muted); }
+.lp-faq { max-width: 760px; margin: 0 auto; border-top: 1px solid var(--border); }
+.lp-faq details { border-bottom: 1px solid var(--border); }
+.lp-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 12px 4px; font-size: 16px; font-weight: 600; cursor: pointer; list-style: none; }
+.lp-faq summary::-webkit-details-marker { display: none; }
+.lp-faq summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lp-faq summary svg.i { flex: none; color: var(--text-muted); transition: transform 0.15s; }
+.lp-faq details[open] summary svg.i { transform: rotate(180deg); }
+.lp-faq details p { margin: 0 4px 18px; color: var(--text-muted); font-size: 15px; max-width: 640px; }
 .lp-block { padding: 96px var(--lp-pad); }
 .lp-block.alt { background: var(--surface-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .lp-head { max-width: 640px; margin: 0 auto 48px; text-align: center; }
@@ -558,7 +570,7 @@ kbd { font: 11px Consolas, monospace; padding: 0 4px; border: 1px solid var(--bo
 .lp-end .lp-btn.ghost { background: transparent; border-color: rgba(255, 255, 255, 0.45); color: #ffffff; }
 .lp-end .lp-btn.ghost:hover { background: rgba(255, 255, 255, 0.1); }
 :root[data-theme="dark"] .lp-end { background: var(--brand-light); border: 1px solid var(--border); }
-.lp-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 20px var(--lp-pad) 28px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+.lp-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 20px var(--lp-pad) 28px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
 .lp-footer a { color: var(--text-muted); }
 .lp-footer a:hover { color: var(--text); }
 .lp-dot { opacity: 0.5; }
@@ -576,6 +588,9 @@ kbd { font: 11px Consolas, monospace; padding: 0 4px; border: 1px solid var(--bo
   .lp-tabs svg.i { display: none; }
   .lp-steps, .lp-spec { grid-template-columns: 1fr; }
   .lp-end { padding: 40px 20px; }
+  .lp-stats { grid-template-columns: 1fr 1fr; }
+  .lp-stats li:nth-child(3) { border-left: 0; }
+  .lp-stats li:nth-child(n + 3) { border-top: 1px solid var(--border); }
 }
 
 .crash { max-width: 560px; margin: 80px auto; padding: 0 16px; color: var(--text); }

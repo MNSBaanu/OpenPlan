@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import OP from '../core';
 import { useStore, S } from '../store';
-import { downloadXml } from '../lib/actions';
 import * as ops from '../lib/taskOps';
 import Icon from './Icon';
 import type { CustomField, Resource } from '../types';
@@ -182,23 +181,6 @@ function ResourceDialog({ uid }: { uid: number }) {
   );
 }
 
-function ConvertDialog({ kind }: { kind: 'mpp' | 'pod' }) {
-  const st = useStore(), mpp = kind === 'mpp';
-  return (
-    <Modal title={mpp ? 'Export to MS Project (.mpp)' : 'Export to ProjectLibre (.pod)'} cancelLabel="Close"
-      okLabel={<><Icon name="download" />Download XML</>}
-      onSubmit={() => { downloadXml(); st.toast('XML downloaded — now open it in ' + (mpp ? 'MS Project' : 'ProjectLibre') + ' and Save As .' + kind); }}>
-      <p>{mpp ? '.mpp is Microsoft’s closed file format' : '.pod is ProjectLibre’s internal Java format'}, so a web page cannot write it directly.
-        OpenPlan saves an MS Project XML file that {mpp ? 'MS Project' : 'ProjectLibre'} opens without losing tasks, links, resources, costs or the baseline.</p>
-      <ol className="steps">
-        <li>Click <b>Download XML</b> below.</li>
-        <li>Open the file in {mpp ? 'Microsoft Project' : 'ProjectLibre (free, projectlibre.com)'} (File › Open, choose the .xml).</li>
-        <li>Choose <b>File › Save As</b> and pick <b>{mpp ? 'Project (*.mpp)' : 'ProjectLibre (*.pod)'}</b>.</li>
-      </ol>
-    </Modal>
-  );
-}
-
 function AboutDialog() {
   return (
     <Modal title="About OpenPlan" cancelLabel="Close" noOk>
@@ -207,7 +189,6 @@ function AboutDialog() {
       <p><b>Keyboard</b><br /><kbd>Enter</kbd>/<kbd>↑</kbd><kbd>↓</kbd> move between rows · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>→</kbd>/<kbd>←</kbd> indent/outdent · <kbd>Ins</kbd> new task · <kbd>Del</kbd> delete selected · <kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> undo/redo · <kbd>Ctrl</kbd>+<kbd>S</kbd> save file</p>
       <p><b>Gantt chart</b><br />Drag a bar to move it (sets a “Start no earlier than” constraint), drag its right edge to change the duration, or drag it up/down onto another bar to link the two.</p>
       <p><b>Predecessors</b><br />Type task IDs separated by commas. Link types: FS (default), SS, FF, SF, with optional lag, e.g. <code>3, 5SS+2d, 7FF-1d</code>.</p>
-      <p><b>MS Project and ProjectLibre files</b><br />.mpp and .pod are closed binary formats that a browser cannot read or write. OpenPlan exchanges plans through MS Project XML, which both programs open and save.</p>
     </Modal>
   );
 }
@@ -227,7 +208,6 @@ export default function DialogHost() {
     case 'settings': return <SettingsDialog />;
     case 'recurring': return <RecurringDialog />;
     case 'resource': return <ResourceDialog uid={dialog.props.uid} />;
-    case 'convert': return <ConvertDialog kind={dialog.props.kind} />;
     case 'about': return <AboutDialog />;
     case 'confirm': return <ConfirmDialog {...dialog.props} />;
     default: return null;

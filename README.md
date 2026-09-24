@@ -40,7 +40,7 @@ It runs entirely in the browser and has no server or account. Projects are saved
 - **Resources**: work, material and cost resources, calendars, vacations, rate changes, a workload heatmap and resource leveling.
 - **Tracking**: baselines, % complete, actual dates, a status date and earned value (SPI, CPI, EAC).
 - **Budget and reports**: cost by work package and by resource, monthly and cumulative cost, and 10 ready-made reports.
-- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import and export project XML, and export CSV.
+- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, and export CSV.
 - **Interface**: a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, and light and dark themes.
 
 ## Tech stack
@@ -112,7 +112,7 @@ To use your own GoatCounter account, change `mnsbaanu` in the `data-goatcounter`
 
 - **Autosave**: every change is saved in the browser's localStorage. That copy exists only in the browser and computer you are using, and clearing your browser data deletes it.
 - **Save** (Ctrl+S) writes an `.openplan` file. In Chrome and Edge, the first save asks where to put the file, and later saves write back to that same file. **Save As** makes a copy. Other browsers download the file instead.
-- **Open** loads an `.openplan` file, an older `.json` project file or a project XML file.
+- **Open** loads an `.openplan` file or an older `.json` project file.
 
 Keep a project file for anything important.
 
@@ -134,8 +134,6 @@ In Chrome or Edge, install OpenPlan as an app. After that, double-clicking an `.
 
 | Format | Support |
 |---|---|
-| Project XML (`.xml`) | Import and export |
-| `.mpp` / `.pod` | Export the XML, then open it in a desktop project tool and use **Save As**. Browsers cannot write these binary formats. |
 | CSV | Export the task list |
 | PNG / SVG / PDF | Chart images, and printing to PDF |
 
@@ -159,7 +157,7 @@ OpenPlan/
 │   ├── assets/              logo, favicon and app icons
 │   └── manifest.webmanifest app install and .openplan file handling
 ├── src/
-│   ├── core/                scheduling engine, XML/CSV import-export, SVG charts, sample project
+│   ├── core/                scheduling engine, file formats and CSV export, SVG charts, sample project
 │   ├── components/          toolbar, title and status bars, File menu, dialogs, task details panel
 │   ├── views/               Gantt, diagrams, resource sheet, workload, budget, reports
 │   ├── lib/                 task commands, grid columns and filters, file actions

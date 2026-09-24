@@ -26,13 +26,13 @@ async function saveFile(as: boolean) {
 
 async function openHandle(h: any) {
   const file = await h.getFile();
-  S().replaceProject(IO.parseAny(await file.text()), 'Opened ' + file.name);
-  handle = /\.(openplan|json)$/i.test(file.name) ? h : null;
+  S().replaceProject(IO.fromJSON(await file.text()), 'Opened ' + file.name);
+  handle = h;
 }
 
 async function openFile() {
   try {
-    const [h] = await W.showOpenFilePicker({ types: [{ description: 'Project files', accept: { 'application/x-openplan': ['.openplan'], 'application/json': ['.json'], 'application/xml': ['.xml'] } }] });
+    const [h] = await W.showOpenFilePicker({ types: [{ description: 'Project files', accept: { 'application/x-openplan': ['.openplan'], 'application/json': ['.json'] } }] });
     await openHandle(h);
   } catch (e: any) {
     if (e.name !== 'AbortError') S().toast('Could not open file: ' + e.message, true);
@@ -99,9 +99,7 @@ export function runAction(a: string) {
     case 'insert': pickFile(true); break;
     case 'save': saveFile(false); break;
     case 'saveas': saveFile(true); break;
-    case 'xml': downloadXml(); st.toast('MS Project XML downloaded — open it in ProjectLibre or MS Project'); break;
     case 'csv': U.download(name + '-tasks.csv', '﻿' + IO.toCSV(st.p), 'text/csv'); st.toast('CSV downloaded'); break;
-    case 'mpp': case 'pod': st.openDialog('convert', { kind: a }); break;
     case 'png': case 'svg': {
       const svg = viewSvgString(st);
       if (!svg) { st.toast('Switch to Gantt, Network, WBS or Team Chart to export an image.'); return; }
@@ -123,7 +121,7 @@ export function runAction(a: string) {
 function pickFile(insert: boolean) {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.openplan,.json,.xml,application/json,text/xml';
+  input.accept = '.openplan,.json,application/json';
   input.onchange = () => {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -131,7 +129,7 @@ function pickFile(insert: boolean) {
     reader.onload = () => {
       const st = S();
       try {
-        const p: Project = IO.parseAny(String(reader.result));
+        const p: Project = IO.fromJSON(String(reader.result));
         if (insert) {
           let res = { uid: 0, warnings: [] as string[] };
           st.commit(pp => { res = IO.insertProject(pp, p); });
@@ -145,9 +143,4 @@ function pickFile(insert: boolean) {
     reader.readAsText(file);
   };
   input.click();
-}
-
-export function downloadXml() {
-  const st = S();
-  U.download(U.slug(st.p.name) + '.xml', IO.toMSPDI(st.p), 'application/xml');
 }

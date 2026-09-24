@@ -45,7 +45,7 @@ npm run preview    # http://localhost:4173
 ```
 src/
 ├── core/        core.js (utils, calendar, model, CPM scheduler, leveling)
-│                io.js (JSON, MS Project XML, CSV, SVG/PNG export, print)
+│                io.js (JSON, CSV, SVG/PNG export, print)
 │                charts.js (Gantt, network, WBS, org, cost charts)
 │                demo.js (sample project)
 ├── components/  Chrome (title/status bar, backstage), Ribbon, Drawer, Dialogs, Field, Icon
@@ -69,10 +69,8 @@ src/
 | Format | Import | Export |
 |---|---|---|
 | `.openplan` / `.json` | ✅ | ✅ |
-| MS Project XML (MSPDI) | ✅ | ✅ |
 | CSV | ❌ | ✅ |
 | PNG / SVG / Print-to-PDF | — | ✅ |
-| `.mpp` / `.pod` | via XML | via XML |
 
 ## Deployment
 - Every push to `main` deploys to production on Vercel. Pull requests get preview deploys (`.github/workflows/vercel.yml`).
@@ -98,3 +96,5 @@ src/
   - **Accessibility:** zoom buttons, menus, keyboard access to chart nodes, labelled cells.
   - **Tooling:** Vite 6, pinned CI, MIT licence.
   - Remaining items are listed under Open issues. `AUDIT.md` was deleted.
+- **2026-09-24** Landing page upgrade: stats row, "Who it's for", FAQ, and an "Open source under the MIT License" mention in the footer. Square corners everywhere, new logo.
+- **2026-09-24** Removed MS Project XML import/export and the .mpp/.pod export dialogs. Logo shown without a background tile; footer centred.

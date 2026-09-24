@@ -3,8 +3,10 @@ import '@fontsource-variable/inter';
 import OP from '../core';
 import { useApp, S, ask } from '../store';
 import Icon from '../components/Icon';
+import type { Schedule } from '../types';
 
 const C = OP.charts;
+const REPO = 'https://github.com/MNSBaanu/OpenPlan';
 
 export const enterApp = () => { location.hash = 'app'; };
 const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -38,16 +40,31 @@ const SPEC: [string, string][] = [
   ['Resources', 'Work, material and cost resources, rates and rate changes, vacations, a weekly workload view and leveling.'],
   ['Tracking', 'Baselines, % complete, actual dates, a status date, and earned value: SPI, CPI and EAC.'],
   ['Cost', 'Budget versus planned cost, cost by work package and by resource, monthly and cumulative spend.'],
-  ['Output', '10 printable reports, PNG and SVG export of every chart, project XML import and export, and CSV export.']
+  ['Output', '10 printable reports, PNG and SVG export of every chart, and CSV export.']
+];
+
+const STATS: [string, string][] = [['8', 'views of one plan'], ['10', 'ready-made reports'], ['4', 'dependency link types'], ['4', 'file formats']];
+
+const AUDIENCE: [string, string, string][] = [
+  ['report', 'Students', 'Coursework that asks for a WBS, Gantt chart, network diagram, resource plan and budget, all produced from one plan.'],
+  ['users', 'Small teams', 'Plan phases or sprints, assign people, and see who is overloaded before it becomes a problem, with no licences to buy.'],
+  ['target', 'Lecturers', 'One free tool the whole class can open in a browser, with charts and reports ready to hand in.']
+];
+
+const FAQ: [string, string][] = [
+  ['Is OpenPlan really free?', 'Yes. There are no accounts, trials or paid tiers.'],
+  ['Where is my project stored?', 'In this browser, saved automatically as you work, and in .openplan files you save to your computer. Your plan is never uploaded anywhere.'],
+  ['Can I put the charts in my report?', 'Yes. Every chart exports as PNG or SVG, and each of the 10 reports prints or saves as a PDF.'],
+  ['Does it work on a phone?', 'This page does. The planner itself has a spreadsheet-style grid and a timeline, so it works best on a laptop or desktop screen.']
 ];
 
 function useSample() {
   return useMemo(() => {
-    const p = OP.demo(), s = OP.schedule(p);
-    const sprint = s.rows.find((r: any) => r.summary && r.task.name.startsWith('Sprint 1'));
+    const p = OP.demo(), s: Schedule = OP.schedule(p);
+    const sprint = s.rows.find(r => r.summary && r.task.name.startsWith('Sprint 1'));
     return {
       gantt: C.gantt({ p, s, rows: s.rows, zoom: 'week', critical: true, table: true }).svg,
-      network: C.network({ p, s, rows: sprint.leaves.map((i: number) => s.rows[i]), critical: true, dates: false, title: 'Sprint 1' }).svg,
+      network: C.network({ p, s, rows: sprint ? sprint.leaves.map(i => s.rows[i]) : s.rows, critical: true, dates: false, title: sprint ? 'Sprint 1' : 'Sample project' }).svg,
       wbs: C.wbs({ p, s, depth: 2 }).svg,
       cost: C.costChart({ p, data: C.monthlyCost(p, s), kind: 'cumulative' })
     };
@@ -98,7 +115,6 @@ export default function Landing() {
           <button onClick={() => scrollTo('how')}>How it works</button>
           <button onClick={() => scrollTo('outputs')}>What you get</button>
           <button onClick={() => scrollTo('included')}>Features</button>
-          <a href="https://github.com/MNSBaanu/OpenPlan" target="_blank" rel="noreferrer">GitHub</a>
         </nav>
         <button className="lp-theme" aria-label="Toggle dark mode" title="Dark / light" onClick={() => st.setUI({ theme: st.theme === 'dark' ? 'light' : 'dark' })}>
           <Icon name={st.theme === 'dark' ? 'sun' : 'moon'} />
@@ -121,6 +137,9 @@ export default function Landing() {
           </div>
           <p className="lp-note">Free · No sign-up · Nothing to install · Your project data stays on your computer</p>
           <Preview sample={sample} />
+          <ul className="lp-stats" aria-label="OpenPlan at a glance">
+            {STATS.map(([n, label]) => <li key={label}><b>{n}</b><span>{label}</span></li>)}
+          </ul>
         </section>
 
         <section className="lp-block alt" id="how">
@@ -149,7 +168,17 @@ export default function Landing() {
           </ul>
         </section>
 
-        <section className="lp-block alt" id="included">
+        <section className="lp-block alt" id="audience">
+          <div className="lp-head">
+            <h2>Who it’s for</h2>
+            <p>Anyone who needs a proper project plan without buying desktop project management software.</p>
+          </div>
+          <div className="lp-facts">
+            {AUDIENCE.map(([icon, title, text]) => <div key={title}><Icon name={icon} /><h3>{title}</h3><p>{text}</p></div>)}
+          </div>
+        </section>
+
+        <section className="lp-block" id="included">
           <div className="lp-head">
             <h2>Features</h2>
             <p>The parts of desktop project software that courses and small teams actually use.</p>
@@ -159,7 +188,7 @@ export default function Landing() {
           </dl>
         </section>
 
-        <section className="lp-block" id="files">
+        <section className="lp-block alt" id="files">
           <div className="lp-head">
             <h2>Your work stays with you</h2>
             <p>OpenPlan has no server and no account. Here’s where your plans are kept. Anonymous visit counts (page, referrer, screen size, browser) are collected with cookie-free GoatCounter analytics; project data is never sent.</p>
@@ -167,7 +196,17 @@ export default function Landing() {
           <div className="lp-facts">
             <div><Icon name="save" /><h3>In your browser</h3><p>Every change is saved automatically on this device, so you can close the tab and continue later.</p></div>
             <div><Icon name="file" /><h3>In .openplan files</h3><p>Save to a file on your computer. In Chrome and Edge, install the app and double-click a file to open it.</p></div>
-            <div><Icon name="download" /><h3>In other tools</h3><p>Export project XML for desktop planners, CSV for spreadsheets, and PNG or SVG for your report.</p></div>
+            <div><Icon name="download" /><h3>In other tools</h3><p>Export CSV for spreadsheets, and PNG or SVG for your report.</p></div>
+          </div>
+        </section>
+
+        <section className="lp-block" id="faq">
+          <div className="lp-head">
+            <h2>Questions</h2>
+            <p>Short answers to what people usually ask first.</p>
+          </div>
+          <div className="lp-faq">
+            {FAQ.map(([q, a]) => <details key={q}><summary>{q}<Icon name="chevD" /></summary><p>{a}</p></details>)}
           </div>
         </section>
 
@@ -188,7 +227,9 @@ export default function Landing() {
         <span className="lp-dot">·</span>
         <span>Free, browser-based project planning</span>
         <span className="lp-dot">·</span>
-        <a href="https://github.com/MNSBaanu/OpenPlan" target="_blank" rel="noreferrer">Source on GitHub</a>
+        <span>Open source under the <a href={REPO + '/blob/main/LICENSE'} target="_blank" rel="noreferrer">MIT License</a></span>
+        <span className="lp-dot">·</span>
+        <a href={REPO} target="_blank" rel="noreferrer">Source on GitHub</a>
         <span className="lp-dot">·</span>
         <span>Made by <a href="https://github.com/MNSBaanu" target="_blank" rel="noreferrer">MNS Baanu</a></span>
       </footer>

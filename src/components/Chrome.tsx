@@ -112,10 +112,10 @@ export function Backstage() {
     </div></>;
   } else if (page === 'open') {
     body = <><h1>Open</h1>
-      <Tile icon="upload" title="Browse…" sub="OpenPlan (.openplan, .json) or MS Project XML (.xml) files" act="open" />
+      <Tile icon="upload" title="Browse…" sub="OpenPlan project files (.openplan, .json)" act="open" />
       <Tile icon="layers" title="Insert as Subproject…" sub="Add another project file under a new summary task" act="insert" />
       <Tile icon="undo" title="Restore Previous Project" sub="Bring back the plan that was open before the last New, Open or Sample" act="restore" disabled={!hasPrevious()} />
-      <p className="bs-note">To open an .mpp or .pod file, open it in MS Project or ProjectLibre first and save it as XML.</p></>;
+    </>;
   } else if (page === 'save') {
     body = <><h1>Save</h1>
       <Tile icon="save" title="Save" sub="Save to an OpenPlan (.openplan) file on your computer; Ctrl+S saves back to the same file" act="save" />
@@ -125,9 +125,6 @@ export function Backstage() {
         : 'Browser storage is unavailable: download a project file to keep your work.'}</p></>;
   } else if (page === 'export') {
     body = <><h1>Export</h1>
-      <Tile icon="file" title="MS Project XML (.xml)" sub="Opens in MS Project, ProjectLibre and Project Plan 365" act="xml" />
-      <Tile icon="file" title="MS Project (.mpp)" sub="Saves XML plus the steps to convert it in MS Project" act="mpp" />
-      <Tile icon="file" title="ProjectLibre (.pod)" sub="Saves XML plus the steps to convert it in ProjectLibre" act="pod" />
       <Tile icon="table" title="Excel (.csv)" sub="Task table with dates, costs and slack" act="csv" />
       <Tile icon="image" title={'Picture of the ' + viewName + ' (.png)'} sub={img ? 'For Word reports' : 'Switch to Gantt, Network, WBS or Team Chart first'} act="png" disabled={!img} />
       <Tile icon="image" title="Vector picture (.svg)" sub="Sharp at any size" act="svg" disabled={!img} /></>;
