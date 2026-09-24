@@ -16,16 +16,7 @@ OP.io = (function () {
   function fromJSON(text) {
     var p = JSON.parse(text);
     if (!p || !Array.isArray(p.tasks) || !Array.isArray(p.resources)) throw new Error('Not an OpenPlan project file.');
-    var maxUid = 0;
-    p.tasks.forEach(function (t) {
-      t.preds = t.preds || []; t.assignments = t.assignments || [];
-      maxUid = Math.max(maxUid, t.uid);
-    });
-    p.resources.forEach(function (r) { maxUid = Math.max(maxUid, r.uid); });
-    p.nextUid = Math.max(p.nextUid || 0, maxUid + 1);
-    M.normalize(p);
-    M.normalizeLevels(p);
-    return p;
+    return M.normalize(p);
   }
 
   // Read any supported project file (OpenPlan JSON or MS Project XML).
@@ -33,9 +24,18 @@ OP.io = (function () {
     return /^\s*</.test(text) ? fromMSPDI(text) : fromJSON(text);
   }
 
-  // Append another project as a summary task (subproject). Resources are matched by name.
+  // Append another project as a summary task (subproject). Resources and custom fields are matched by name.
+  // Returns the new summary task's uid and notes about data that could not be carried over.
   function insertProject(p, sub) {
-    var resMap = {}, taskMap = {}, copies = [];
+    var resMap = {}, taskMap = {}, copies = [], cfMap = {}, warnings = [];
+    sub.customFields.forEach(function (f) {
+      var same = p.customFields.filter(function (x) { return x.name === f.name && x.type === f.type; })[0];
+      if (!same) { same = { id: 'c' + Date.now().toString(36) + p.customFields.length, name: f.name, type: f.type }; p.customFields.push(same); }
+      cfMap[f.id] = same.id;
+    });
+    var newHol = sub.holidays.filter(function (h) { return p.holidays.indexOf(h) < 0; }).length;
+    if (newHol) warnings.push(newHol + ' holiday' + (newHol > 1 ? 's were' : ' was') + ' not added to this calendar');
+    if (sub.baseline) warnings.push('its baseline was not copied');
     sub.resources.forEach(function (r) {
       var same = p.resources.filter(function (x) { return x.name && x.name === r.name; })[0];
       if (same) { resMap[r.uid] = same.uid; return; }
@@ -55,10 +55,12 @@ OP.io = (function () {
       c.level = t.level + 1;
       c.preds = t.preds.filter(function (l) { return taskMap[l.uid]; }).map(function (l) { return { uid: taskMap[l.uid], type: l.type, lag: l.lag }; });
       c.assignments = t.assignments.filter(function (a) { return resMap[a.res]; }).map(function (a) { return { res: resMap[a.res], units: a.units }; });
+      c.custom = {};
+      for (var k in t.custom) if (cfMap[k]) c.custom[cfMap[k]] = t.custom[k];
       p.tasks.push(c);
     });
     M.normalizeLevels(p);
-    return head.uid;
+    return { uid: head.uid, warnings: warnings };
   }
 
   /* ---------- MS Project XML ---------- */
@@ -66,27 +68,35 @@ OP.io = (function () {
   function x(s) { return U.esc(s); }
   function hours(h) { return 'PT' + Math.round(h * 100) / 100 + 'H0M0S'; }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function tm(min) { return pad(Math.floor(min / 60)) + ':' + pad(min % 60) + ':00'; }
+  var CURRENCY_CODE = { 'Rs.': 'LKR', 'Rs': 'LKR', '$': 'USD', 'US$': 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY', '₹': 'INR', 'A$': 'AUD' };
 
   function toMSPDI(p) {
     var s = OP.schedule(p), hpd = +p.hoursPerDay || 8, out = [];
     function el(tag, v) { out.push('<' + tag + '>' + x(v) + '</' + tag + '>'); }
     var resUid = {};
     p.resources.forEach(function (r, i) { resUid[r.uid] = i + 1; });
-    var finishTime = pad(13 + hpd - 4) + ':00:00';
+    // Working day: 08:00 with a 12:00-13:00 lunch break; long days start at midnight and have no break.
+    var dayStart = hpd > 15 ? 0 : 480, lunch = hpd > 4 && hpd <= 15;
+    var dayEnd = Math.min(dayStart + Math.round(hpd * 60) + (lunch ? 60 : 0), 1439);
+    var startTime = tm(dayStart), finishTime = tm(dayEnd);
+    var workTimes = (lunch ? [[dayStart, 720], [780, dayEnd]] : [[dayStart, dayEnd]]).map(function (w) {
+      return '<WorkingTime><FromTime>' + tm(w[0]) + '</FromTime><ToTime>' + tm(w[1]) + '</ToTime></WorkingTime>';
+    }).join('');
 
     out.push('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>');
     out.push('<Project xmlns="http://schemas.microsoft.com/project">');
     el('SaveVersion', 14);
     el('Name', p.name + '.xml'); el('Title', p.name); el('Company', p.organization); el('Author', p.manager);
     el('ScheduleFromStart', 1);
-    el('StartDate', U.iso(s.startDn) + 'T08:00:00');
+    el('StartDate', U.iso(s.startDn) + 'T' + startTime);
     el('FinishDate', U.iso(s.finishDn) + 'T' + finishTime);
     if (p.statusDate) el('StatusDate', p.statusDate + 'T' + finishTime);
     el('CalendarUID', 1);
-    el('DefaultStartTime', '08:00:00'); el('DefaultFinishTime', finishTime);
+    el('DefaultStartTime', startTime); el('DefaultFinishTime', finishTime);
     el('MinutesPerDay', hpd * 60); el('MinutesPerWeek', hpd * 300); el('DaysPerMonth', 20);
     el('CurrencySymbol', p.currency);
-    el('CurrencyCode', p.currency === 'Rs.' ? 'LKR' : '');
+    el('CurrencyCode', CURRENCY_CODE[p.currency] || (/^[A-Z]{3}$/.test(p.currency) ? p.currency : ''));
 
     if (p.customFields.length) {
       out.push('<ExtendedAttributes>');
@@ -102,9 +112,7 @@ OP.io = (function () {
       out.push('<Calendar><UID>' + uid + '</UID><Name>' + x(name) + '</Name><IsBaseCalendar>' + (baseUid < 0 ? 1 : 0) + '</IsBaseCalendar><BaseCalendarUID>' + baseUid + '</BaseCalendarUID><WeekDays>');
       for (var d = 1; d <= 7; d++) {
         if (workDays.indexOf(d - 1) < 0) out.push('<WeekDay><DayType>' + d + '</DayType><DayWorking>0</DayWorking></WeekDay>');
-        else out.push('<WeekDay><DayType>' + d + '</DayType><DayWorking>1</DayWorking><WorkingTimes>' +
-          '<WorkingTime><FromTime>08:00:00</FromTime><ToTime>12:00:00</ToTime></WorkingTime>' +
-          '<WorkingTime><FromTime>13:00:00</FromTime><ToTime>' + finishTime + '</ToTime></WorkingTime></WorkingTimes></WeekDay>');
+        else out.push('<WeekDay><DayType>' + d + '</DayType><DayWorking>1</DayWorking><WorkingTimes>' + workTimes + '</WorkingTimes></WeekDay>');
       }
       exceptions.forEach(function (h) {
         if (!U.parseDate(h)) return;
@@ -125,7 +133,7 @@ OP.io = (function () {
       el('UID', t.uid); el('ID', r.id); el('Name', t.name); el('Type', TYPE_CODE[t.type] || 0); el('IsNull', 0);
       el('WBS', r.wbs); el('OutlineNumber', r.wbs); el('OutlineLevel', t.level);
       el('Priority', t.priority);
-      el('Start', U.iso(r.startDn) + 'T08:00:00');
+      el('Start', U.iso(r.startDn) + 'T' + startTime);
       el('Finish', U.iso(r.finishDn) + 'T' + finishTime);
       el('Duration', hours(r.duration * hpd)); el('DurationFormat', 7);
       el('Work', hours(r.work));
@@ -137,10 +145,10 @@ OP.io = (function () {
       el('FixedCost', Math.round((+t.fixedCost || 0) * 100));
       el('FixedCostAccrual', 3);
       el('ActualCost', Math.round(r.actualCost * 100));
-      if (t.actualStart) el('ActualStart', t.actualStart + 'T08:00:00');
+      if (t.actualStart) el('ActualStart', t.actualStart + 'T' + startTime);
       if (t.actualFinish) el('ActualFinish', t.actualFinish + 'T' + finishTime);
       el('ConstraintType', r.summary ? 0 : CONSTRAINT_CODE[t.constraint] || 0);
-      if (!r.summary && t.constraintDate && t.constraint !== 'ASAP' && t.constraint !== 'ALAP') el('ConstraintDate', t.constraintDate + 'T08:00:00');
+      if (!r.summary && t.constraintDate && t.constraint !== 'ASAP' && t.constraint !== 'ALAP') el('ConstraintDate', t.constraintDate + 'T' + startTime);
       if (t.deadline) el('Deadline', t.deadline + 'T' + finishTime);
       if (t.levelDelay) { el('LevelingDelay', Math.round(t.levelDelay * hpd * 600)); el('LevelingDelayFormat', 7); }
       if (t.notes) el('Notes', t.notes);
@@ -155,7 +163,7 @@ OP.io = (function () {
         out.push('<ExtendedAttribute><FieldID>' + (num ? 188743767 + k : 188743731 + k) + '</FieldID><Value>' + x(v) + '</Value></ExtendedAttribute>');
       });
       if (r.base) {
-        out.push('<Baseline><Number>0</Number><Start>' + U.iso(r.base.startDn) + 'T08:00:00</Start><Finish>' + U.iso(r.base.finishDn) + 'T' + finishTime +
+        out.push('<Baseline><Number>0</Number><Start>' + U.iso(r.base.startDn) + 'T' + startTime + '</Start><Finish>' + U.iso(r.base.finishDn) + 'T' + finishTime +
           '</Finish><Duration>' + hours(r.base.duration * hpd) + '</Duration><DurationFormat>7</DurationFormat><Work>' + hours(r.base.work) + '</Work><Cost>' + Math.round(r.base.cost * 100) + '</Cost></Baseline>');
       }
       out.push('</Task>');
@@ -200,7 +208,7 @@ OP.io = (function () {
         if (res.kind === 'Work') { el('Units', (a.units / 100).toFixed(2)); el('Work', hours(a.units / 100 * hpd * r.duration)); }
         else if (res.kind === 'Material') el('Units', a.units);
         else el('Cost', Math.round(a.units * 100));
-        el('Start', U.iso(r.startDn) + 'T08:00:00'); el('Finish', U.iso(r.finishDn) + 'T' + finishTime);
+        el('Start', U.iso(r.startDn) + 'T' + startTime); el('Finish', U.iso(r.finishDn) + 'T' + finishTime);
         out.push('</Assignment>');
       });
     });
@@ -248,9 +256,8 @@ OP.io = (function () {
     });
 
     function exceptionsOf(c) {
-      var outD = [], wd = kids(c, 'WeekDays')[0], work = [1, 2, 3, 4, 5];
-      if (!wd) return { days: outD, work: work };
-      kids(wd, 'WeekDay').forEach(function (w) {
+      var outD = [], seenD = {}, wd = kids(c, 'WeekDays')[0], work = [1, 2, 3, 4, 5];
+      if (wd) kids(wd, 'WeekDay').forEach(function (w) {
         var dt = +val(w, 'DayType');
         if (dt >= 1 && dt <= 7) {
           var on = val(w, 'DayWorking') === '1', k = dt - 1, at = work.indexOf(k);
@@ -261,10 +268,20 @@ OP.io = (function () {
         if (dt !== 0 || val(w, 'DayWorking') !== '0') return;
         var tp = kids(w, 'TimePeriod')[0];
         if (!tp) return;
-        var a = U.parseDate(val(tp, 'FromDate')), b = U.parseDate(val(tp, 'ToDate'));
-        for (var dn = a; a != null && b != null && dn <= b && dn - a < 60; dn++) outD.push(U.iso(dn));
+        addRange(tp);
+      });
+      // Project 2007+ and ProjectLibre store holidays as <Exceptions>.
+      var ex = kids(c, 'Exceptions')[0];
+      if (ex) kids(ex, 'Exception').forEach(function (e) {
+        if (val(e, 'DayWorking') === '1') return;
+        var tp = kids(e, 'TimePeriod')[0];
+        if (tp) addRange(tp);
       });
       return { days: outD, work: work.sort() };
+      function addRange(tp) {
+        var a = U.parseDate(val(tp, 'FromDate')), b = U.parseDate(val(tp, 'ToDate'));
+        for (var dn = a; a != null && b != null && dn <= b && dn - a < 3660; dn++) if (!seenD[dn]) { seenD[dn] = true; outD.push(U.iso(dn)); }
+      }
     }
     var cals = {}, baseUid = val(root, 'CalendarUID');
     list('Calendars', 'Calendar').forEach(function (c) { cals[val(c, 'UID')] = exceptionsOf(c); });
@@ -357,7 +374,7 @@ OP.io = (function () {
         : Math.round((val(a, 'Units') === '' ? 1 : +val(a, 'Units')) * 100);
       task.assignments.push({ res: res.uid, units: units });
     });
-    M.normalizeLevels(p);
+    M.normalize(p);
     p.tasks.forEach(function (t, i) { if (M.isSummary(p, i)) t.assignments = []; });
     return p;
   }
@@ -375,9 +392,11 @@ OP.io = (function () {
         r.es, r.ef, r.ls, r.lf, r.slack, r.critical ? 'Yes' : 'No', r.task.percent || 0]);
     });
     return lines.map(function (row) {
-      return row.map(function (v) {
-        v = String(v == null ? '' : v);
-        return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      return row.map(function (raw) {
+        var v = String(raw == null ? '' : raw);
+        // Text starting with a formula character would run as a formula in Excel or Sheets.
+        if (typeof raw === 'string' && /^[=+\-@\t\r]/.test(v)) v = "'" + v;
+        return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
       }).join(',');
     }).join('\r\n');
   }
@@ -404,7 +423,8 @@ OP.io = (function () {
 
   function exportPNG(svg, name) {
     var w = +svg.getAttribute('width'), h = +svg.getAttribute('height');
-    var scale = Math.min(2, 16000 / Math.max(w, h));
+    // Browsers cap canvas side length and total area (about 16 megapixels on Safari).
+    var scale = Math.min(2, 16000 / Math.max(w, h), Math.sqrt(16e6 / (w * h)));
     var img = new Image();
     img.onload = function () {
       var c = document.createElement('canvas');
@@ -412,7 +432,10 @@ OP.io = (function () {
       var ctx = c.getContext('2d');
       ctx.scale(scale, scale);
       ctx.drawImage(img, 0, 0, w, h);
-      c.toBlob(function (b) { U.download(name + '.png', b); }, 'image/png');
+      c.toBlob(function (b) {
+        if (b) U.download(name + '.png', b);
+        else OP.notify('The chart is too large for a PNG. Try the SVG export instead.');
+      }, 'image/png');
     };
     img.onerror = function () { OP.notify('Could not create the image. Try the SVG export instead.'); };
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(standaloneSVG(svg));
@@ -424,6 +447,8 @@ OP.io = (function () {
     document.body.appendChild(f);
     var w = f.contentWindow;
     w.onafterprint = function () { setTimeout(function () { f.remove(); }, 0); };
+    // Some browsers (Safari) do not fire afterprint reliably.
+    setTimeout(function () { f.remove(); }, 60000);
     w.document.write('<!doctype html><title>' + U.esc(title) + '</title><style>@page{size:landscape;margin:10mm}body{margin:0}svg{width:100%;height:auto}</style>' +
       standaloneSVG(svg));
     w.document.close();
