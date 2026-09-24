@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -18,10 +21,13 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Pull requests from forks don't receive the Vercel secrets, so only the checks run for them.
+    env:
+      CAN_DEPLOY: ${{ github.event_name == 'push' || !github.event.pull_request.head.repo.fork }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: npm
@@ -33,13 +39,17 @@ jobs:
         run: npm run typecheck
 
       - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+        if: env.CAN_DEPLOY == 'true'
+        run: npm install --global vercel@59.26.0
 
       - name: Pull Vercel project settings
+        if: env.CAN_DEPLOY == 'true'
         run: vercel pull --yes --environment=$VERCEL_ENV --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build
+        if: env.CAN_DEPLOY == 'true'
         run: vercel build $VERCEL_PROD_FLAG --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy
+        if: env.CAN_DEPLOY == 'true'
         run: vercel deploy --prebuilt $VERCEL_PROD_FLAG --token=${{ secrets.VERCEL_TOKEN }}
