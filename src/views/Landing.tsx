@@ -189,6 +189,8 @@ export default function Landing() {
         <span>Free, browser-based project planning</span>
         <span className="lp-dot">·</span>
         <a href="https://github.com/MNSBaanu/OpenPlan" target="_blank" rel="noreferrer">Source on GitHub</a>
+        <span className="lp-dot">·</span>
+        <span>Made by <a href="https://github.com/MNSBaanu" target="_blank" rel="noreferrer">MNS Baanu</a></span>
       </footer>
     </div>
   );
