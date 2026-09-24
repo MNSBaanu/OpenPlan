@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import OP from '../core';
-import { useStore, S, focusKey, type Store } from '../store';
+import { useStore, S, focusKey, DEFAULT_COLS, type Store } from '../store';
 import { COL_GROUPS, COLS, menuData, toggleCol } from '../lib/grid';
 import { hasImage, runAction } from '../lib/actions';
 import * as ops from '../lib/taskOps';
@@ -38,16 +38,26 @@ const Group = ({ label, children }: { label: string; children: ReactNode }) => (
 const Stack = ({ children }: { children: ReactNode }) => <div className="rstack">{children}</div>;
 const RowBox = ({ children }: { children: ReactNode }) => <div className="rrow">{children}</div>;
 
+// Arrow keys move between the menu's buttons and checkboxes.
+function menuKeys(e: React.KeyboardEvent<HTMLDivElement>) {
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  const items = [...e.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), input')];
+  const i = items.indexOf(document.activeElement as HTMLElement);
+  e.preventDefault();
+  items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]?.focus();
+}
+
 function DropBig({ id, icon, label, children, st }: { id: string; icon: string; label: ReactNode; children: ReactNode; st: Store }) {
+  const open = st.menu === id;
   return (
     <div className="menu-wrap">
-      <button className="rb big drop" onClick={() => st.setUI({ menu: st.menu === id ? null : id })}><Icon name={icon} /><span>{label} ▾</span></button>
-      <div className={'menu left' + (st.menu === id ? ' open' : '')}>{children}</div>
+      <button className="rb big drop" aria-haspopup="menu" aria-expanded={open} aria-controls={id} onClick={() => st.setUI({ menu: open ? null : id })}><Icon name={icon} /><span>{label} ▾</span></button>
+      <div id={id} role="menu" className={'menu left' + (open ? ' open' : '')} onKeyDown={menuKeys}>{children}</div>
     </div>
   );
 }
 function MenuItem({ icon, label, onClick, disabled }: { icon: string; label: string; onClick: () => void; disabled?: boolean }) {
-  return <button disabled={disabled} onClick={() => { S().setUI({ menu: null }); onClick(); }}><Icon name={icon} />{label}</button>;
+  return <button role="menuitem" disabled={disabled} onClick={() => { S().setUI({ menu: null }); onClick(); }}><Icon name={icon} />{label}</button>;
 }
 
 function Check({ label, checked, onChange, disabled, title }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean; title?: string }) {
@@ -110,7 +120,7 @@ function ColumnsMenu({ st }: { st: Store }) {
         </div>
       </>}
       <hr />
-      <MenuItem icon="undo" label="Reset to default columns" onClick={() => st.setUI({ cols: ['id', 'ind', 'name', 'duration', 'start', 'finish', 'preds', 'res', 'cost'] })} />
+      <MenuItem icon="undo" label="Reset to default columns" onClick={() => st.setUI({ cols: DEFAULT_COLS.slice() })} />
     </div>
   );
 }
@@ -330,7 +340,7 @@ export default function Ribbon() {
     <nav className="ribbon-tabs" aria-label="Toolbar">
       <button className="rtab file" onClick={() => st.setUI({ backstage: true, bsPage: 'info', menu: null })}><Icon name="menu" />File</button>
       {TABS.filter(([k]) => k !== 'format' || tools).map(([k, label, icon]) => (
-        <button key={k} className={'rtab' + (tab === k ? ' on' : '')}
+        <button key={k} aria-pressed={tab === k} className={'rtab' + (tab === k ? ' on' : '')}
           onClick={() => onTab(k)} onDoubleClick={() => st.setUI({ ribbonMin: !st.ribbonMin })}><Icon name={icon} />{label}</button>
       ))}
       <span className="rtab-fill" />
