@@ -1,17 +1,17 @@
 import { useEffect } from 'react';
 import OP from '../core';
-import { useStore, VIEW_NAMES, ZOOMS } from '../store';
+import { useApp, useStore, VIEW_NAMES, ZOOMS, PREV_STORE } from '../store';
 import { hasImage, runAction } from '../lib/actions';
 import Icon from './Icon';
 import type { ViewName } from '../types';
 
 const U = OP.util;
-const LOGO_MARK = './assets/openplan-mark.png';
+const LOGO_MARK = './assets/OpenPlan.png';
 
 /* ---------- title bar ---------- */
 
 export function TitleBar() {
-  const st = useStore();
+  const st = useApp();
   useEffect(() => { document.title = st.p.name + ' - OpenPlan'; }, [st.p.name]);
   return (
     <header className="titlebar">
@@ -37,7 +37,7 @@ export function TitleBar() {
 const SB_VIEWS: [ViewName, string][] = [['gantt', 'gantt'], ['resources', 'users'], ['network', 'network'], ['reports', 'report']];
 
 export function StatusBar() {
-  const st = useStore();
+  const st = useApp();
   const zi = ZOOMS.indexOf(st.zoom as any);
   const setZoom = (i: number) => st.setUI({ zoom: ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i))] });
   return (
@@ -47,7 +47,8 @@ export function StatusBar() {
       <span className="hide-sm">New Tasks : Auto Scheduled</span>
       <span className="sb-sep hide-sm" />
       <span className="save-state">
-        {st.saved ? <><Icon name="check" />Saved in this browser</> : <span style={{ color: 'var(--warn)' }}><Icon name="alert" />Browser storage unavailable — use File › Save</span>}
+        {st.saveState === 'ok' ? <><Icon name="check" />Saved in this browser</>
+          : <span style={{ color: 'var(--warn)' }}><Icon name="alert" />{st.saveState === 'full' ? 'Project too large for autosave — use File › Save' : 'Browser storage unavailable — use File › Save'}</span>}
       </span>
       <span className="spacer" />
       <div className="sb-views">
@@ -56,9 +57,9 @@ export function StatusBar() {
         ))}
       </div>
       <div className="sb-zoom" title="Timescale zoom">
-        <span className="z-btn" onClick={() => setZoom(zi - 1)}>−</span>
+        <button className="z-btn" aria-label="Zoom out" onClick={() => setZoom(zi - 1)}>−</button>
         <input type="range" min={0} max={3} step={1} value={zi} aria-label="Timescale zoom" onChange={e => setZoom(+e.target.value)} />
-        <span className="z-btn" onClick={() => setZoom(zi + 1)}>+</span>
+        <button className="z-btn" aria-label="Zoom in" onClick={() => setZoom(zi + 1)}>+</button>
       </div>
     </footer>
   );
@@ -89,8 +90,12 @@ function Tile({ icon, title, sub, act, disabled }: { icon: string; title: string
   );
 }
 
+function hasPrevious() {
+  try { return !!localStorage.getItem(PREV_STORE); } catch { return false; }
+}
+
 export function Backstage() {
-  const st = useStore();
+  const st = useApp();
   useEffect(() => {
     if (!st.backstage) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') st.setUI({ backstage: false }); };
@@ -109,12 +114,15 @@ export function Backstage() {
     body = <><h1>Open</h1>
       <Tile icon="upload" title="Browse…" sub="OpenPlan (.openplan, .json) or MS Project XML (.xml) files" act="open" />
       <Tile icon="layers" title="Insert as Subproject…" sub="Add another project file under a new summary task" act="insert" />
+      <Tile icon="undo" title="Restore Previous Project" sub="Bring back the plan that was open before the last New, Open or Sample" act="restore" disabled={!hasPrevious()} />
       <p className="bs-note">To open an .mpp or .pod file, open it in MS Project or ProjectLibre first and save it as XML.</p></>;
   } else if (page === 'save') {
     body = <><h1>Save</h1>
       <Tile icon="save" title="Save" sub="Save to an OpenPlan (.openplan) file on your computer; Ctrl+S saves back to the same file" act="save" />
       <Tile icon="save" title="Save As…" sub="Save a copy under a new name or location" act="saveas" />
-      <p className="bs-note">{st.saved ? 'Your work is also saved automatically in this browser.' : 'Browser storage is unavailable: download a project file to keep your work.'}</p></>;
+      <p className="bs-note">{st.saveState === 'ok' ? 'Your work is also saved automatically in this browser.'
+        : st.saveState === 'full' ? 'This project is too large for browser storage: save a project file to keep your work.'
+        : 'Browser storage is unavailable: download a project file to keep your work.'}</p></>;
   } else if (page === 'export') {
     body = <><h1>Export</h1>
       <Tile icon="file" title="MS Project XML (.xml)" sub="Opens in MS Project, ProjectLibre and Project Plan 365" act="xml" />
@@ -126,7 +134,7 @@ export function Backstage() {
   } else if (page === 'print') {
     body = <><h1>Print</h1><Tile icon="printer" title={'Print ' + viewName} sub="Use “Save as PDF” in the print dialog to create a PDF" act="print" /></>;
   } else if (page === 'about') {
-    body = <><h1>About</h1><img src="./assets/openplan-logo.png" alt="OpenPlan" height={48} />
+    body = <><h1>About</h1><img className="logo" src="./assets/OpenPlan.png" alt="OpenPlan" height={48} />
       <p className="bs-note">Free, browser-based project planning: Gantt chart, critical path, network diagram, WBS, resources, leveling, baselines, tracking, earned value and reports.</p>
       <Tile icon="info" title="Keyboard shortcuts and help" sub="Editing tips for the task table and Gantt chart" act="about" /></>;
   } else {
