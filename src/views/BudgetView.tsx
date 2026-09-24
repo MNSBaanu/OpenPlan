@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import OP from '../core';
-import { useStore } from '../store';
+import { useApp } from '../store';
 import Icon from '../components/Icon';
-import type { Row } from '../types';
+import type { Resource, Row } from '../types';
 
 const U = OP.util, M = OP.model, C = OP.charts;
 
@@ -18,7 +18,7 @@ function Health({ v }: { v: number | null }) {
 const ratio = (v: number | null) => (v == null ? '—' : v.toFixed(2));
 
 export default function BudgetView() {
-  const st = useStore(), p = st.p, s = st.s, cur = p.currency, ev = s.ev;
+  const st = useApp(), p = st.p, s = st.s, cur = p.currency, ev = s.ev;
   const budget = +p.budget || 0, cost = s.totalCost, diff = budget - cost, pct = budget ? cost / budget * 100 : 0;
   const monthly = C.monthlyCost(p, s);
   const tops = s.rows.filter((r: Row) => r.task.level === 1);
@@ -26,7 +26,7 @@ export default function BudgetView() {
   const maxRes = Math.max(1, ...p.resources.map(r => s.resStats[r.uid].cost));
   const actual = s.rows.reduce((a: number, r: Row) => a + (r.summary ? 0 : r.actualCost), 0);
   const fixed = s.rows.reduce((a: number, r: Row) => a + (+r.task.fixedCost || 0), 0);
-  const groups = [
+  const groups: { label: string; list: Resource[] }[] = [
     ...M.RES_TYPES.map((t: string) => ({ label: t, list: p.resources.filter(r => r.kind === 'Work' && r.type === t) })),
     { label: 'Materials', list: p.resources.filter(r => r.kind === 'Material') },
     { label: 'Cost resources', list: p.resources.filter(r => r.kind === 'Cost') }
@@ -40,8 +40,10 @@ export default function BudgetView() {
         <div className="kpis">
           <Kpi k="Budget" v={budget ? U.money(budget, cur) : 'Not set'} s={budget ? '' : <span className="muted">Set it in Project information</span>} />
           <Kpi k="Planned cost" v={U.money(cost, cur)} s={budget ? <span className="muted">{U.num(pct)}% of budget</span> : ''} />
-          <Kpi k={diff >= 0 ? 'Remaining' : 'Over budget'} v={U.money(Math.abs(diff), cur)}
-            s={budget ? (diff >= 0 ? <span className="chip good"><Icon name="check" />Within budget</span> : <span className="chip bad"><Icon name="alert" />Over budget</span>) : ''} />
+          {budget
+            ? <Kpi k={diff >= 0 ? 'Remaining' : 'Over budget'} v={U.money(Math.abs(diff), cur)}
+              s={diff >= 0 ? <span className="chip good"><Icon name="check" />Within budget</span> : <span className="chip bad"><Icon name="alert" />Over budget</span>} />
+            : <Kpi k="Remaining" v="—" s={<span className="muted">Budget not set</span>} />}
           <Kpi k="Duration" v={U.num(s.duration) + ' days'} s={<span className="muted">{U.fmt(s.startDn)} → {U.fmt(s.finishDn)}</span>} />
           <Kpi k="Actual cost to date" v={U.money(actual, cur)} s={<span className="muted">from % complete</span>} />
         </div>
