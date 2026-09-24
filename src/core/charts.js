@@ -149,7 +149,7 @@ OP.charts = (function () {
         (r.slack > 0 ? ', slack ' + U.num(r.slack) + 'd' : '') + (r.percent ? ', ' + r.percent + '% complete' : '') +
         (r.base ? '\nBaseline: ' + U.fmt(r.base.startDn) + ' to ' + U.fmt(r.base.finishDn) : '') +
         (r.task.deadline ? '\nDeadline: ' + U.fmt(U.parseDate(r.task.deadline)) : '')) + '</title>';
-      h.push('<g class="gbar" data-uid="' + r.task.uid + '">' + tip);
+      h.push('<g class="gbar" data-uid="' + esc(r.task.uid) + '" tabindex="0" role="button" aria-label="' + esc(r.id + '. ' + r.task.name) + '">' + tip);
       if (showBase) {
         var bx1 = X(r.base.startDn), bx2 = X(r.base.finishDn) + ppd;
         if (r.milestone || !r.base.duration) h.push('<path class="bl" d="M' + bx2 + ',' + (y + 15) + 'l4,4l-4,4l-4,-4z"/>');
@@ -227,14 +227,17 @@ OP.charts = (function () {
     var inSet = {};
     rows.forEach(function (r) { inSet[r.i] = r; });
     var edges = s.edges.filter(function (e) { return inSet[e.from] && inSet[e.to]; });
-    var level = {};
-    rows.forEach(function (r) { level[r.i] = 1; });
-    for (var pass = 0; pass < rows.length + 1; pass++) {
-      var changed = false;
-      edges.forEach(function (e) {
-        if (level[e.to] < level[e.from] + 1 && level[e.from] < rows.length + 2) { level[e.to] = level[e.from] + 1; changed = true; }
+    var level = {}, succOf = {}, predOf = {}, indeg = {};
+    rows.forEach(function (r) { level[r.i] = 1; succOf[r.i] = []; predOf[r.i] = []; indeg[r.i] = 0; });
+    edges.forEach(function (e) { succOf[e.from].push(e.to); predOf[e.to].push(e.from); indeg[e.to]++; });
+    // Longest-path layering in topological order; tasks on a dependency loop keep the level reached so far.
+    var queue = rows.filter(function (r) { return !indeg[r.i]; }).map(function (r) { return r.i; });
+    for (var qi = 0; qi < queue.length; qi++) {
+      var v0 = queue[qi];
+      succOf[v0].forEach(function (w) {
+        if (level[w] < level[v0] + 1) level[w] = level[v0] + 1;
+        if (--indeg[w] === 0) queue.push(w);
       });
-      if (!changed) break;
     }
     var maxL = 1;
     rows.forEach(function (r) { maxL = Math.max(maxL, level[r.i]); });
@@ -248,7 +251,7 @@ OP.charts = (function () {
     rows.forEach(function (r) { colsArr[level[r.i] - 1].push(r); });
     colsArr.forEach(function (col) {
       col.forEach(function (r) {
-        var ps = edges.filter(function (e) { return e.to === r.i && rowPos[e.from] != null; }).map(function (e) { return rowPos[e.from]; });
+        var ps = predOf[r.i].filter(function (f) { return rowPos[f] != null; }).map(function (f) { return rowPos[f]; });
         r._bary = ps.length ? ps.reduce(function (a, b) { return a + b; }, 0) / ps.length : r.i / 1000;
       });
       col.sort(function (a, b) { return a._bary - b._bary || a.i - b.i; });
@@ -287,7 +290,8 @@ OP.charts = (function () {
     rows.forEach(function (r) { byI[r.i] = r; });
     edges.forEach(function (e) {
       var a = byI[e.from], b = byI[e.to];
-      var crit = o.critical && a.critical && b.critical && e.type === 'FS' && Math.abs(a.ef + e.lag - b.es) < 1e-9;
+      var from = e.type === 'FS' || e.type === 'FF' ? a.ef : a.es, to = e.type === 'FS' || e.type === 'SS' ? b.es : b.ef;
+      var crit = o.critical && a.critical && b.critical && Math.abs(from + e.lag - to) < 1e-9;
       h.push(edgePath(port(e.from), port(e.to), crit));
     });
     rows.forEach(function (r) {
@@ -296,7 +300,7 @@ OP.charts = (function () {
       if (!hasOut[r.i]) h.push(edgePath(port(r.i), ePort, crit && Math.abs(r.ef - s.duration) < 1e-9));
     });
     [[startN, 'Start', '0'], [endN, 'Finish', U.num(s.duration)]].forEach(function (n) {
-      h.push('<rect class="node c" x="' + n[0].x + '" y="' + (n[0].y - 24) + '" width="' + SW + '" height="48" rx="24"/>');
+      h.push('<rect class="node c" x="' + n[0].x + '" y="' + (n[0].y - 24) + '" width="' + SW + '" height="48"/>');
       h.push('<text class="b" text-anchor="middle" x="' + (n[0].x + SW / 2) + '" y="' + (n[0].y - 2) + '">' + n[1] + '</text>');
       h.push('<text class="m sm" text-anchor="middle" x="' + (n[0].x + SW / 2) + '" y="' + (n[0].y + 13) + '">day ' + n[2] + '</text>');
     });
@@ -304,7 +308,7 @@ OP.charts = (function () {
     function v(n) { return o.dates ? n : U.num(n); }
     rows.forEach(function (r) {
       var p = at[r.i];
-      h.push('<g class="nnode" data-uid="' + r.task.uid + '">' + nodeBox(p.x, p.y, {
+      h.push('<g class="nnode" data-uid="' + esc(r.task.uid) + '" tabindex="0" role="button" aria-label="' + esc(r.id + '. ' + r.task.name) + '">' + nodeBox(p.x, p.y, {
         es: o.dates ? U.fmt(r.startDn) : v(r.es), dur: OP.model.fmtDuration(r.duration), ef: o.dates ? U.fmt(r.finishDn) : v(r.ef),
         id: r.id, name: r.task.name, res: r.names, ls: o.dates ? U.fmt(s.cal.date(r.ls)) : v(r.ls),
         slack: U.num(r.slack) + 'd', lf: o.dates ? U.fmt(s.cal.date(Math.max(Math.ceil(r.lf) - 1, 0))) : v(r.lf), crit: o.critical && r.critical
@@ -315,9 +319,9 @@ OP.charts = (function () {
 
     function nodeBox(x, y, n) {
       var c = n.crit ? ' c' : '', cw = NW / 3, out = [];
-      out.push('<rect class="node' + c + '" x="' + x + '" y="' + y + '" width="' + NW + '" height="' + NH + '" rx="6"/>');
-      out.push('<path class="nh' + c + '" d="M' + (x + 1) + ',' + (y + 22) + 'V' + (y + 7) + 'a6,6 0 0 1 6,-6H' + (x + NW - 7) + 'a6,6 0 0 1 6,6V' + (y + 22) + 'z"/>');
-      out.push('<rect class="nh' + c + '" x="' + (x + 1) + '" y="' + (y + NH - 22) + '" width="' + (NW - 2) + '" height="21" rx="5"/>');
+      out.push('<rect class="node' + c + '" x="' + x + '" y="' + y + '" width="' + NW + '" height="' + NH + '"/>');
+      out.push('<rect class="nh' + c + '" x="' + (x + 1) + '" y="' + (y + 1) + '" width="' + (NW - 2) + '" height="21"/>');
+      out.push('<rect class="nh' + c + '" x="' + (x + 1) + '" y="' + (y + NH - 22) + '" width="' + (NW - 2) + '" height="21"/>');
       out.push('<line class="gls" x1="' + x + '" y1="' + (y + 22) + '" x2="' + (x + NW) + '" y2="' + (y + 22) + '"/>');
       out.push('<line class="gls" x1="' + x + '" y1="' + (y + NH - 22) + '" x2="' + (x + NW) + '" y2="' + (y + NH - 22) + '"/>');
       for (var k = 1; k < 3; k++) {
@@ -358,7 +362,7 @@ OP.charts = (function () {
     var H = PAD * 2 + 60 + 44 + NH + maxDesc * (NH + 10) + 10;
     var h = [svgOpen(W, H, 'wbs-svg')];
     var rootW = Math.min(W - PAD * 2, 320), rx = (W - rootW) / 2, ry = PAD;
-    h.push('<rect class="wbs0" x="' + rx + '" y="' + ry + '" width="' + rootW + '" height="' + RH + '" rx="8"/>');
+    h.push('<rect class="wbs0" x="' + rx + '" y="' + ry + '" width="' + rootW + '" height="' + RH + '"/>');
     h.push('<text class="wbs0t lg" text-anchor="middle" x="' + (W / 2) + '" y="' + (ry + 25) + '">' + esc(trunc(p.name, 40)) + '</text>');
     h.push('<text class="wbs0t sm" text-anchor="middle" x="' + (W / 2) + '" y="' + (ry + 42) + '">' + esc('0  ·  ' + U.fmt(s.startDn) + ' – ' + U.fmt(s.finishDn)) + '</text>');
     var busY = ry + RH + 22;
@@ -385,7 +389,7 @@ OP.charts = (function () {
 
     function box(x, y, w, r, cls) {
       var maxc = Math.floor((w - 16) / 6.6), lines = wrap(r.task.name, maxc, 2), out = [];
-      out.push('<g class="wnode" data-uid="' + r.task.uid + '"><rect class="' + cls + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + NH + '" rx="6"/>');
+      out.push('<g class="wnode" data-uid="' + esc(r.task.uid) + '" tabindex="0" role="button" aria-label="' + esc(r.wbs + ' ' + r.task.name) + '"><rect class="' + cls + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + NH + '"/>');
       out.push('<text class="m sm" x="' + (x + 8) + '" y="' + (y + 15) + '">' + esc(r.wbs) + (r.milestone ? '  ◆' : '') + '</text>');
       out.push('<text class="' + (r.summary ? 'b ' : '') + 'sm" x="' + (x + 8) + '" y="' + (y + (lines[1] ? 28 : 32)) + '">' + esc(lines[0]) + '</text>');
       if (lines[1]) out.push('<text class="' + (r.summary ? 'b ' : '') + 'sm" x="' + (x + 8) + '" y="' + (y + 40) + '">' + esc(lines[1]) + '</text>');
@@ -400,8 +404,17 @@ OP.charts = (function () {
     var res = o.p.resources, byUid = {}, kids = {};
     res.forEach(function (r) { byUid[r.uid] = r; kids[r.uid] = []; });
     var roots = [];
+    // People whose manager chain leads back to themselves are shown as top-level cards.
+    function loops(r) {
+      var seen = {};
+      for (var q = byUid[r.reportsTo]; q && !seen[q.uid]; q = byUid[q.reportsTo]) {
+        if (q === r) return true;
+        seen[q.uid] = true;
+      }
+      return false;
+    }
     res.forEach(function (r) {
-      if (r.reportsTo != null && byUid[r.reportsTo] && r.reportsTo !== r.uid) kids[r.reportsTo].push(r);
+      if (r.reportsTo != null && byUid[r.reportsTo] && r.reportsTo !== r.uid && !loops(r)) kids[r.reportsTo].push(r);
       else roots.push(r);
     });
     var NW = 188, NH = 66, GX = 22, GY = 48, PAD = 30;
@@ -446,8 +459,8 @@ OP.charts = (function () {
     });
     nodes.forEach(function (r) {
       var a = placed[r.uid];
-      h.push('<g class="onode" data-uid="' + r.uid + '"><rect class="node" x="' + a.x + '" y="' + a.y + '" width="' + NW + '" height="' + NH + '" rx="8"/>');
-      h.push('<rect class="t-' + esc(r.type) + '" x="' + a.x + '" y="' + (a.y + 10) + '" width="4" height="' + (NH - 20) + '" rx="2"/>');
+      h.push('<g class="onode" data-uid="' + esc(r.uid) + '"><rect class="node" x="' + a.x + '" y="' + a.y + '" width="' + NW + '" height="' + NH + '"/>');
+      h.push('<rect class="t-' + esc(r.type) + '" x="' + a.x + '" y="' + (a.y + 10) + '" width="4" height="' + (NH - 20) + '"/>');
       h.push('<text class="b" x="' + (a.x + 14) + '" y="' + (a.y + 22) + '">' + esc(trunc(r.name, 26)) + '</text>');
       h.push('<text class="m sm" x="' + (a.x + 14) + '" y="' + (a.y + 38) + '">' + esc(trunc(r.role, 30)) + '</text>');
       h.push('<text class="m sm" x="' + (a.x + 14) + '" y="' + (a.y + 54) + '">' + esc(r.type + ' · ' + r.maxUnits + '% · ' + U.money(r.rate, o.p.currency) + '/h') + '</text></g>');
@@ -455,7 +468,7 @@ OP.charts = (function () {
     // Legend: type is shown by the side stripe and repeated in text on every card.
     var lx = PAD, ly = H - 24;
     OP.model.RES_TYPES.forEach(function (t) {
-      h.push('<rect class="t-' + t + '" x="' + lx + '" y="' + (ly - 9) + '" width="10" height="10" rx="2"/><text class="m sm" x="' + (lx + 15) + '" y="' + ly + '">' + t + '</text>');
+      h.push('<rect class="t-' + t + '" x="' + lx + '" y="' + (ly - 9) + '" width="10" height="10"/><text class="m sm" x="' + (lx + 15) + '" y="' + ly + '">' + t + '</text>');
       lx += 100;
     });
     h.push('</svg>');
@@ -466,13 +479,17 @@ OP.charts = (function () {
 
   function monthlyCost(p, s) {
     var byMonth = {};
+    function add(d, v) {
+      var dt = U.toDate(s.cal.date(d)), key = dt.getUTCFullYear() * 12 + dt.getUTCMonth();
+      byMonth[key] = (byMonth[key] || 0) + v;
+    }
+    for (var d in s.dayCost) add(+d, s.dayCost[d]);
+    // Fixed costs on summary tasks are spread over the summary's span.
     s.rows.forEach(function (r) {
-      if (r.summary || !r.cost) return;
-      var days = Math.max(Math.ceil(r.ef) - Math.floor(r.es), 1), per = r.cost / days;
-      for (var d = Math.floor(r.es); d < Math.floor(r.es) + days; d++) {
-        var dt = U.toDate(s.cal.date(d)), key = dt.getUTCFullYear() * 12 + dt.getUTCMonth();
-        byMonth[key] = (byMonth[key] || 0) + per;
-      }
+      var fc = +r.task.fixedCost || 0;
+      if (!r.summary || !fc) return;
+      var days = Math.max(Math.ceil(r.ef) - Math.floor(r.es), 1);
+      for (var k = 0; k < days; k++) add(Math.floor(r.es) + k, fc / days);
     });
     var keys = Object.keys(byMonth).map(Number).sort(function (a, b) { return a - b; });
     if (!keys.length) return [];
@@ -516,7 +533,7 @@ OP.charts = (function () {
     if (o.kind === 'monthly') {
       data.forEach(function (d, i) {
         var bw = Math.min(step * 0.6, 48), x = L + step * i + (step - bw) / 2, y = Y(d.value), bh = T + ph - y;
-        if (bh > 0) h.push('<path class="cbar" d="M' + x + ',' + (T + ph) + 'V' + (y + Math.min(4, bh)) + 'q0,-4 4,-4H' + (x + bw - 4) + 'q4,0 4,4V' + (T + ph) + 'z"/>');
+        if (bh > 0) h.push('<path class="cbar" d="M' + x + ',' + (T + ph) + 'V' + y + 'H' + (x + bw) + 'V' + (T + ph) + 'z"/>');
         h.push('<rect class="hit" x="' + (L + step * i) + '" y="' + T + '" width="' + step + '" height="' + ph + '"><title>' + esc(d.label + ': ' + U.money(d.value, cur)) + '</title></rect>');
       });
     } else {
