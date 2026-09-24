@@ -75,7 +75,7 @@ function selectedBlocks(p: Project): number[] {
 function wouldLoop(mutate: (p: Project) => void) {
   const trial: Project = U.clone(S().p);
   mutate(trial);
-  return OP.schedule(trial).cycle.length > 0;
+  return OP.schedule(trial, { cycleOnly: true }).cycle.length > 0;
 }
 
 /* ---------- commands ---------- */
@@ -198,6 +198,7 @@ export function deleteSelected() {
 
 export function setPercent(uid: number, v: number) {
   const r = rowByUid(uid);
+  if (!r) return;
   S().commit(p => {
     const t = findTask(p, uid);
     t.percent = v;
@@ -261,7 +262,7 @@ export function levelAll() {
   let res: any = null;
   st.commit(p => { res = OP.level(p); });
   if (!res || (!res.moved && !res.unresolved.length)) st.toast('No overallocations to level.');
-  else if (res.unresolved.length) st.toast('Leveled ' + res.moved + ' tasks. Still overallocated (assigned above max units): ' + res.unresolved.join(', '), true);
+  else if (res.unresolved.length) st.toast('Leveled ' + res.moved + ' tasks. Still overallocated: ' + res.unresolved.join(', ') + ' (assigned above max units, or on tasks that cannot move: started, in progress or Must start/finish on)', true);
   else st.toast('Leveled — delayed ' + res.moved + ' task' + (res.moved === 1 ? '' : 's'));
 }
 
@@ -280,7 +281,12 @@ export function createRecurring(o: { name: string; duration: number; first: numb
       let dn: number;
       if (o.unit === 'week') dn = o.first + k * 7 * o.every;
       else if (o.unit === 'day') dn = cal.date(cal.indexOf(o.first) + k * o.every);
-      else { const dt = U.toDate(o.first); dn = Math.round(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() + k * o.every, dt.getUTCDate()) / 864e5); }
+      else {
+        // Clamp to the month's last day so "every month from 31 Jan" gives 28/29 Feb, not 3 Mar.
+        const dt = U.toDate(o.first), y = dt.getUTCFullYear(), m = dt.getUTCMonth() + k * o.every;
+        const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+        dn = Math.round(Date.UTC(y, m, Math.min(dt.getUTCDate(), last)) / 864e5);
+      }
       list.push(M.newTask(p, { name: o.name + ' ' + (k + 1), level: lvl + 1, duration: o.duration, milestone: o.duration === 0, constraint: 'SNET', constraintDate: U.iso(dn) }));
     }
     p.tasks.splice(pos, 0, ...list);
