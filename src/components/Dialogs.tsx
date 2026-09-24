@@ -1,13 +1,13 @@
-import { useEffect, useRef, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import OP from '../core';
 import { useStore, S } from '../store';
 import { downloadXml } from '../lib/actions';
 import * as ops from '../lib/taskOps';
 import Icon from './Icon';
-import type { Resource } from '../types';
+import type { CustomField, Resource } from '../types';
 
 const U = OP.util;
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const STATUSES = ['Draft', 'In review', 'Approved', 'Baselined', 'Final'];
 
 function Modal({ title, children, onSubmit, okLabel = 'Save', cancelLabel = 'Cancel', noOk }: {
   title: string; children: ReactNode; onSubmit?: (fd: FormData) => boolean | void; okLabel?: ReactNode; cancelLabel?: string; noOk?: boolean;
@@ -50,13 +50,16 @@ function parseDates(text: FormDataEntryValue | null, bad: string[]) {
 
 function SettingsDialog() {
   const st = useStore(), p = st.p;
-  const cf = p.customFields.map(f => f.name + (f.type === 'number' ? ' : number' : '')).join('\n');
+  // Fields keep their ids while being renamed, so task values stay with the right field.
+  const [fields, setFields] = useState<CustomField[]>(() => p.customFields.map(f => ({ ...f })));
+  const patchField = (k: number, patch: Partial<CustomField>) => setFields(fields.map((f, i) => (i === k ? { ...f, ...patch } : f)));
+  const statuses = STATUSES.includes(p.status) || !p.status ? STATUSES : STATUSES.concat([p.status]);
   return (
     <Modal title="Project information" onSubmit={fd => {
       const bad: string[] = [];
       const hol = parseDates(fd.get('holidays'), bad);
       if (bad.length) st.toast('Ignored invalid holiday dates: ' + bad.join(', '), true);
-      const lines = String(fd.get('custom') || '').split('\n').map(l => l.trim()).filter(Boolean);
+      const cfs = fields.map(f => ({ ...f, name: f.name.trim() })).filter(f => f.name);
       st.commit(pp => {
         pp.name = String(fd.get('name')).trim() || 'Untitled project';
         pp.organization = String(fd.get('organization'));
@@ -69,19 +72,16 @@ function SettingsDialog() {
         pp.budget = Math.max(0, +fd.get('budget')! || 0);
         pp.currency = String(fd.get('currency')).trim();
         pp.holidays = hol;
-        const old = pp.customFields;
-        pp.customFields = lines.map((l, k) => {
-          const m = /^(.*?)\s*:\s*number$/i.exec(l), name = m ? m[1] : l;
-          const prev = old.find(f => f.name === name) || old[k];
-          return { id: prev ? prev.id : 'c' + Date.now().toString(36) + k, name, type: m ? 'number' : 'text' };
-        });
+        pp.customFields = cfs;
+        const keep = new Set(cfs.map(f => f.id));
+        pp.tasks.forEach(t => { Object.keys(t.custom).forEach(id => { if (!keep.has(id)) delete t.custom[id]; }); });
       });
     }}>
       <F label="Project name" name="name" value={p.name} />
       <div className="row2"><F label="Issuing organisation" name="organization" value={p.organization} /><F label="Project manager" name="manager" value={p.manager} /></div>
       <div className="row2">
         <label className="field"><span>Status</span><select className="sel" name="status" defaultValue={p.status}>
-          {['Draft', 'In review', 'Approved', 'Baselined', 'Final'].map(s => <option key={s}>{s}</option>)}
+          {statuses.map(s => <option key={s}>{s}</option>)}
         </select></label>
         <F label="Date of issue" name="issueDate" value={p.issueDate} type="date" />
       </div>
@@ -93,8 +93,20 @@ function SettingsDialog() {
       </div>
       <label className="field"><span>Holidays (one date per line, YYYY-MM-DD) — non-working days besides weekends</span>
         <textarea className="inp" name="holidays" rows={3} defaultValue={(p.holidays || []).join('\n')} /></label>
-      <label className="field"><span>Custom task fields (one per line; add “: number” for numeric fields)</span>
-        <textarea className="inp" name="custom" rows={3} placeholder={'Owner\nStory points : number'} defaultValue={cf} /></label>
+      <div className="field"><span>Custom task fields</span>
+        <div className="mini-list">
+          {fields.map((f, k) => (
+            <div className="mini-row cf" key={f.id}>
+              <input className="inp" aria-label="Field name" placeholder="e.g. Owner" value={f.name} onChange={e => patchField(k, { name: e.target.value })} />
+              <select className="sel" aria-label="Field type" value={f.type} onChange={e => patchField(k, { type: e.target.value as CustomField['type'] })}>
+                <option value="text">Text</option><option value="number">Number</option>
+              </select>
+              <button type="button" className="icon-btn" aria-label="Remove field" onClick={() => setFields(fields.filter((_, i) => i !== k))}><Icon name="x" /></button>
+            </div>
+          ))}
+          <button type="button" className="btn ghost" onClick={() => setFields(fields.concat([{ id: 'c' + Date.now().toString(36) + fields.length, name: '', type: 'text' }]))}><Icon name="plus" />Add field</button>
+        </div>
+      </div>
     </Modal>
   );
 }
@@ -156,7 +168,7 @@ function ResourceDialog({ uid }: { uid: number }) {
     }}>
       {r.kind === 'Work' && <>
         <label className="field"><span>Working days</span><div className="chk-row">
-          {[1, 2, 3, 4, 5, 6, 0].map(d => <label key={d} className="chk"><input type="checkbox" name="wd" value={d} defaultChecked={r.workDays.includes(d)} />{DAY_NAMES[d]}</label>)}
+          {[1, 2, 3, 4, 5, 6, 0].map(d => <label key={d} className="chk"><input type="checkbox" name="wd" value={d} defaultChecked={r.workDays.includes(d)} />{U.DAYS[d]}</label>)}
         </div></label>
         <label className="field"><span>Vacations / days off (one date per line, YYYY-MM-DD)</span><textarea className="inp" name="vacations" rows={3} defaultValue={r.vacations.join('\n')} /></label>
         <label className="field"><span>Rate changes (one per line: effective date and new hourly rate)</span><textarea className="inp" name="rates" rows={3} placeholder="2026-04-01 8500" defaultValue={rates} /></label>
@@ -191,7 +203,7 @@ function AboutDialog() {
   return (
     <Modal title="About OpenPlan" cancelLabel="Close" noOk>
       <p>OpenPlan is a free, browser-based project planner: WBS, Gantt chart, critical path, network diagram, resources, leveling, baselines, tracking, earned value, budget and reports. Your project is stored only in this browser; use <b>File › Save</b> to keep a copy.</p>
-      <div className="logos"><img src="./assets/openplan-logo.png" alt="OpenPlan" height={40} /></div>
+      <div className="logos"><img className="logo" src="./assets/OpenPlan.png" alt="OpenPlan" height={40} /></div>
       <p><b>Keyboard</b><br /><kbd>Enter</kbd>/<kbd>↑</kbd><kbd>↓</kbd> move between rows · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>→</kbd>/<kbd>←</kbd> indent/outdent · <kbd>Ins</kbd> new task · <kbd>Del</kbd> delete selected · <kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> undo/redo · <kbd>Ctrl</kbd>+<kbd>S</kbd> save file</p>
       <p><b>Gantt chart</b><br />Drag a bar to move it (sets a “Start no earlier than” constraint), drag its right edge to change the duration, or drag it up/down onto another bar to link the two.</p>
       <p><b>Predecessors</b><br />Type task IDs separated by commas. Link types: FS (default), SS, FF, SF, with optional lag, e.g. <code>3, 5SS+2d, 7FF-1d</code>.</p>
