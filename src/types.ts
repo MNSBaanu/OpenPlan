@@ -68,7 +68,78 @@ export interface Project {
 }
 
 /* Computed schedule rows and results come from the JavaScript engine (core.js). */
-export type Row = any;
-export type Schedule = any;
+export interface Row {
+  task: Task;
+  i: number;
+  id: number;
+  wbs: string;
+  summary: boolean;
+  parent: number;
+  children: number[];
+  leaves: number[];
+  es: number; ef: number; ls: number; lf: number; esEarly: number;
+  slack: number;
+  freeSlack: number;
+  critical: boolean;
+  milestone: boolean;
+  duration: number;
+  startDn: number;
+  finishDn: number;
+  percent: number;
+  cost: number;
+  work: number;
+  actualCost: number;
+  actualWork: number;
+  bcws: number; bcwp: number; acwp: number;
+  segs: [number, number][];
+  material: Record<number, number>;
+  names: string;
+  late: boolean;
+  over: boolean;
+  cyclic: boolean;
+  conflict: string;
+  missedDeadline: boolean;
+  base: { startDn: number; finishDn: number; duration: number; cost: number; work: number } | null;
+  startVar: number;
+  finishVar: number;
+  costVar: number;
+  slipped: boolean;
+}
+
+export interface ResStat {
+  peak: number;
+  overDays: number[];
+  over: boolean;
+  work: number;
+  cost: number;
+  qty: number;
+  capOn: (day: number) => number;
+}
+
+export interface Calendar {
+  first: number;
+  isWorking: (dn: number) => boolean;
+  date: (n: number) => number;
+  indexOf: (dn: number) => number;
+  finishIndex: (dn: number) => number;
+}
+
+export interface Schedule {
+  rows: Row[];
+  edges: { from: number; to: number; type: LinkType; lag: number }[];
+  cal: Calendar;
+  load: Record<number, Record<number, number>>;
+  contrib: Record<number, Record<number, number[]>>;
+  resStats: Record<number, ResStat>;
+  ev: { bac: number; bcws: number; bcwp: number; acwp: number; sv: number; cv: number; spi: number | null; cpi: number | null; eac: number; vac: number };
+  dayCost: Record<number, number>;
+  cycle: number[];
+  duration: number;
+  statusDn: number;
+  startDn: number;
+  finishDn: number;
+  totalCost: number;
+  totalWork: number;
+}
 
 export type ViewName = 'gantt' | 'network' | 'wbs' | 'resources' | 'org' | 'workload' | 'budget' | 'reports';
