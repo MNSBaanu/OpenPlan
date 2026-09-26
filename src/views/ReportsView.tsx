@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import OP from '../core';
 import { useApp, type Store } from '../store';
 import { runAction } from '../lib/actions';
@@ -143,22 +143,33 @@ const build: Record<string, (st: Store) => ReactNode> = {
 
 export default function ReportsView() {
   const st = useApp();
+  const [printAll, setPrintAll] = useState(false);
+  useEffect(() => {
+    if (!printAll) return;
+    window.print();
+    setPrintAll(false);
+  }, [printAll]);
   const id = build[st.report] ? st.report : 'overview';
-  const title = REPORTS.find(r => r[0] === id)![1];
+  const page = ([k, title]: [string, string]) => (
+    <article className="paper" key={k} id={printAll ? undefined : 'report'}>
+      <header className="rpt-head">
+        <div><div className="muted small">{st.p.name}{st.p.organization ? ' · ' + st.p.organization : ''}</div><h2>{title}</h2></div>
+        <div className="muted small">Generated {U.fmtLong(U.todayDn())}</div>
+      </header>
+      {build[k](st)}
+    </article>
+  );
   return (
     <div className="view"><div className="reports">
       <nav className="rpt-nav" aria-label="Reports">
         {REPORTS.map(([k, label]) => <button key={k} className={k === id ? 'active' : ''} onClick={() => st.setUI({ report: k })}>{label}</button>)}
       </nav>
       <div className="rpt-body">
-        <div className="toolbar rpt-tools"><span className="spacer" /><button className="btn" onClick={() => runAction('print')}><Icon name="printer" />Print / Save as PDF</button></div>
-        <article className="paper" id="report">
-          <header className="rpt-head">
-            <div><div className="muted small">{st.p.name}{st.p.organization ? ' · ' + st.p.organization : ''}</div><h2>{title}</h2></div>
-            <div className="muted small">Generated {U.fmtLong(U.todayDn())}</div>
-          </header>
-          {build[id](st)}
-        </article>
+        <div className="toolbar rpt-tools"><span className="spacer" />
+          <button className="btn" onClick={() => setPrintAll(true)}><Icon name="report" />Print all reports</button>
+          <button className="btn" onClick={() => runAction('print')}><Icon name="printer" />Print / Save as PDF</button>
+        </div>
+        {printAll ? <div className="rpt-all">{REPORTS.map(page)}</div> : page(REPORTS.find(r => r[0] === id)!)}
       </div>
     </div></div>
   );

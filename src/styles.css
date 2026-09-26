@@ -399,6 +399,8 @@ table.heat td.over, .legend i.over { background: var(--heat-over); color: var(--
 .paper { flex: 1; overflow: auto; background: var(--surface); border: 1px solid var(--border); padding: 22px 26px; box-shadow: var(--shadow-lg); }
 .rpt-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--brand-fg); padding-bottom: 8px; margin-bottom: 14px; gap: 12px; }
 .rpt-head h2 { margin: 2px 0 0; font-size: var(--fs-4xl); font-weight: 300; color: var(--brand-fg); }
+.rpt-all { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 16px; }
+.rpt-all .paper { flex: none; overflow: visible; }
 .paper h3 { font-size: var(--fs-md); margin: 16px 0 6px; color: var(--brand-fg); font-weight: 600; }
 .paper .kpis { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 table.data.rpt th { position: static; }
@@ -644,7 +646,8 @@ kbd { font: var(--fs-xs) Consolas, monospace; padding: 0 4px; border: 1px solid 
 @media print {
   .titlebar, .ribbon-tabs, .ribbon, .viewbar, .statusbar, .toolbar, aside.drawer, .rpt-nav, .rpt-tools, .alert, .backstage { display: none !important; }
   body { overflow: visible; height: auto; }
-  .layout, main, .view, .reports, .rpt-body, .paper { display: block !important; overflow: visible !important; height: auto !important; }
+  .layout, main, .view, .reports, .rpt-body, .rpt-all, .paper { display: block !important; overflow: visible !important; height: auto !important; }
+  .rpt-all .paper + .paper { break-before: page; }
   .paper { border: 0; box-shadow: none; padding: 0; }
 }
 .titlebar .icon-btn { color: var(--on-brand); border: 0; width: 28px; height: 26px; }
