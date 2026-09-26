@@ -2,7 +2,7 @@ import { Component, StrictMode, Suspense, lazy, useEffect, useState, type ReactN
 import { createRoot } from 'react-dom/client';
 import OP from './core';
 import DialogHost from './components/Dialogs';
-import { Toast } from './components/Chrome';
+import { Toast } from './components/Toast';
 import { useStore, S, ask } from './store';
 import { handleLaunchFiles } from './lib/actions';
 import { SHARE_PREFIX, decodePlan } from './lib/share';
