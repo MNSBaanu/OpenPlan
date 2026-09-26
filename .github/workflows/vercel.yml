@@ -48,6 +48,10 @@ jobs:
         if: env.CAN_DEPLOY == 'true'
         run: npm install --global vercel@59.26.0
 
+      - name: Remove stale Vercel link metadata
+        if: env.CAN_DEPLOY == 'true'
+        run: rm -rf .vercel
+
       - name: Pull Vercel project settings
         if: env.CAN_DEPLOY == 'true'
         run: vercel pull --yes --environment=$VERCEL_ENV --token=${{ secrets.VERCEL_TOKEN }}
