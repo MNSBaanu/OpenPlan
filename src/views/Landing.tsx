@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import '@fontsource-variable/inter';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import '@fontsource-variable/archivo';
 import OP from '../core';
 import { useApp, S, ask } from '../store';
 import Icon from '../components/Icon';
@@ -127,38 +127,57 @@ export default function Landing() {
 
       <main>
         <section className="lp-hero">
-          <p className="lp-eyebrow">Free online project planning</p>
-          <h1>Turn a task list into a complete project plan.</h1>
-          <p className="lp-lede">
-            Enter your tasks, how long they take and what depends on what. OpenPlan builds the schedule and
-            gives you the Gantt chart, critical path, network diagram, WBS, resource plan and budget,
-            ready to export into your report.
-          </p>
-          <div className="lp-actions">
-            <button className="lp-btn lg" onClick={enterApp}>Start planning <Icon name="chevR" /></button>
-            <button className="lp-btn lg ghost" onClick={openSample}>Try the sample project</button>
+          <div className="lp-hero-top">
+            <div className="lp-hero-copy">
+              <p className="lp-label">Free online project planning</p>
+              <h1>Turn a task list into a complete project plan.</h1>
+              <p className="lp-lede">
+                Enter your tasks, how long they take and what depends on what. OpenPlan builds the schedule and
+                gives you the Gantt chart, critical path, network diagram, WBS, resource plan and budget,
+                ready to export into your report.
+              </p>
+              <div className="lp-actions">
+                <button className="lp-btn lg" onClick={enterApp}>Start planning <Icon name="chevR" /></button>
+                <button className="lp-btn lg ghost" onClick={openSample}>Try the sample project</button>
+              </div>
+              <p className="lp-note">Free · No sign-up · Nothing to install · Your project data stays on your computer</p>
+            </div>
+            <div className="lp-summary">
+              <p className="lp-label" id="lp-glance">At a glance</p>
+              <ul className="lp-stats" aria-labelledby="lp-glance">
+                {STATS.map(([n, label]) => <li key={label}><b>{n}</b><span>{label}</span></li>)}
+              </ul>
+            </div>
           </div>
-          <p className="lp-note">Free · No sign-up · Nothing to install · Your project data stays on your computer</p>
           <Preview sample={sample} />
-          <ul className="lp-stats" aria-label="OpenPlan at a glance">
-            {STATS.map(([n, label]) => <li key={label}><b>{n}</b><span>{label}</span></li>)}
-          </ul>
         </section>
 
-        <section className="lp-block alt" id="how">
+        <section className="lp-block" id="how">
           <div className="lp-head">
             <h2>How it works</h2>
             <p>Four steps take you from a list of tasks to a finished plan. You don’t need any project management software experience.</p>
           </div>
-          <ol className="lp-steps">
-            {STEPS.map(([title, text], i) => (
-              <li key={title}>
-                <span className="lp-step-n">Step {i + 1}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
+          <div className="lp-gantt">
+            <div className="lp-g-row lp-g-head" aria-hidden="true">
+              <span className="lp-g-id">ID</span><span>Task</span><span className="lp-g-pred">Pred.</span><span className="lp-g-time">Timeline</span>
+            </div>
+            <ol>
+              {STEPS.map(([title, text], i) => (
+                <li className="lp-g-row" key={title}>
+                  <span className="lp-g-id">{i + 1}</span>
+                  <div><h3>{title}</h3><p>{text}</p></div>
+                  <span className="lp-g-pred">{i ? i : '–'}</span>
+                  <span className="lp-g-time" aria-hidden="true"><i className="lp-g-bar" style={{ '--i': i } as CSSProperties} /></span>
+                </li>
+              ))}
+              <li className="lp-g-row ms">
+                <span className="lp-g-id">{STEPS.length + 1}</span>
+                <div><h3>Plan ready</h3></div>
+                <span className="lp-g-pred">{STEPS.length}</span>
+                <span className="lp-g-time" aria-hidden="true"><i className="lp-g-ms" /></span>
               </li>
-            ))}
-          </ol>
+            </ol>
+          </div>
         </section>
 
         <section className="lp-block" id="outputs">
@@ -171,12 +190,12 @@ export default function Landing() {
           </ul>
         </section>
 
-        <section className="lp-block alt" id="audience">
+        <section className="lp-block" id="audience">
           <div className="lp-head">
             <h2>Who it’s for</h2>
             <p>Anyone who needs a proper project plan without buying desktop project management software.</p>
           </div>
-          <div className="lp-facts">
+          <div className="lp-cols">
             {AUDIENCE.map(([icon, title, text]) => <div key={title}><Icon name={icon} /><h3>{title}</h3><p>{text}</p></div>)}
           </div>
         </section>
@@ -191,12 +210,12 @@ export default function Landing() {
           </dl>
         </section>
 
-        <section className="lp-block alt" id="files">
+        <section className="lp-block" id="files">
           <div className="lp-head">
             <h2>Your work stays with you</h2>
             <p>OpenPlan has no server and no account. Here’s where your plans are kept. Anonymous visit counts (page, referrer, screen size, browser) are collected with cookie-free GoatCounter analytics; project data is never sent.</p>
           </div>
-          <div className="lp-facts">
+          <div className="lp-cols">
             <div><Icon name="save" /><h3>In your browser</h3><p>Every change is saved automatically on this device, so you can close the tab and continue later.</p></div>
             <div><Icon name="file" /><h3>In .openplan files</h3><p>Save to a file on your computer. In Chrome and Edge, install the app and double-click a file to open it.</p></div>
             <div><Icon name="download" /><h3>In other tools</h3><p>Export CSV for spreadsheets, and PNG or SVG for your report.</p></div>
