@@ -1,7 +1,8 @@
 import { useEffect, useState, type JSX } from 'react';
 import OP from '../core';
 import { useApp, useStore, VIEW_NAMES, ZOOMS, PREV_STORE } from '../store';
-import { hasImage, runAction } from '../lib/actions';
+import { hasImage, openTemplate, runAction } from '../lib/actions';
+import { TEMPLATES } from '../lib/templates';
 import Icon from './Icon';
 import type { ViewName } from '../types';
 
@@ -122,6 +123,12 @@ export function Backstage() {
     body = <><h1>New</h1><div className="bs-cards">
       <button className="bs-card" onClick={() => runAction('new')}><div className="bs-thumb blank" /><b>Blank Project</b></button>
       <button className="bs-card" onClick={() => runAction('sample')}><div className="bs-thumb sample"><i /><i /><i /></div><b>Sample Project</b></button>
+    </div><h2 className="bs-sub">Templates</h2><div className="bs-cards">
+      {TEMPLATES.map(t => (
+        <button key={t.id} className="bs-card" onClick={() => openTemplate(t)}>
+          <div className="bs-thumb sample"><i /><i /><i /></div><b>{t.name}</b><span className="bs-card-sub">{t.desc}</span>
+        </button>
+      ))}
     </div></>;
   } else if (page === 'open') {
     body = <><h1>Open</h1>

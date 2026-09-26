@@ -2,6 +2,7 @@ import OP from '../core';
 import { S, VIEW_NAMES, ask, PREV_STORE, type Store } from '../store';
 import { gridItems } from './grid';
 import { toXlsx } from './xlsx';
+import { fromTemplate, type Template } from './templates';
 import type { Project } from '../types';
 
 const U = OP.util, C = OP.charts, IO = OP.io;
@@ -83,6 +84,18 @@ export const hasImage = (st: Store) => ['gantt', 'network', 'wbs', 'org'].includ
 
 function svgElement(str: string): SVGSVGElement {
   return new DOMParser().parseFromString(str, 'image/svg+xml').documentElement as unknown as SVGSVGElement;
+}
+
+// Replaces the current plan; the previous one can be restored from File › Open.
+export function loadProject(p: Project, msg: string) {
+  handle = null;
+  S().setUI({ backstage: false, menu: null });
+  S().replaceProject(p, msg);
+}
+
+export function openTemplate(t: Template) {
+  ask('Start a new plan from the “' + t.name + '” template? The current one can be restored from File › Open › Restore Previous Project.',
+    () => loadProject(fromTemplate(t), t.name + ' template loaded'), 'Use template');
 }
 
 export function runAction(a: string) {
