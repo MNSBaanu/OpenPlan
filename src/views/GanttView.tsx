@@ -362,15 +362,27 @@ export default function GanttView() {
     to.scrollTop = from.scrollTop;
   };
 
+  const hide = st.ganttHide;
   const startSplit = (e: React.PointerEvent<HTMLDivElement>) => {
-    const x0 = e.clientX, w0 = st.gridW, el = e.currentTarget;
+    const el = e.currentTarget, split = el.parentElement!, grid = gridRef.current!;
+    const x0 = e.clientX, total = split.clientWidth - el.offsetWidth;
+    const w0 = hide === 'table' ? 0 : hide === 'chart' ? total : grid.offsetWidth;
     el.classList.add('drag');
     el.setPointerCapture(e.pointerId);
-    const mv = (ev: PointerEvent) => { if (gridRef.current) gridRef.current.style.width = Math.max(160, Math.min(2400, w0 + ev.clientX - x0)) + 'px'; };
+    // Dropping the splitter near an edge hides that pane.
+    const at = (ev: PointerEvent) => {
+      const w = Math.max(0, Math.min(total, w0 + ev.clientX - x0));
+      const h: typeof hide = w < 80 ? 'table' : total - w < 120 ? 'chart' : 'none';
+      return { h, w: Math.max(160, Math.min(2400, w)) };
+    };
+    const mv = (ev: PointerEvent) => { const { h, w } = at(ev); split.dataset.hide = h; if (h === 'none') grid.style.width = w + 'px'; };
     const up = (ev: PointerEvent) => {
       el.classList.remove('drag');
       el.removeEventListener('pointermove', mv);
-      S().setUI({ gridW: Math.max(160, Math.min(2400, w0 + ev.clientX - x0)) });
+      const { h, w } = at(ev), gridW = h === 'none' ? w : st.gridW;
+      split.dataset.hide = h;
+      grid.style.width = gridW + 'px';
+      S().setUI({ ganttHide: h, gridW });
     };
     el.addEventListener('pointermove', mv);
     el.addEventListener('pointerup', up, { once: true });
@@ -394,11 +406,22 @@ export default function GanttView() {
         <div className="alert info"><Icon name="filter" />Showing: {md.filters[st.filter] || st.filter}{st.group !== 'none' ? ', grouped by ' + (md.groups[st.group] || st.group) : ''}{' '}
           <button className="linkbtn" onClick={() => st.setUI({ filter: 'all', group: 'none' })}>Show all tasks</button></div>
       )}
-      <div className="split">
+      <div className="split" data-hide={hide}>
         <div className="grid-pane" ref={gridRef} style={{ width: st.gridW }} onScroll={e => sync(e.currentTarget, chartEl)}>
           <Grid st={st} list={list} />
         </div>
-        <div className="splitter" title="Drag to resize" onPointerDown={startSplit} />
+        <div className="splitter" title="Drag to resize, or to either edge to hide a side" onPointerDown={startSplit}>
+          <div className="split-btns" onPointerDown={e => e.stopPropagation()}>
+            {hide !== 'table' && (
+              <button className="flip" title={hide === 'chart' ? 'Show the chart' : 'Hide the task table'} aria-label={hide === 'chart' ? 'Show the chart' : 'Hide the task table'}
+                onClick={() => st.setUI({ ganttHide: hide === 'chart' ? 'none' : 'table' })}><Icon name="chevR" /></button>
+            )}
+            {hide !== 'chart' && (
+              <button title={hide === 'table' ? 'Show the task table' : 'Hide the chart'} aria-label={hide === 'table' ? 'Show the task table' : 'Hide the chart'}
+                onClick={() => st.setUI({ ganttHide: hide === 'table' ? 'none' : 'chart' })}><Icon name="chevR" /></button>
+            )}
+          </div>
+        </div>
         <div className="chart-pane" ref={el => { chartEl = el; }}
           onScroll={e => sync(e.currentTarget, gridRef.current)}
           onClick={onChartClick}
