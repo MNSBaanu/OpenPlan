@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import OP from '../core';
 import { useStore, S, focusKey, DEFAULT_COLS, type Store } from '../store';
 import { COL_GROUPS, COLS, menuData, toggleCol } from '../lib/grid';
@@ -49,10 +49,19 @@ function menuKeys(e: React.KeyboardEvent<HTMLDivElement>) {
 
 function DropBig({ id, icon, label, children, st }: { id: string; icon: string; label: ReactNode; children: ReactNode; st: Store }) {
   const open = st.menu === id;
+  const wrap = useRef<HTMLDivElement>(null), menu = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const w = wrap.current, m = menu.current;
+    if (!open || !w || !m) return;
+    const r = w.getBoundingClientRect();
+    m.style.position = 'fixed';
+    m.style.top = r.bottom + 'px';
+    m.style.left = Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8)) + 'px';
+  }, [open]);
   return (
-    <div className="menu-wrap">
+    <div className="menu-wrap" ref={wrap}>
       <button className="rb big drop" aria-haspopup="menu" aria-expanded={open} aria-controls={id} onClick={() => st.setUI({ menu: open ? null : id })}><Icon name={icon} /><span>{label} ▾</span></button>
-      <div id={id} role="menu" className={'menu left' + (open ? ' open' : '')} onKeyDown={menuKeys}>{children}</div>
+      <div id={id} ref={menu} role="menu" className={'menu left' + (open ? ' open' : '')} onKeyDown={menuKeys}>{children}</div>
     </div>
   );
 }
@@ -81,6 +90,11 @@ function SelectRow({ label, value, map, onChange }: { label: string; value: stri
 
 // Commands that edit the task list switch to the Gantt Chart first.
 function inGantt(fn: () => void) { return () => { if (S().view !== 'gantt') S().setView('gantt'); fn(); }; }
+
+function setAllCollapsed(collapse: boolean) {
+  const st = S();
+  st.setUI({ collapsed: collapse ? Object.fromEntries(st.s.rows.filter(r => r.summary).map(r => [r.task.uid, true])) : {} });
+}
 
 function assignResources() {
   const st = S();
@@ -267,6 +281,12 @@ function ViewTab({ st }: { st: Store }) {
         <SelectRow label="Group" value={md.groups[st.group] ? st.group : 'none'} map={md.groups} onChange={v => st.setUI({ group: v })} />
       </Stack>
       <DropBig id="colMenu" icon="columns" label="Tables" st={st}><ColumnsMenu st={st} /></DropBig>
+    </Group>
+    <Group label="Outline">
+      <Stack>
+        <Small icon="chevD" label="Expand All" title="Show all subtasks" onClick={inGantt(() => setAllCollapsed(false))} />
+        <Small icon="chevR" label="Collapse All" title="Show only top-level tasks" onClick={inGantt(() => setAllCollapsed(true))} />
+      </Stack>
     </Group>
     <Group label="Zoom">
       <Stack>

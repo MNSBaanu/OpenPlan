@@ -19,7 +19,7 @@ OP.charts = (function () {
     '.wbs2{fill:var(--surface);stroke:var(--border-strong);stroke-width:1}.con{stroke:var(--border-strong);fill:none;stroke-width:1.25}' +
     '.t-Manager{fill:var(--c1)}.t-Full-time{fill:var(--c2)}.t-Part-time{fill:var(--c3)}.t-Supporter{fill:var(--c4)}' +
     '.cbar{fill:var(--bar)}.cline{stroke:var(--bar);stroke-width:2;fill:none}.bud{stroke:var(--critical);stroke-width:1.5;stroke-dasharray:6 4}' +
-    '.hit{fill:transparent}.hit:hover{fill:var(--hover)}.grp{fill:var(--surface-3)}.bl{fill:var(--baseline)}.bar.late{fill:var(--warn)}' +
+    '.hit{fill:transparent}.hit:hover{fill:var(--accent);fill-opacity:.12}.grp{fill:var(--surface-3)}.bl{fill:var(--baseline)}.bar.late{fill:var(--warn)}' +
     '.gsplit{stroke:var(--bar);stroke-width:1.5;stroke-dasharray:2 3}.dl{fill:var(--good);stroke:var(--good);stroke-width:1.5}.dl.miss{fill:var(--critical);stroke:var(--critical)}' +
     '.gstat{stroke:var(--warn);stroke-width:1.5}.gstat-t{fill:var(--warn)}';
 
@@ -95,7 +95,7 @@ OP.charts = (function () {
     top.forEach(function (t, i) {
       var x = X(t[0]), nx = i + 1 < top.length ? X(top[i + 1][0]) : W;
       h.push('<line class="gls" x1="' + x + '" y1="0" x2="' + x + '" y2="' + HDR + '"/>');
-      if (nx - x > 40) h.push('<text class="b sm" x="' + (x + 6) + '" y="14">' + esc(t[1]) + '</text>');
+      if (nx - x > t[1].length * 6.5 + 10) h.push('<text class="b sm" x="' + (x + 6) + '" y="14">' + esc(t[1]) + '</text>');
     });
     bot.forEach(function (b) {
       var x = X(b[0]);

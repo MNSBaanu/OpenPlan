@@ -4,6 +4,7 @@ import { useStore, S } from '../store';
 import * as ops from '../lib/taskOps';
 import Icon from './Icon';
 import type { CustomField, Resource } from '../types';
+import { version } from '../../package.json';
 
 const U = OP.util;
 const STATUSES = ['Draft', 'In review', 'Approved', 'Baselined', 'Final'];
@@ -181,14 +182,36 @@ function ResourceDialog({ uid }: { uid: number }) {
   );
 }
 
+const SHORTCUTS: [ReactNode, string][] = [
+  [<><kbd>Enter</kbd> <kbd>↑</kbd> <kbd>↓</kbd></>, 'Move between rows'],
+  [<><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>→</kbd> / <kbd>←</kbd></>, 'Indent / outdent'],
+  [<kbd>Ins</kbd>, 'Insert a new task'],
+  [<kbd>Del</kbd>, 'Delete the selected tasks'],
+  [<><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></>, 'Undo / redo'],
+  [<><kbd>Ctrl</kbd>+<kbd>S</kbd></>, 'Save to a file']
+];
+
 function AboutDialog() {
   return (
     <Modal title="About OpenPlan" cancelLabel="Close" noOk>
-      <p>OpenPlan is a free, browser-based project planner: WBS, Gantt chart, critical path, network diagram, resources, leveling, baselines, tracking, earned value, budget and reports. Your project is stored only in this browser; use <b>File › Save</b> to keep a copy.</p>
-      <div className="logos"><img className="logo" src="./assets/OpenPlan.png" alt="OpenPlan" height={40} /></div>
-      <p><b>Keyboard</b><br /><kbd>Enter</kbd>/<kbd>↑</kbd><kbd>↓</kbd> move between rows · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>→</kbd>/<kbd>←</kbd> indent/outdent · <kbd>Ins</kbd> new task · <kbd>Del</kbd> delete selected · <kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd> undo/redo · <kbd>Ctrl</kbd>+<kbd>S</kbd> save file</p>
-      <p><b>Gantt chart</b><br />Drag a bar to move it (sets a “Start no earlier than” constraint), drag its right edge to change the duration, or drag it up/down onto another bar to link the two.</p>
-      <p><b>Predecessors</b><br />Type task IDs separated by commas. Link types: FS (default), SS, FF, SF, with optional lag, e.g. <code>3, 5SS+2d, 7FF-1d</code>.</p>
+      <div className="about-head">
+        <img src="./assets/OpenPlan.png" alt="" width={44} height={44} />
+        <div><h3>OpenPlan</h3><span className="muted">Version {version} · Free, browser-based project planning</span></div>
+      </div>
+      <p>Plan with a WBS, Gantt chart, critical path, network diagram, resources, leveling, baselines, tracking, earned value, budget and reports. Your project is saved automatically in this browser only; use <b>File › Save</b> to keep a copy as an .openplan file.</p>
+      <section className="about-sec">
+        <h4>Keyboard shortcuts</h4>
+        <table className="about-keys"><tbody>{SHORTCUTS.map(([keys, action]) => <tr key={action}><td>{keys}</td><td>{action}</td></tr>)}</tbody></table>
+      </section>
+      <section className="about-sec">
+        <h4>Tips</h4>
+        <dl className="about-tips">
+          <dt>Rename the project</dt><dd>Click the name in the title bar. <kbd>Enter</kbd> saves, <kbd>Esc</kbd> cancels.</dd>
+          <dt>Gantt chart</dt><dd>Drag a bar to move it (sets a “Start no earlier than” constraint), drag its right edge to change the duration, or drag it onto another bar to link the two.</dd>
+          <dt>Predecessors</dt><dd>Type task IDs separated by commas. Link types are FS (default), SS, FF and SF, with optional lag, e.g. <code>3, 5SS+2d, 7FF-1d</code>.</dd>
+        </dl>
+      </section>
+      <p className="about-foot muted">Open source under the <a href="https://github.com/MNSBaanu/OpenPlan/blob/main/LICENSE" target="_blank" rel="noreferrer">MIT License</a> · <a href="https://github.com/MNSBaanu/OpenPlan" target="_blank" rel="noreferrer">Source on GitHub</a> · Made by MNS Baanu</p>
     </Modal>
   );
 }
