@@ -323,6 +323,11 @@ function FormatTab({ st }: { st: Store }) {
         <Check label="Timeline" checked={st.timeline} onChange={v => st.setUI({ timeline: v })} />
       </Stack>
     </Group>
+    <Group label="Dates">
+      <Stack>
+        <Check label="Full Year (2026)" title="Show dates as 12 Jan 2026 instead of 12 Jan 26" checked={st.fullYear} onChange={v => st.setUI({ fullYear: v })} />
+      </Stack>
+    </Group>
     <Group label="Gantt Chart Style">
       <div className="swatches">
         {['teal', 'indigo', 'amber', 'slate'].map(c => (

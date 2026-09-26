@@ -10,6 +10,8 @@ const OP = {};
 OP.util = (function () {
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var fullYear = false;
+  function setFullYear(on) { fullYear = !!on; }
 
   // Dates are handled as whole day numbers (days since 1970-01-01, UTC) to avoid timezone drift.
   function parseDate(s) {
@@ -24,7 +26,8 @@ OP.util = (function () {
   function fmt(dn) {
     if (dn == null) return '';
     var d = toDate(dn);
-    return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2);
+    var y = String(d.getUTCFullYear());
+    return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + ' ' + (fullYear ? y : y.slice(2));
   }
   function fmtLong(dn) {
     if (dn == null) return '';
@@ -60,7 +63,7 @@ OP.util = (function () {
 
   return {
     MONTHS: MONTHS, DAYS: DAYS, parseDate: parseDate, toDate: toDate, iso: iso, weekday: weekday,
-    fmt: fmt, fmtLong: fmtLong, todayDn: todayDn, money: money, num: num, esc: esc, clone: clone,
+    fmt: fmt, fmtLong: fmtLong, setFullYear: setFullYear, todayDn: todayDn, money: money, num: num, esc: esc, clone: clone,
     download: download, slug: slug
   };
 })();

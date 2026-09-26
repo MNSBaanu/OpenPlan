@@ -40,14 +40,15 @@ export interface UIState {
   ribbonMin: boolean;
   theme: 'light' | 'dark';
   bars: string;
+  fullYear: boolean;
 }
 
 const UI_DEFAULTS: UIState = {
   view: 'gantt', zoom: 'week', critical: true, gridW: 600, ganttHide: 'none', drawer: window.innerWidth > 1100, netScope: 'all', netDates: false,
   netZoom: 1, wbsDepth: 99, filter: 'all', group: 'none', sort: 'id', cols: DEFAULT_COLS.slice(), showBaseline: true,
-  report: 'overview', tab: 'task', timeline: true, ribbonMin: false, theme: 'light', bars: 'teal'
+  report: 'overview', tab: 'task', timeline: true, ribbonMin: false, theme: 'light', bars: 'teal', fullYear: false
 };
-const PERSISTED_UI: (keyof UIState)[] = ['view', 'zoom', 'critical', 'gridW', 'ganttHide', 'drawer', 'netDates', 'wbsDepth', 'filter', 'group', 'sort', 'cols', 'showBaseline', 'report', 'tab', 'timeline', 'theme', 'bars'];
+const PERSISTED_UI: (keyof UIState)[] = ['view', 'zoom', 'critical', 'gridW', 'ganttHide', 'drawer', 'netDates', 'wbsDepth', 'filter', 'group', 'sort', 'cols', 'showBaseline', 'report', 'tab', 'timeline', 'theme', 'bars', 'fullYear'];
 
 export interface Dialog { type: string; props?: any }
 export type SaveState = 'ok' | 'full' | 'off';
@@ -173,6 +174,8 @@ export const useStore = create<Store>((set, get) => ({
   pendingFocus: null,
 
   setUI: patch => {
+    // Dates are formatted by the engine, so rebuild the schedule to redraw every chart and table.
+    if ('fullYear' in patch) { OP.util.setFullYear(patch.fullYear); patch = { ...patch, s: OP.schedule(get().p) }; }
     set(patch);
     if (Object.keys(patch).some(k => (PERSISTED_UI as string[]).includes(k))) saveUI(get());
   },
@@ -227,6 +230,7 @@ export const useStore = create<Store>((set, get) => ({
   openDialog: (type, props) => set({ dialog: { type, props }, menu: null }),
   closeDialog: () => set({ dialog: null })
 }));
+OP.util.setFullYear(useStore.getState().fullYear);
 
 // Non-reactive access for event handlers and helpers.
 export const S = () => useStore.getState();
