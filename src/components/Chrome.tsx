@@ -1,8 +1,9 @@
 import { useEffect, useState, type JSX } from 'react';
 import OP from '../core';
-import { useApp, useStore, VIEW_NAMES, ZOOMS, PREV_STORE } from '../store';
-import { hasImage, openTemplate, runAction } from '../lib/actions';
+import { useApp, useStore, ask, VIEW_NAMES, ZOOMS, PREV_STORE } from '../store';
+import { hasImage, loadProject, openTemplate, runAction } from '../lib/actions';
 import { TEMPLATES } from '../lib/templates';
+import { deleteVersion, listVersions, saveVersion, type Version } from '../lib/versions';
 import Icon from './Icon';
 import type { ViewName } from '../types';
 
@@ -95,7 +96,7 @@ export function Toast() {
 
 /* ---------- File backstage ---------- */
 
-const PAGES: [string, string][] = [['info', 'Info'], ['new', 'New'], ['open', 'Open'], ['save', 'Save'], ['export', 'Export'], ['print', 'Print'], ['about', 'About']];
+const PAGES: [string, string][] = [['info', 'Info'], ['new', 'New'], ['open', 'Open'], ['save', 'Save'], ['versions', 'Versions'], ['export', 'Export'], ['print', 'Print'], ['about', 'About']];
 
 function Tile({ icon, title, sub, act, disabled }: { icon: string; title: string; sub: string; act: string; disabled?: boolean }) {
   return (
@@ -103,6 +104,44 @@ function Tile({ icon, title, sub, act, disabled }: { icon: string; title: string
       <Icon name={icon} /><div><b>{title}</b><span>{sub}</span></div>
     </button>
   );
+}
+
+function VersionsPage() {
+  const st = useApp();
+  const [list, setList] = useState(listVersions), [name, setName] = useState('');
+  const save = (e: React.FormEvent) => {
+    e.preventDefault();
+    const err = saveVersion(name || 'Version ' + (list.length + 1), st.p);
+    if (err) { st.toast(err, true); return; }
+    st.toast('Version saved');
+    setName('');
+    setList(listVersions());
+  };
+  const restore = (v: Version) => ask('Restore “' + v.name + '”? The current plan can be restored from File › Open › Restore Previous Project.', () => {
+    try { loadProject(OP.io.fromJSON(v.json), 'Version “' + v.name + '” restored'); } catch (e: any) { st.toast('Could not restore: ' + e.message, true); }
+  }, 'Restore');
+  return <>
+    <h1>Versions</h1>
+    <p className="bs-note">Save named copies of your plan, for example before a big change, and go back to any of them later. Versions are kept in this browser only; save a project file to keep a copy elsewhere.</p>
+    <form className="ver-form" onSubmit={save}>
+      <input className="inp" id="version-name" value={name} onChange={e => setName(e.target.value)} placeholder="Version name, e.g. Before sprint 2" aria-label="Version name" maxLength={80} />
+      <button className="btn primary" type="submit"><Icon name="save" />Save version</button>
+    </form>
+    {list.length ? (
+      <table className="data ver-list">
+        <thead><tr><th>Version</th><th>Plan</th><th>Saved</th><th><span className="sr-only">Actions</span></th></tr></thead>
+        <tbody>{list.map(v => (
+          <tr key={v.id}>
+            <td>{v.name}</td><td>{v.project}</td><td>{new Date(v.at).toLocaleString()}</td>
+            <td className="ver-acts">
+              <button className="btn" onClick={() => restore(v)}>Restore</button>
+              <button className="icon-btn" title="Delete" aria-label={'Delete ' + v.name} onClick={() => { deleteVersion(v.id); setList(listVersions()); }}><Icon name="trash" /></button>
+            </td>
+          </tr>
+        ))}</tbody>
+      </table>
+    ) : <p className="muted">No versions saved yet.</p>}
+  </>;
 }
 
 function hasPrevious() {
@@ -146,6 +185,8 @@ export function Backstage() {
       <p className="bs-note">{st.saveState === 'ok' ? 'Your work is also saved automatically in this browser.'
         : st.saveState === 'full' ? 'This project is too large for browser storage: save a project file to keep your work.'
         : 'Browser storage is unavailable: download a project file to keep your work.'}</p></>;
+  } else if (page === 'versions') {
+    body = <VersionsPage />;
   } else if (page === 'export') {
     body = <><h1>Export</h1>
       <Tile icon="table" title="Excel workbook (.xlsx)" sub="Task table with real dates, costs and slack" act="xlsx" />
