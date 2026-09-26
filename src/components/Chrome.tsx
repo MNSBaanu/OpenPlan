@@ -50,7 +50,7 @@ export function TitleBar() {
 
 /* ---------- status bar ---------- */
 
-const SB_VIEWS: [ViewName, string][] = [['gantt', 'gantt'], ['resources', 'users'], ['network', 'network'], ['reports', 'report']];
+const SB_VIEWS: [ViewName, string][] = [['gantt', 'gantt'], ['board', 'columns'], ['resources', 'users'], ['network', 'network'], ['reports', 'report']];
 
 export function StatusBar() {
   const st = useApp();

@@ -142,4 +142,4 @@ export interface Schedule {
   totalWork: number;
 }
 
-export type ViewName = 'gantt' | 'network' | 'wbs' | 'resources' | 'org' | 'workload' | 'budget' | 'reports';
+export type ViewName = 'gantt' | 'board' | 'network' | 'wbs' | 'resources' | 'org' | 'workload' | 'budget' | 'reports';

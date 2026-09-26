@@ -11,11 +11,11 @@ const UISTORE = 'openplan.ui';
 export const DEFAULT_COLS = ['id', 'ind', 'name', 'duration', 'start', 'finish', 'preds', 'res', 'cost'];
 export const ZOOMS = ['day', 'week', 'month', 'quarter'] as const;
 export const VIEW_NAMES: Record<ViewName, string> = {
-  gantt: 'Gantt Chart', network: 'Network Diagram', wbs: 'WBS Chart', resources: 'Resource Sheet',
+  gantt: 'Gantt Chart', board: 'Task Board', network: 'Network Diagram', wbs: 'WBS Chart', resources: 'Resource Sheet',
   org: 'Team Chart', workload: 'Resource Usage', budget: 'Cost & Budget', reports: 'Reports'
 };
 const VIEW_TABS: Partial<Record<ViewName, string>> = {
-  gantt: 'task', resources: 'resource', org: 'resource', workload: 'resource', reports: 'report', budget: 'report'
+  gantt: 'task', board: 'task', resources: 'resource', org: 'resource', workload: 'resource', reports: 'report', budget: 'report'
 };
 
 export interface UIState {

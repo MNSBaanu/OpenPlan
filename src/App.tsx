@@ -6,13 +6,14 @@ import { TitleBar, StatusBar, Backstage } from './components/Chrome';
 import Ribbon from './components/Ribbon';
 import Drawer from './components/Drawer';
 import GanttView from './views/GanttView';
+import BoardView from './views/BoardView';
 import { NetworkView, WbsView, OrgView } from './views/Diagrams';
 import { ResourcesView, WorkloadView } from './views/Sheets';
 import BudgetView from './views/BudgetView';
 import ReportsView from './views/ReportsView';
 
 const VIEWS = {
-  gantt: GanttView, network: NetworkView, wbs: WbsView, resources: ResourcesView,
+  gantt: GanttView, board: BoardView, network: NetworkView, wbs: WbsView, resources: ResourcesView,
   org: OrgView, workload: WorkloadView, budget: BudgetView, reports: ReportsView
 };
 

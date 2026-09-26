@@ -281,7 +281,7 @@ function ViewTab({ st }: { st: Store }) {
   const vb = (v: ViewName, icon: string, label: ReactNode) => <Big icon={icon} label={label} on={st.view === v} onClick={() => st.setView(v)} />;
   const vs = (v: ViewName, icon: string, label: string) => <Small icon={icon} label={label} on={st.view === v} onClick={() => st.setView(v)} />;
   return <>
-    <Group label="Task Views">{vb('gantt', 'gantt', <>Gantt<br />Chart</>)}{vb('network', 'network', <>Network<br />Diagram</>)}{vb('wbs', 'tree', <>WBS<br />Chart</>)}</Group>
+    <Group label="Task Views">{vb('gantt', 'gantt', <>Gantt<br />Chart</>)}{vb('board', 'columns', <>Task<br />Board</>)}{vb('network', 'network', <>Network<br />Diagram</>)}{vb('wbs', 'tree', <>WBS<br />Chart</>)}</Group>
     <Group label="Resource Views"><Stack>{vs('resources', 'users', 'Resource Sheet')}{vs('org', 'org', 'Team Chart')}{vs('workload', 'grid', 'Resource Usage')}</Stack></Group>
     <Group label="Data">
       <Stack>
