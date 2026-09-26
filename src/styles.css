@@ -98,6 +98,9 @@ img.logo { object-fit: contain; }
 .qat-btn:disabled { opacity: 0.45; pointer-events: none; }
 .qat-btn svg.i { width: 15px; height: 15px; }
 .title { flex: 1; text-align: center; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.title-btn { max-width: 60%; padding: 2px 6px; border: 0; background: transparent; color: inherit; font: inherit; cursor: text; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.title-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.title-inp { field-sizing: content; min-width: 8ch; max-width: 60%; height: 22px; padding: 2px 6px; border: 0; outline: 1px solid rgba(255, 255, 255, 0.45); background: rgba(255, 255, 255, 0.18); color: inherit; font: inherit; vertical-align: middle; }
 
 /* ---------- toolbar ---------- */
 .ribbon-tabs { flex: none; display: flex; align-items: center; background: var(--surface); border-bottom: 1px solid var(--border); height: 42px; padding: 0 10px; gap: 4px; overflow-x: auto; overflow-y: hidden; }

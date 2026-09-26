@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import OP from '../core';
 import { useApp, useStore, VIEW_NAMES, ZOOMS, PREV_STORE } from '../store';
 import { hasImage, runAction } from '../lib/actions';
@@ -12,7 +12,13 @@ const LOGO_MARK = './assets/OpenPlan.png';
 
 export function TitleBar() {
   const st = useApp();
+  const [renaming, setRenaming] = useState(false);
   useEffect(() => { document.title = st.p.name + ' - OpenPlan'; }, [st.p.name]);
+  const rename = (value: string) => {
+    setRenaming(false);
+    const name = value.trim();
+    if (name && name !== st.p.name) st.commit(pp => { pp.name = name; });
+  };
   return (
     <header className="titlebar">
       <div className="qat">
@@ -21,7 +27,14 @@ export function TitleBar() {
         <button className="qat-btn" title="Undo (Ctrl+Z)" aria-label="Undo" disabled={!st.undo.length} onClick={st.undoAct}><Icon name="undo" /></button>
         <button className="qat-btn" title="Redo (Ctrl+Y)" aria-label="Redo" disabled={!st.redo.length} onClick={st.redoAct}><Icon name="redo" /></button>
       </div>
-      <div className="title">{st.p.name} - OpenPlan</div>
+      <div className="title">
+        {renaming
+          ? <input className="title-inp" aria-label="Project name" defaultValue={st.p.name} size={st.p.name.length || 8} autoFocus onFocus={e => e.target.select()}
+              onBlur={e => rename(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.value = st.p.name; if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur(); }} />
+          : <button className="title-btn" title="Rename project" onClick={() => setRenaming(true)}>{st.p.name}</button>}
+        {' - OpenPlan'}
+      </div>
       <div className="tb-right">
         <button className="qat-btn" title="Dark / light" aria-label="Toggle dark mode" onClick={() => st.setUI({ theme: st.theme === 'dark' ? 'light' : 'dark' })}>
           <Icon name={st.theme === 'dark' ? 'sun' : 'moon'} />
