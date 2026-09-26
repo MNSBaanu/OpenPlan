@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import OP from '../core';
 import { useApp, useStore, VIEW_NAMES, ZOOMS, PREV_STORE } from '../store';
 import { hasImage, runAction } from '../lib/actions';

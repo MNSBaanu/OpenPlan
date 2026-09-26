@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, type MouseEvent as RMouseEvent } from 'react';
+import { useLayoutEffect, useMemo, useRef, type JSX, type MouseEvent as RMouseEvent } from 'react';
 import OP from '../core';
 import { useApp, S, ask, focusKey, rowByUid, type Store } from '../store';
 import { activeCols, colDef, gridItems, menuData, type GroupItem } from '../lib/grid';

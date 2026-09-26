@@ -47,9 +47,10 @@ It runs entirely in the browser and has no server or account. Projects are saved
 
 | Layer | Technology |
 |---|---|
-| UI | React 18, TypeScript |
-| State | Zustand |
-| Build | Vite 6 |
+| UI | React 19, TypeScript 6 |
+| State | Zustand 5 |
+| Build | Vite 8 |
+| Tests and lint | Vitest, ESLint |
 | Scheduling and charts | Plain JavaScript modules rendering SVG (`src/core/`) |
 | Storage | Browser localStorage, and the File System Access API for project files |
 
@@ -77,6 +78,8 @@ npm run dev        # http://localhost:5173
 
 ```bash
 npm run build      # outputs to dist/
+npm run lint       # ESLint
+npm test           # Vitest
 npm run preview    # serves dist/ at http://localhost:4173
 ```
 
@@ -172,7 +175,7 @@ OpenPlan/
 ## Contributing
 
 1. Fork the repository and create a branch: `git checkout -b feature/my-change`
-2. Make your changes and check that `npm run build` passes.
+2. Make your changes and check that `npm run lint`, `npm test` and `npm run build` pass.
 3. Commit, push, and open a pull request.
 
 ## Author
