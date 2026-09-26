@@ -3,11 +3,28 @@ import { createRoot } from 'react-dom/client';
 import OP from './core';
 import DialogHost from './components/Dialogs';
 import { Toast } from './components/Chrome';
-import { useStore } from './store';
+import { useStore, S, ask } from './store';
 import { handleLaunchFiles } from './lib/actions';
+import { SHARE_PREFIX, decodePlan } from './lib/share';
 import './styles.css';
 
 const W = window as any;
+
+// Opens a plan carried in a share link, after asking, and removes the plan data from the address bar.
+async function openSharedPlan() {
+  if (!location.hash.startsWith(SHARE_PREFIX)) return;
+  const data = location.hash.slice(SHARE_PREFIX.length);
+  history.replaceState(null, '', location.pathname + location.search);
+  try {
+    const p = await decodePlan(data);
+    ask('Open a copy of the shared plan “' + p.name + '”? Your current plan can be restored from File › Open › Restore Previous Project.', () => {
+      S().replaceProject(p, 'Shared plan opened');
+      location.hash = 'app';
+    }, 'Open plan');
+  } catch {
+    S().toast('This share link is incomplete or damaged. Ask for the link again, or for the .openplan file.', true);
+  }
+}
 const loadApp = () => import('./App');
 const App = lazy(loadApp);
 const Landing = lazy(() => import('./views/Landing'));
@@ -17,7 +34,7 @@ function Root() {
   const theme = useStore(s => s.theme);
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => {
-    const onHash = () => { setInApp(location.hash === '#app'); W.goatcounter?.count?.(); };
+    const onHash = () => { openSharedPlan(); setInApp(location.hash === '#app'); W.goatcounter?.count?.(); };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
@@ -64,3 +81,4 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 );
 handleLaunchFiles();
+openSharedPlan();

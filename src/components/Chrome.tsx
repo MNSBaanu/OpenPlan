@@ -40,6 +40,7 @@ export function TitleBar() {
         <button className="qat-btn" title="Dark / light" aria-label="Toggle dark mode" onClick={() => st.setUI({ theme: st.theme === 'dark' ? 'light' : 'dark' })}>
           <Icon name={st.theme === 'dark' ? 'sun' : 'moon'} />
         </button>
+        <button className="qat-btn" title="Share a copy as a link" aria-label="Share a copy as a link" onClick={() => runAction('share')}><Icon name="link" /></button>
         <button className="qat-btn" title="About OpenPlan" aria-label="About" onClick={() => st.openDialog('about')}><Icon name="info" /></button>
       </div>
     </header>
@@ -141,6 +142,7 @@ export function Backstage() {
     body = <><h1>Save</h1>
       <Tile icon="save" title="Save" sub="Save to an OpenPlan (.openplan) file on your computer; Ctrl+S saves back to the same file" act="save" />
       <Tile icon="save" title="Save As…" sub="Save a copy under a new name or location" act="saveas" />
+      <Tile icon="link" title="Share a copy as a link" sub="Anyone with the link gets their own copy; nothing is uploaded" act="share" />
       <p className="bs-note">{st.saveState === 'ok' ? 'Your work is also saved automatically in this browser.'
         : st.saveState === 'full' ? 'This project is too large for browser storage: save a project file to keep your work.'
         : 'Browser storage is unavailable: download a project file to keep your work.'}</p></>;

@@ -118,6 +118,7 @@ export function runAction(a: string) {
     case 'open': if (FS) openFile(); else pickFile(false); break;
     case 'insert': pickFile(true); break;
     case 'import': st.openDialog('import'); break;
+    case 'share': st.openDialog('share'); break;
     case 'save': saveFile(false); break;
     case 'saveas': saveFile(true); break;
     case 'xlsx':

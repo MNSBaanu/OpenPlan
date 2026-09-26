@@ -6,6 +6,7 @@ import Icon from './Icon';
 import type { CustomField, Resource } from '../types';
 import { version } from '../../package.json';
 import { projectFromTable } from '../lib/importTable';
+import { shareUrl } from '../lib/share';
 import { loadProject } from '../lib/actions';
 
 const U = OP.util;
@@ -250,6 +251,27 @@ function ImportDialog() {
   );
 }
 
+function ShareDialog() {
+  const [url, setUrl] = useState(''), [error, setError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { shareUrl(S().p).then(setUrl, (e: Error) => setError(e.message)); }, []);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(url); S().toast('Share link copied'); }
+    catch { inputRef.current?.select(); S().toast('Press Ctrl+C to copy the selected link.'); }
+  };
+  return (
+    <Modal title="Share a copy of this plan" cancelLabel="Close" noOk>
+      <p>Anyone who opens this link gets their own copy of the plan in their browser. Their changes don't affect yours. The plan travels inside the link and is never uploaded.</p>
+      <div className="share-row">
+        <input ref={inputRef} className="inp" id="share-url" readOnly value={url || 'Creating link…'} aria-label="Share link" onFocus={e => e.target.select()} />
+        <button type="button" className="btn primary" disabled={!url} onClick={copy}><Icon name="link" />Copy link</button>
+      </div>
+      {url && <p className="muted small">Link length: {Math.ceil(url.length / 1024)} KB.{url.length > 8000 ? ' Some chat and email apps cut off long links; if it does not open, send the .openplan file instead.' : ''}</p>}
+      {error && <p className="alert inline">Could not create the link: {error}</p>}
+    </Modal>
+  );
+}
+
 function ConfirmDialog({ title, message, okLabel, onOk }: { title: string; message: string; okLabel: string; onOk: () => void }) {
   return (
     <Modal title={title} okLabel={okLabel} onSubmit={() => { S().closeDialog(); onOk(); return false; }}>
@@ -267,6 +289,7 @@ export default function DialogHost() {
     case 'resource': return <ResourceDialog uid={dialog.props.uid} />;
     case 'about': return <AboutDialog />;
     case 'import': return <ImportDialog />;
+    case 'share': return <ShareDialog />;
     case 'confirm': return <ConfirmDialog {...dialog.props} />;
     default: return null;
   }
