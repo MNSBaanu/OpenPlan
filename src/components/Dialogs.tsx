@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import OP from '../core';
 import { useStore, S } from '../store';
 import * as ops from '../lib/taskOps';
 import Icon from './Icon';
 import type { CustomField, Resource } from '../types';
 import { version } from '../../package.json';
+import { projectFromTable } from '../lib/importTable';
+import { loadProject } from '../lib/actions';
 
 const U = OP.util;
 const STATUSES = ['Draft', 'In review', 'Approved', 'Baselined', 'Final'];
@@ -216,6 +218,38 @@ function AboutDialog() {
   );
 }
 
+function ImportDialog() {
+  const [text, setText] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+  const result = useMemo(() => {
+    if (!text.trim()) return null;
+    try { return projectFromTable(text); } catch (e: any) { return { error: e.message as string }; }
+  }, [text]);
+  const ok = result && 'project' in result ? result : null;
+  const pickFile = async (file?: File) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { S().toast('That file is larger than 5 MB. Choose a CSV task list.', true); return; }
+    setText(await file.text());
+  };
+  return (
+    <Modal title="Import tasks from Excel or CSV" okLabel="Import" onSubmit={() => {
+      if (!ok) return false;
+      loadProject(ok.project, 'Imported ' + ok.tasks + ' task' + (ok.tasks > 1 ? 's' : '') + (ok.warnings.length ? '. ' + ok.warnings.join('; ') + '.' : ''));
+    }}>
+      <p>Copy the task list in Excel or Google Sheets and paste it below, or choose a CSV file. Columns are matched by their headings: Task Name, Duration, Predecessors, Resources, Level or WBS, % Complete and Notes. Without headings, the columns are read as task name, duration and predecessors.</p>
+      <textarea className="inp mono" id="import-text" rows={9} value={text} onChange={e => setText(e.target.value)} aria-label="Task list"
+        placeholder={['Task Name, Duration, Predecessors', 'Design, 5', 'Build, 10, 1', 'Launch, 0, 2'].join('\n')} />
+      <div className="row-actions">
+        <button type="button" className="btn" onClick={() => fileRef.current?.click()}><Icon name="upload" />Choose CSV file…</button>
+        <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,text/csv" hidden onChange={e => pickFile(e.target.files?.[0])} />
+      </div>
+      {ok && <p className="muted">Found {ok.tasks} task{ok.tasks > 1 ? 's' : ''} and {ok.resources} resource{ok.resources === 1 ? '' : 's'}. Importing replaces the current plan, which you can bring back from File › Open › Restore Previous Project.</p>}
+      {ok && ok.warnings.length > 0 && <p className="alert warn inline">{ok.warnings.join('; ')}.</p>}
+      {result && 'error' in result && <p className="alert inline">{result.error}</p>}
+    </Modal>
+  );
+}
+
 function ConfirmDialog({ title, message, okLabel, onOk }: { title: string; message: string; okLabel: string; onOk: () => void }) {
   return (
     <Modal title={title} okLabel={okLabel} onSubmit={() => { S().closeDialog(); onOk(); return false; }}>
@@ -232,6 +266,7 @@ export default function DialogHost() {
     case 'recurring': return <RecurringDialog />;
     case 'resource': return <ResourceDialog uid={dialog.props.uid} />;
     case 'about': return <AboutDialog />;
+    case 'import': return <ImportDialog />;
     case 'confirm': return <ConfirmDialog {...dialog.props} />;
     default: return null;
   }
