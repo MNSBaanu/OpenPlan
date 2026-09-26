@@ -5,6 +5,7 @@ import * as ops from './lib/taskOps';
 import { TitleBar, StatusBar, Backstage } from './components/Chrome';
 import Ribbon from './components/Ribbon';
 import Drawer from './components/Drawer';
+import Guide from './components/Guide';
 import GanttView from './views/GanttView';
 import BoardView from './views/BoardView';
 import { NetworkView, WbsView, OrgView } from './views/Diagrams';
@@ -64,6 +65,7 @@ export default function App() {
       <Drawer />
     </div>
     <StatusBar />
+    <Guide />
     <Backstage />
   </>;
 }

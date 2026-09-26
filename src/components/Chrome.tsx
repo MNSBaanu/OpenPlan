@@ -198,7 +198,8 @@ export function Backstage() {
   } else if (page === 'about') {
     body = <><h1>About</h1><img className="logo" src="./assets/OpenPlan.png" alt="OpenPlan" height={48} />
       <p className="bs-note">Free, browser-based project planning: Gantt chart, critical path, network diagram, WBS, resources, leveling, baselines, tracking, earned value and reports.</p>
-      <Tile icon="info" title="Keyboard shortcuts and help" sub="Editing tips for the task table and Gantt chart" act="about" /></>;
+      <Tile icon="info" title="Keyboard shortcuts and help" sub="Editing tips for the task table and Gantt chart" act="about" />
+      <button className="bs-tile" onClick={() => st.setUI({ guide: true, backstage: false })}><Icon name="check" /><div><b>Getting started guide</b><span>Show the four-step checklist again</span></div></button></>;
   } else {
     const props: [string, string][] = [
       ['Start', U.fmtLong(s.startDn)], ['Finish', U.fmtLong(s.finishDn)], ['Duration', U.num(s.duration) + ' days'],
