@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import OP from '../core';
 import { useStore, S, focusKey, DEFAULT_COLS, type Store } from '../store';
-import { COL_GROUPS, COLS, menuData, toggleCol } from '../lib/grid';
+import { COL_GROUPS, COLS, gridItems, menuData, toggleCol } from '../lib/grid';
 import { hasImage, runAction } from '../lib/actions';
 import * as ops from '../lib/taskOps';
 import { scrollToSelected } from '../views/GanttView';
@@ -57,6 +57,11 @@ function DropBig({ id, icon, label, children, st }: { id: string; icon: string; 
     m.style.position = 'fixed';
     m.style.top = r.bottom + 'px';
     m.style.left = Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8)) + 'px';
+    // The position is measured once, so close the menu when its button moves.
+    const close = () => S().setUI({ menu: null }), ribbon = w.closest('.ribbon');
+    addEventListener('resize', close);
+    ribbon?.addEventListener('scroll', close);
+    return () => { removeEventListener('resize', close); ribbon?.removeEventListener('scroll', close); };
   }, [open]);
   return (
     <div className="menu-wrap" ref={wrap}>
@@ -93,7 +98,10 @@ function inGantt(fn: () => void) { return () => { if (S().view !== 'gantt') S().
 
 function setAllCollapsed(collapse: boolean) {
   const st = S();
-  st.setUI({ collapsed: collapse ? Object.fromEntries(st.s.rows.filter(r => r.summary).map(r => [r.task.uid, true])) : {} });
+  if (!collapse) { st.setUI({ collapsed: {} }); return; }
+  const collapsed: Record<string, boolean> = Object.fromEntries(st.s.rows.filter(r => r.summary).map(r => [r.task.uid, true]));
+  gridItems({ ...st, collapsed: {} }).forEach(it => { if ('group' in it) collapsed[it.key] = true; });
+  st.setUI({ collapsed });
 }
 
 function assignResources() {

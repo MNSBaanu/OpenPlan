@@ -10,6 +10,11 @@ const FS = !!W.showSaveFilePicker;
 const TYPES = [{ description: 'OpenPlan project', accept: { 'application/x-openplan': ['.openplan'] } }];
 let handle: any = null;
 
+const MAX_FILE_MB = 20;
+function checkSize(file: File) {
+  if (file.size > MAX_FILE_MB * 1024 * 1024) throw new Error('The file is larger than ' + MAX_FILE_MB + ' MB, so it is not an OpenPlan project.');
+}
+
 async function saveFile(as: boolean) {
   const st = S();
   if (!FS) { U.download(U.slug(st.p.name) + '.openplan', IO.toJSON(st.p), 'application/x-openplan'); st.toast('Project file downloaded'); return; }
@@ -26,6 +31,7 @@ async function saveFile(as: boolean) {
 
 async function openHandle(h: any) {
   const file = await h.getFile();
+  checkSize(file);
   S().replaceProject(IO.fromJSON(await file.text()), 'Opened ' + file.name);
   handle = h;
 }
@@ -125,6 +131,7 @@ function pickFile(insert: boolean) {
   input.onchange = () => {
     const file = input.files && input.files[0];
     if (!file) return;
+    try { checkSize(file); } catch (e: any) { S().toast('Could not open file: ' + e.message, true); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const st = S();

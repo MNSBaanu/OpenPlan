@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import OP from './core';
 import type { Project, Schedule, ViewName } from './types';
+import { capHistory } from './lib/history';
 
 const STORE = 'openplan.project';
 export const PREV_STORE = 'openplan.project.previous';
@@ -92,6 +93,8 @@ function loadUI(): Partial<UIState> {
     if (out.view && !(out.view in VIEW_NAMES)) delete out.view;
     if (out.theme && out.theme !== 'light' && out.theme !== 'dark') delete out.theme;
     if (out.zoom && !(ZOOMS as readonly string[]).includes(out.zoom)) delete out.zoom;
+    if (out.ganttHide && !['none', 'table', 'chart'].includes(out.ganttHide)) delete out.ganttHide;
+    if (out.gridW != null && !(out.gridW >= 160 && out.gridW <= 2400)) delete out.gridW;
     return out;
   } catch {
     return {};
@@ -186,7 +189,7 @@ export const useStore = create<Store>((set, get) => ({
     if (fn(next) === false) return false;
     const after = JSON.stringify(next);
     if (after === before) return false;
-    const undo = get().undo.concat([before]).slice(-100);
+    const undo = capHistory(get().undo.concat([before]));
     set({ p: next, s: OP.schedule(next), undo, redo: [] });
     persist(after);
     return true;
@@ -196,7 +199,7 @@ export const useStore = create<Store>((set, get) => ({
     const { undo, redo, p } = get();
     if (!undo.length) return;
     const text = undo[undo.length - 1], prev = JSON.parse(text);
-    set({ p: prev, s: OP.schedule(prev), undo: undo.slice(0, -1), redo: redo.concat([JSON.stringify(p)]) });
+    set({ p: prev, s: OP.schedule(prev), undo: undo.slice(0, -1), redo: capHistory(redo.concat([JSON.stringify(p)])) });
     persist(text);
   },
 
@@ -204,7 +207,7 @@ export const useStore = create<Store>((set, get) => ({
     const { undo, redo, p } = get();
     if (!redo.length) return;
     const text = redo[redo.length - 1], next = JSON.parse(text);
-    set({ p: next, s: OP.schedule(next), redo: redo.slice(0, -1), undo: undo.concat([JSON.stringify(p)]) });
+    set({ p: next, s: OP.schedule(next), redo: redo.slice(0, -1), undo: capHistory(undo.concat([JSON.stringify(p)])) });
     persist(text);
   },
 
@@ -213,7 +216,7 @@ export const useStore = create<Store>((set, get) => ({
     OP.model.normalize(p);
     const old = JSON.stringify(get().p);
     try { localStorage.setItem(PREV_STORE, old); } catch { /* storage unavailable */ }
-    set({ p, s: OP.schedule(p), undo: get().undo.concat([old]), redo: [], sel: [], collapsed: {} });
+    set({ p, s: OP.schedule(p), undo: capHistory(get().undo.concat([old])), redo: [], sel: [], collapsed: {} });
     persist(JSON.stringify(p));
     if (msg) get().toast(msg);
   },

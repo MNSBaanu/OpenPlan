@@ -1,8 +1,6 @@
-import { Component, StrictMode, useEffect, useState, type ReactNode } from 'react';
+import { Component, StrictMode, Suspense, lazy, useEffect, useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import OP from './core';
-import App from './App';
-import Landing from './views/Landing';
 import DialogHost from './components/Dialogs';
 import { Toast } from './components/Chrome';
 import { useStore } from './store';
@@ -10,6 +8,9 @@ import { handleLaunchFiles } from './lib/actions';
 import './styles.css';
 
 const W = window as any;
+const loadApp = () => import('./App');
+const App = lazy(loadApp);
+const Landing = lazy(() => import('./views/Landing'));
 
 function Root() {
   const [inApp, setInApp] = useState(location.hash === '#app');
@@ -20,8 +21,10 @@ function Root() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
+  // Fetch the planner in the background so "Open the app" is instant.
+  useEffect(() => { if (!inApp) { const t = setTimeout(loadApp, 1500); return () => clearTimeout(t); } }, [inApp]);
   return <>
-    {inApp ? <App /> : <Landing />}
+    <Suspense fallback={null}>{inApp ? <App /> : <Landing />}</Suspense>
     <DialogHost />
     <Toast />
   </>;
