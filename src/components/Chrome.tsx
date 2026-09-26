@@ -138,7 +138,8 @@ export function Backstage() {
         : 'Browser storage is unavailable: download a project file to keep your work.'}</p></>;
   } else if (page === 'export') {
     body = <><h1>Export</h1>
-      <Tile icon="table" title="Excel (.csv)" sub="Task table with dates, costs and slack" act="csv" />
+      <Tile icon="table" title="Excel workbook (.xlsx)" sub="Task table with real dates, costs and slack" act="xlsx" />
+      <Tile icon="table" title="CSV (.csv)" sub="The same table as plain text, for any spreadsheet" act="csv" />
       <Tile icon="image" title={'Picture of the ' + viewName + ' (.png)'} sub={img ? 'For Word reports' : 'Switch to Gantt, Network, WBS or Team Chart first'} act="png" disabled={!img} />
       <Tile icon="image" title="Vector picture (.svg)" sub="Sharp at any size" act="svg" disabled={!img} /></>;
   } else if (page === 'print') {

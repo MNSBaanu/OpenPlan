@@ -1,6 +1,7 @@
 import OP from '../core';
 import { S, VIEW_NAMES, ask, PREV_STORE, type Store } from '../store';
 import { gridItems } from './grid';
+import { toXlsx } from './xlsx';
 import type { Project } from '../types';
 
 const U = OP.util, C = OP.charts, IO = OP.io;
@@ -105,6 +106,10 @@ export function runAction(a: string) {
     case 'insert': pickFile(true); break;
     case 'save': saveFile(false); break;
     case 'saveas': saveFile(true); break;
+    case 'xlsx':
+      U.download(name + '-tasks.xlsx', new Blob([toXlsx(IO.taskTable(st.p), 'Tasks')], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      st.toast('Excel file downloaded');
+      break;
     case 'csv': U.download(name + '-tasks.csv', '﻿' + IO.toCSV(st.p), 'text/csv'); st.toast('CSV downloaded'); break;
     case 'png': case 'svg': {
       const svg = viewSvgString(st);

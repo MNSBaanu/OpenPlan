@@ -52,7 +52,8 @@ OP.io = (function () {
 
   /* ---------- CSV ---------- */
 
-  function toCSV(p) {
+  // The task table shared by the CSV and Excel exports: a header row, then one row per task.
+  function taskTable(p) {
     var s = OP.schedule(p), idx = M.indexByUid(p);
     var head = ['ID', 'WBS', 'Task Name', 'Level', 'Duration (days)', 'Start', 'Finish', 'Predecessors', 'Resources',
       'Work (h)', 'Cost', 'ES', 'EF', 'LS', 'LF', 'Total Slack', 'Critical', '% Complete'];
@@ -62,7 +63,11 @@ OP.io = (function () {
         M.formatPreds(p, r.task, idx), r.names, Math.round(r.work * 10) / 10, Math.round(r.cost),
         r.es, r.ef, r.ls, r.lf, r.slack, r.critical ? 'Yes' : 'No', r.task.percent || 0]);
     });
-    return lines.map(function (row) {
+    return lines;
+  }
+
+  function toCSV(p) {
+    return taskTable(p).map(function (row) {
       return row.map(function (raw) {
         var v = String(raw == null ? '' : raw);
         // Text starting with a formula character would run as a formula in Excel or Sheets.
@@ -128,6 +133,6 @@ OP.io = (function () {
   }
 
   return {
-    toJSON: toJSON, fromJSON: fromJSON, toCSV: toCSV, insertProject: insertProject, exportSVG: exportSVG, exportPNG: exportPNG, printSVG: printSVG
+    toJSON: toJSON, fromJSON: fromJSON, taskTable: taskTable, toCSV: toCSV, insertProject: insertProject, exportSVG: exportSVG, exportPNG: exportPNG, printSVG: printSVG
   };
 })();
