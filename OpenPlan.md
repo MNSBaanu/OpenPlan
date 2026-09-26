@@ -5,7 +5,7 @@ tags: [project, academic, topup, react, typescript, vite, project-management]
 status: active
 version: 2.0.0
 created: 2026-09-24
-updated: 2026-09-24
+updated: 2026-09-26
 repo: https://github.com/MNSBaanu/OpenPlan
 author: MNS Baanu
 ---
@@ -84,6 +84,7 @@ src/
 > - [ ] Move Gantt drag state and file handle out of module-level variables
 > - [ ] Undo keeps up to 100 full JSON snapshots (memory on large plans)
 > - [ ] Dates show 2-digit years (kept for narrow chart cells)
+> - [ ] Design system: unify font-size scale; move dark hardcoded hex (timeline lanes, heatmap, group row) into tokens; drop unused `--radius` and duplicate tokens
 
 ## Log
 - **2026-09-24** Full audit completed. Created this note.
@@ -98,3 +99,5 @@ src/
 - **2026-09-24** Landing page upgrade: stats row, "Who it's for", FAQ, and an "Open source under the MIT License" mention in the footer. Square corners everywhere, new logo.
 - **2026-09-24** Removed MS Project XML import/export and the .mpp/.pod export dialogs. Logo shown without a background tile; footer centred.
 - **2026-09-24** SEO: title and description, canonical URL, Open Graph and Twitter tags with `og-image.png`, WebApplication JSON-LD, noscript fallback, `robots.txt` and `sitemap.xml` for https://openplan.vercel.app.
+- **2026-09-26** Design-system audit of `src/styles.css` (tokens, type scale, focus states, dark mode). Findings added to Open issues; no code changed.
+- **2026-09-26** Fixed dark-mode focus and brand-coloured text: added `--brand-fg` (accent in dark) and `--focus` tokens, a shared 2px `:focus-visible` ring for all buttons, links and summaries (currentColor on filled/brand backgrounds), and removed 5 dark heading overrides.
