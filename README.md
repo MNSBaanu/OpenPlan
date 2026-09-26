@@ -40,7 +40,11 @@ It runs entirely in the browser and has no server or account. Projects are saved
 - **Resources**: work, material and cost resources, calendars, vacations, rate changes, a workload heatmap and resource leveling.
 - **Tracking**: baselines, % complete, actual dates, a status date and earned value (SPI, CPI, EAC).
 - **Budget and reports**: cost by work package and by resource, monthly and cumulative cost, and 10 ready-made reports.
-- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, and export CSV.
+- **Task board**: a Not started / In progress / Done board; dragging a card updates its % complete.
+- **Getting started**: templates (final-year project, software sprint, event, research project) and a first-run checklist.
+- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import task lists from Excel or CSV, and export Excel (.xlsx) and CSV.
+- **Sharing and versions**: share a copy of a plan as a link (the plan travels inside the link, nothing is uploaded), and save named versions in the browser.
+- **Offline**: once installed or visited, the app works without an internet connection.
 - **Interface**: a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, and light and dark themes.
 
 ## Tech stack
@@ -137,8 +141,11 @@ In Chrome or Edge, install OpenPlan as an app. After that, double-clicking an `.
 
 | Format | Support |
 |---|---|
+| Excel (.xlsx) | Export the task list with real dates |
+| Excel / CSV | Import a task list: paste from a spreadsheet or choose a CSV file (File › Open) |
 | CSV | Export the task list |
-| PNG / SVG / PDF | Chart images, and printing to PDF |
+| Share link | A copy of the plan inside a link (File › Save, or the link button in the title bar) |
+| PNG / SVG / PDF | Chart images, printing to PDF, and all 10 reports at once (Reports › Print all reports) |
 
 ### Keyboard shortcuts
 
@@ -158,12 +165,15 @@ In Chrome or Edge, install OpenPlan as an app. After that, double-clicking an `.
 OpenPlan/
 ├── public/
 │   ├── assets/              logo, favicon and app icons
-│   └── manifest.webmanifest app install and .openplan file handling
+│   ├── manifest.webmanifest app install and .openplan file handling
+│   ├── sw.js                offline support
+│   └── count.js             GoatCounter visit counter (self-hosted)
 ├── src/
 │   ├── core/                scheduling engine, file formats and CSV export, SVG charts, sample project
 │   ├── components/          toolbar, title and status bars, File menu, dialogs, task details panel
-│   ├── views/               Gantt, diagrams, resource sheet, workload, budget, reports
-│   ├── lib/                 task commands, grid columns and filters, file actions
+│   ├── views/               Gantt, task board, diagrams, resource sheet, workload, budget, reports, landing page
+│   ├── lib/                 task commands, grid columns and filters, file actions, templates, import,
+│   │                        share links, versions, Excel writer, undo history (with tests)
 │   ├── store.ts             app state, undo/redo, autosave
 │   ├── App.tsx              layout and keyboard shortcuts
 │   └── main.tsx             entry point
