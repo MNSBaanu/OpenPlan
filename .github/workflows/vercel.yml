@@ -48,6 +48,15 @@ jobs:
         if: env.CAN_DEPLOY == 'true'
         run: npm install --global vercel@59.26.0
 
+      - name: Debug secrets
+        run: |
+          echo org=${#VERCEL_ORG_ID} proj=${#VERCEL_PROJECT_ID} tok=${#VT}
+          echo "$VERCEL_ORG_ID" | cut -c1-5
+          echo "$VERCEL_PROJECT_ID" | cut -c1-4
+          printf %s "$VERCEL_ORG_ID" | od -c | tail -n 3 | cut -c1-5 >/dev/null
+        env:
+          VT: ${{ secrets.VERCEL_TOKEN }}
+
       - name: Pull Vercel project settings
         if: env.CAN_DEPLOY == 'true'
         run: vercel pull --yes --environment=$VERCEL_ENV --token=${{ secrets.VERCEL_TOKEN }}
