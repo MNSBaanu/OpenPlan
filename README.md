@@ -6,9 +6,11 @@
 
 Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and a budget without a paid licence.
 
-![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-6-646cff?logo=vite&logoColor=white)
+**[Open OpenPlan](https://openplan-xi.vercel.app)**
+
+![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 
 </div>
 
@@ -62,7 +64,7 @@ It runs entirely in the browser and has no server or account. Projects are saved
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org) 18 or later
+- [Node.js](https://nodejs.org) 22.12 or later
 
 ### Installation
 
