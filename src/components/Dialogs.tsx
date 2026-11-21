@@ -9,6 +9,7 @@ import { projectFromTable } from '../lib/importTable';
 import { shareUrl } from '../lib/share';
 import { loadProject } from '../lib/actions';
 import { COLLAB_URL } from '../collab/config';
+import { CURRENCIES, currencyOf } from '../lib/currencies';
 
 const U = OP.util;
 const STATUSES = ['Draft', 'In review', 'Approved', 'Baselined', 'Final'];
@@ -58,11 +59,14 @@ function SettingsDialog() {
   const [fields, setFields] = useState<CustomField[]>(() => p.customFields.map(f => ({ ...f })));
   const patchField = (k: number, patch: Partial<CustomField>) => setFields(fields.map((f, i) => (i === k ? { ...f, ...patch } : f)));
   const statuses = STATUSES.includes(p.status) || !p.status ? STATUSES : STATUSES.concat([p.status]);
+  const [code, setCode] = useState(currencyOf(p.currencyCode, p.currency)?.code || ''), [symbol, setSymbol] = useState(p.currency);
   return (
     <Modal title="Project information" onSubmit={fd => {
       const bad: string[] = [];
       const hol = parseDates(fd.get('holidays'), bad);
       if (bad.length) st.toast('Ignored invalid holiday dates: ' + bad.join(', '), true);
+      const days = fd.getAll('pwd').map(Number);
+      if (!days.length) { st.toast('Choose at least one working day.', true); return false; }
       const cfs = fields.map(f => ({ ...f, name: f.name.trim() })).filter(f => f.name);
       st.commit(pp => {
         pp.name = String(fd.get('name')).trim() || 'Untitled project';
@@ -75,6 +79,11 @@ function SettingsDialog() {
         pp.hoursPerDay = Math.max(1, Math.min(24, +fd.get('hoursPerDay')! || 8));
         pp.budget = Math.max(0, +fd.get('budget')! || 0);
         pp.currency = String(fd.get('currency')).trim();
+        pp.currencyCode = String(fd.get('currencyCode') || '');
+        // People who worked the old project week follow the new one; anyone with their own days keeps them.
+        const before = (pp.workDays || [1, 2, 3, 4, 5]).join(), week: number[] = OP.model.weekDays(days);
+        pp.workDays = week;
+        if (before !== week.join()) pp.resources.forEach(r => { if (r.workDays.join() === before) r.workDays = week.slice(); });
         pp.holidays = hol;
         pp.customFields = cfs;
         const keep = new Set(cfs.map(f => f.id));
@@ -92,10 +101,20 @@ function SettingsDialog() {
       <div className="row2"><F label="Project start date" name="start" value={p.start} type="date" required /><F label="Status date (for tracking)" name="statusDate" value={p.statusDate} type="date" /></div>
       <div className="row3">
         <F label="Budget" name="budget" value={p.budget} type="number" min={0} step={1000} />
-        <F label="Currency symbol" name="currency" value={p.currency} />
-        <F label="Hours per working day" name="hoursPerDay" value={p.hoursPerDay} type="number" min={1} max={24} step={0.5} />
+        <label className="field"><span>Currency</span>
+          <select className="sel" name="currencyCode" value={code} onChange={e => { setCode(e.target.value); const c = CURRENCIES.find(x => x.code === e.target.value); if (c) setSymbol(c.symbol); }}>
+            <option value="">Other (type a symbol)</option>
+            {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code} · {c.name}</option>)}
+          </select></label>
+        <label className="field"><span>Currency symbol</span>
+          <input className="inp" name="currency" value={symbol} onChange={e => setSymbol(e.target.value)} /></label>
       </div>
-      <label className="field"><span>Holidays (one date per line, YYYY-MM-DD) — non-working days besides weekends</span>
+      <div className="row2">
+        <F label="Hours per working day" name="hoursPerDay" value={p.hoursPerDay} type="number" min={1} max={24} step={0.5} />
+        <div className="field"><span>Working days</span>
+        <div className="chk-row">{[1, 2, 3, 4, 5, 6, 0].map(d => <label key={d} className="chk"><input type="checkbox" name="pwd" value={d} defaultChecked={(p.workDays || [1, 2, 3, 4, 5]).includes(d)} />{U.DAYS[d]}</label>)}</div></div>
+      </div>
+      <label className="field"><span>Holidays (one date per line, YYYY-MM-DD) — extra non-working days</span>
         <textarea className="inp" name="holidays" rows={3} defaultValue={(p.holidays || []).join('\n')} /></label>
       <div className="field"><span>Custom task fields</span>
         <div className="mini-list">

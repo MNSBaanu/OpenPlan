@@ -3,6 +3,7 @@ import { S, VIEW_NAMES, ask, PREV_STORE, type Store } from '../store';
 import { gridItems } from './grid';
 import { toXlsx } from './xlsx';
 import { projectFromMspXml } from './importMsp';
+import { projectToMspXml } from './exportMsp';
 import { fromTemplate, type Template } from './templates';
 import type { Project } from '../types';
 
@@ -138,6 +139,7 @@ export function runAction(a: string) {
       U.download(name + '-tasks.xlsx', new Blob([toXlsx(IO.taskTable(st.p), 'Tasks')], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
       st.toast('Excel file downloaded');
       break;
+    case 'mspxml': U.download(name + '.xml', projectToMspXml(st.p, st.s), 'application/xml'); st.toast('Microsoft Project XML downloaded'); break;
     case 'csv': U.download(name + '-tasks.csv', '﻿' + IO.toCSV(st.p), 'text/csv'); st.toast('CSV downloaded'); break;
     case 'png': case 'svg': {
       const svg = viewSvgString(st);

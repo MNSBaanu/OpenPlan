@@ -31,6 +31,30 @@ const L = require('./lib.cjs'); const { step, eq, ok, proj, toast, row, tab, con
     await pg.locator('.ribbon button', { hasText: /Baseline/ }).first().click(); await pg.locator('.menu.open button', { hasText: 'Clear Baseline' }).click(); await confirm(pg); eq((await proj(pg)).baseline, null); });
   await step('status date + "Update Project" moves progress, no broken numbers', async () => {
     await tab(pg, 'Project'); await pg.locator('.ribbon button', { hasText: /Update Project/ }).click(); await pg.waitForTimeout(250); ok(/Updated/.test(await toast(pg)), await toast(pg)); await clean(pg); });
+  await step('working week: set Sunday to Thursday → dates move, resources follow, setting survives a reload', async () => {
+    const dates = () => pg.locator('table.grid tbody tr:nth-child(2) td.ro').allInnerTexts();
+    await tab(pg, 'Project'); await pg.locator('.ribbon button', { hasText: /Project\s*Information/ }).click(); await pg.waitForSelector('dialog[open]');
+    const boxes = pg.locator('dialog[open] input[name="pwd"]'); eq(await boxes.count(), 7);
+    const checked = async () => boxes.evaluateAll(es => es.filter(e => e.checked).map(e => +e.value)); eq(await checked(), [1, 2, 3, 4, 5]);
+    await pg.locator('dialog[open] input[name="pwd"][value="5"]').uncheck(); await pg.locator('dialog[open] input[name="pwd"][value="0"]').check(); await pg.locator('dialog[open] .btn.primary').click();
+    const p = await proj(pg); eq(p.workDays, [0, 1, 2, 3, 4]); ok(p.resources.every(r => r.workDays.join() === '0,1,2,3,4'), 'resources did not follow the project week');
+    await pg.reload(); await pg.waitForSelector('.ribbon-tabs'); eq((await proj(pg)).workDays, [0, 1, 2, 3, 4]); await clean(pg); });
+  await step('working week: at least one day must stay selected', async () => {
+    await tab(pg, 'Project'); await pg.locator('.ribbon button', { hasText: /Project\s*Information/ }).click(); await pg.waitForSelector('dialog[open]');
+    for (const d of [0, 1, 2, 3, 4]) await pg.locator('dialog[open] input[name="pwd"][value="' + d + '"]').uncheck(); await pg.locator('dialog[open] .btn.primary').click(); await pg.waitForTimeout(250);
+    ok(/at least one working day/.test(await toast(pg)), await toast(pg)); ok(await pg.locator('dialog[open]').count() === 1, 'dialog closed'); eq((await proj(pg)).workDays, [0, 1, 2, 3, 4]); await pg.keyboard.press('Escape'); });
+  await step('currency picker: choosing GBP fills the symbol, is saved, and shows in the budget', async () => {
+    await tab(pg, 'Project'); await pg.locator('.ribbon button', { hasText: /Project\s*Information/ }).click(); await pg.waitForSelector('dialog[open]');
+    eq(await pg.locator('dialog[open] select[name="currencyCode"]').inputValue(), ''); // "Rs." could be several countries, so nothing is guessed
+    await pg.locator('dialog[open] select[name="currencyCode"]').selectOption('GBP'); eq(await pg.locator('dialog[open] input[name="currency"]').inputValue(), '£');
+    await pg.screenshot({ path: L.OUT + 'shots_project_dialog.png' });
+    await pg.locator('dialog[open] .btn.primary').click(); const p = await proj(pg); eq([p.currency, p.currencyCode], ['£', 'GBP']);
+    await pg.locator('.statusbar button[title="Reports"]').click(); await pg.waitForTimeout(300); await tab(pg, 'Report'); await pg.locator('.ribbon button', { hasText: /Cost\s*&\s*Budget/ }).click(); await pg.waitForTimeout(500);
+    ok(/£\s?[\d,]+/.test(await pg.locator('.kpis').first().innerText()), 'budget does not show £'); });
+  await step('currency picker: a custom symbol can be typed and the dropdown stays on the chosen currency', async () => {
+    await tab(pg, 'Project'); await pg.locator('.ribbon button', { hasText: /Project\s*Information/ }).click(); await pg.waitForSelector('dialog[open]');
+    eq(await pg.locator('dialog[open] select[name="currencyCode"]').inputValue(), 'GBP'); await pg.locator('dialog[open] input[name="currency"]').fill('GB£'); await pg.locator('dialog[open] .btn.primary').click();
+    const p = await proj(pg); eq([p.currency, p.currencyCode], ['GB£', 'GBP']); });
   await step('custom field: add via project dialog and see it as a column', async () => {
     await pg.locator('.ribbon button[title="Custom Fields"]').click(); await pg.waitForSelector('dialog[open]'); const t = await pg.locator('dialog[open]').innerText(); ok(/[Cc]ustom/.test(t), 'no custom field section'); await pg.keyboard.press('Escape'); });
   // resources

@@ -68,12 +68,16 @@ OP.util = (function () {
   };
 })();
 
-/* ---------- working-day calendar (Mon-Fri, minus holidays) ---------- */
+/* ---------- working-day calendar (the project's working week, minus holidays) ---------- */
 
-OP.Calendar = function (startDn, holidays) {
-  var hol = {};
+OP.DEFAULT_WEEK = [1, 2, 3, 4, 5];
+
+// workDays are weekday numbers, 0 = Sunday ... 6 = Saturday. An empty or invalid list falls back to Monday to Friday.
+OP.Calendar = function (startDn, holidays, workDays) {
+  var hol = {}, wd = {};
+  (workDays && workDays.length ? workDays : OP.DEFAULT_WEEK).forEach(function (d) { wd[d] = true; });
   (holidays || []).forEach(function (h) { var d = OP.util.parseDate(h); if (d != null) hol[d] = true; });
-  this.isWorking = function (dn) { var w = OP.util.weekday(dn); return w !== 0 && w !== 6 && !hol[dn]; };
+  this.isWorking = function (dn) { return !!wd[OP.util.weekday(dn)] && !hol[dn]; };
   var first = startDn;
   var guard = 0;
   while (!this.isWorking(first) && guard++ < 3660) first++;
@@ -130,7 +134,9 @@ OP.model = (function () {
       statusDate: '',
       budget: 0,
       currency: 'Rs.',
+      currencyCode: '',
       hoursPerDay: 8,
+      workDays: OP.DEFAULT_WEEK.slice(),
       holidays: [],
       customFields: [],
       baseline: null,
@@ -189,7 +195,9 @@ OP.model = (function () {
     for (var k in base) if (p[k] == null) p[k] = base[k];
     ['name', 'organization', 'manager', 'status', 'issueDate', 'start', 'statusDate', 'currency'].forEach(function (k) { p[k] = str(p[k]); });
     p.budget = Math.max(0, num(p.budget, 0));
+    p.currencyCode = /^[A-Za-z]{3}$/.test(str(p.currencyCode).trim()) ? str(p.currencyCode).trim().toUpperCase() : '';
     p.hoursPerDay = Math.max(1, Math.min(24, num(p.hoursPerDay, 8)));
+    p.workDays = weekDays(p.workDays);
     p.holidays = arr(p.holidays).map(str);
     p.customFields = arr(p.customFields).filter(isObj).map(function (f) {
       return { id: str(f.id), name: str(f.name), type: f.type === 'number' ? 'number' : 'text' };
@@ -255,6 +263,13 @@ OP.model = (function () {
     p.version = 2;
     normalizeLevels(p);
     return clampLimits(p);
+  }
+
+  // A list of distinct weekday numbers (0-6), sorted; never empty, so the calendar always has working days.
+  function weekDays(v) {
+    var days = arr(v).map(Number).filter(function (d) { return d >= 0 && d <= 6 && d === Math.floor(d); });
+    days = days.filter(function (d, i) { return days.indexOf(d) === i; }).sort(function (a, b) { return a - b; });
+    return days.length ? days : OP.DEFAULT_WEEK.slice();
   }
 
   function isObj(o) { return o != null && typeof o === 'object' && !Array.isArray(o); }
@@ -363,7 +378,7 @@ OP.model = (function () {
 
   return {
     LINK_TYPES: LINK_TYPES, RES_TYPES: RES_TYPES, RES_KINDS: RES_KINDS, CONSTRAINTS: CONSTRAINTS, TASK_TYPES: TASK_TYPES,
-    MAX_DAYS: MAX_DAYS, clampLimits: clampLimits, blank: blank, newTask: newTask, newResource: newResource, normalize: normalize,
+    MAX_DAYS: MAX_DAYS, clampLimits: clampLimits, weekDays: weekDays, blank: blank, newTask: newTask, newResource: newResource, normalize: normalize,
     isSummary: isSummary, subtreeEnd: subtreeEnd, indexByUid: indexByUid, parsePreds: parsePreds,
     formatPreds: formatPreds, parseDuration: parseDuration, fmtDuration: fmtDuration,
     removeTasks: removeTasks, normalizeLevels: normalizeLevels, initials: initials, rateOn: rateOn, workUnits: workUnits
@@ -375,7 +390,7 @@ OP.model = (function () {
 OP.schedule = function (p, opts) {
   var U = OP.util, M = OP.model;
   var tasks = p.tasks, n = tasks.length;
-  var cal = new OP.Calendar(U.parseDate(p.start) || U.todayDn(), p.holidays);
+  var cal = new OP.Calendar(U.parseDate(p.start) || U.todayDn(), p.holidays, p.workDays);
   var hpd = +p.hoursPerDay || 8;
   var idx = M.indexByUid(p);
   var resByUid = {};

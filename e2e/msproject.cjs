@@ -34,6 +34,14 @@ fs.writeFileSync(T + 'site.xml', xml); fs.writeFileSync(T + 'bad.xml', '<Project
     await file('Open'); await chooser(() => tile('Microsoft Project XML').click(), T + 'site.xml'); await file('Save');
     const dl = pg.waitForEvent('download', { timeout: 5000 }); await pg.locator('.bs-tile', { hasText: /^Save\b/ }).first().click(); const d = await dl; const copy = T + 'roundtrip.openplan'; fs.copyFileSync(await d.path(), copy);
     const saved = JSON.parse(fs.readFileSync(copy, 'utf8')); eq(saved.tasks.length, 7); await file('Open'); await tile('Restore Previous').click(); await file('Open'); await chooser(() => tile('Browse').click(), copy); eq((await proj(pg)).tasks.length, 7); });
+  await step('File ▸ Export ▸ Microsoft Project XML downloads a file that imports back the same', async () => {
+    const before = await proj(pg); await file('Export');
+    const dl = pg.waitForEvent('download', { timeout: 5000 }); await tile('Microsoft Project XML').click(); const d = await dl;
+    const out = T + 'exported.xml'; fs.copyFileSync(await d.path(), out); const text = fs.readFileSync(out, 'utf8');
+    ok(d.suggestedFilename().endsWith('.xml') && /<Project xmlns="http:\/\/schemas\.microsoft\.com\/project">/.test(text), 'not Microsoft Project XML');
+    await file('Open'); await chooser(() => tile('Microsoft Project XML').click(), out); const after = await proj(pg);
+    eq(after.tasks.map(t => t.name), before.tasks.map(t => t.name)); eq(after.resources.map(r => r.name), before.resources.map(r => r.name)); eq(after.tasks.map(t => t.preds.length), before.tasks.map(t => t.preds.length));
+    ok(!/Note:/.test(await toast(pg)), 'import reported problems: ' + await toast(pg)); });
   await step('app: no page errors during any of this', async () => { eq(pg.errors, []); });
   // landing FAQ
   pg = await L.fresh(b); await L.open(pg, '');

@@ -49,14 +49,14 @@ It runs entirely in the browser and has no account. Projects are saved on your o
 ## Features
 
 - **Gantt chart**: an outline of summary tasks and subtasks, FS/SS/FF/SF links with lag, milestones, constraints, deadlines, split tasks and a timeline strip. You can drag bars to move tasks, resize them or link them.
-- **Critical path**: forward and backward passes that give ES, EF, LS, LF, total slack and free slack.
+- **Critical path**: forward and backward passes that give ES, EF, LS, LF, total slack and free slack. The project has its own working week, hours per day, holidays and currency.
 - **Diagrams**: a network diagram (activity on node), a WBS chart and a team org chart. Each one exports to PNG or SVG.
 - **Resources**: work, material and cost resources, calendars, vacations, rate changes, a workload heatmap and resource leveling.
 - **Tracking**: baselines, % complete, actual dates, a status date and earned value (SPI, CPI, EAC).
 - **Budget and reports**: cost by work package and by resource, monthly and cumulative cost, and 10 ready-made reports.
 - **Task board**: a Not started / In progress / Done board; dragging a card updates its % complete.
 - **Getting started**: templates (final-year project, software sprint, event, research project) and a first-run checklist.
-- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import task lists from Excel or CSV, import plans saved from Microsoft Project as XML, and export Excel (.xlsx) and CSV.
+- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import task lists from Excel or CSV, import and export Microsoft Project XML, and export Excel (.xlsx) and CSV.
 - **Sharing and versions**: share a copy of a plan as a link (the plan travels inside the link, nothing is uploaded), and save named versions in the browser.
 - **Offline**: once installed or visited, the app works without an internet connection.
 - **Interface**: a warm paper-and-ink look (ink-black type, a dark brown accent and one font family, Source Sans 3), a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, light and dark themes, and a layout that adapts to phones and tablets.
@@ -170,7 +170,7 @@ In Chrome or Edge, install OpenPlan as an app. After that, double-clicking an `.
 |---|---|
 | Excel (.xlsx) | Export the task list with real dates |
 | Excel / CSV | Import a task list: paste from a spreadsheet or choose a CSV file (File › Open) |
-| Microsoft Project XML | Import a plan saved with File › Save As › XML (also from ProjectLibre): tasks, links and lag, constraints, resources, assignments and holidays. `.mpp` files are not read directly. |
+| Microsoft Project XML | Import a plan saved with File › Save As › XML (also from ProjectLibre): tasks, links and lag, constraints, resources, assignments and holidays. Export the whole plan the same way (File › Export). The export follows Microsoft's published schema. `.mpp` files are not read directly. |
 | CSV | Export the task list |
 | Share link | A copy of the plan inside a link (File › Save, or the link button in the title bar) |
 | PNG / SVG / PDF | Chart images, printing to PDF, and all 10 reports at once (Reports › Print all reports) |

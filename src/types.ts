@@ -58,7 +58,9 @@ export interface Project {
   statusDate: string;
   budget: number;
   currency: string;
+  currencyCode: string;
   hoursPerDay: number;
+  workDays: number[];
   holidays: string[];
   customFields: CustomField[];
   baseline: { savedAt: string; tasks: Record<number, any> } | null;

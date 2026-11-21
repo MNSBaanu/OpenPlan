@@ -470,3 +470,44 @@ describe('limits', () => {
     expect(OP.io.fromJSON(JSON.stringify(raw)).tasks[1].preds[0].lag).toBe(-MAX);
   });
 });
+
+describe('working week', () => {
+  const fin = (days: number[] | undefined, dur: number, start = START) => {
+    const { s } = plan([{ name: 'A', duration: dur }], p => { if (days) p.workDays = days; p.start = start; });
+    return [day(row(s, 'A').startDn), day(row(s, 'A').finishDn)];
+  };
+
+  it('is Monday to Friday unless the project says otherwise', () => {
+    expect(M.blank().workDays).toEqual([1, 2, 3, 4, 5]);
+    expect(fin(undefined, 5)).toEqual(['2026-01-05', '2026-01-09']);
+  });
+
+  it('can include Saturday: a six-day week', () => {
+    expect(fin([1, 2, 3, 4, 5, 6], 6)).toEqual(['2026-01-05', '2026-01-10']);
+  });
+
+  it('can be Sunday to Thursday: Friday and Saturday are days off', () => {
+    expect(fin([0, 1, 2, 3, 4], 5)).toEqual(['2026-01-05', '2026-01-11']);   // Mon, Tue, Wed, Thu, then Sunday
+  });
+
+  it('moves a start date that falls on a day off to the next working day', () => {
+    expect(fin([2, 3], 1, '2026-01-05')).toEqual(['2026-01-06', '2026-01-06']);   // Monday is off, Tuesday is the first working day
+  });
+
+  it('still skips holidays that fall on working days', () => {
+    const { s } = plan([{ name: 'A', duration: 3 }], p => { p.workDays = [0, 1, 2, 3, 4]; p.holidays = ['2026-01-06']; });
+    expect(day(row(s, 'A').finishDn)).toBe('2026-01-08');      // Mon, (Tue is a holiday), Wed, Thu
+  });
+
+  it('repairs a bad list: never empty, whole numbers 0-6, no repeats', () => {
+    for (const [bad, fixed] of [[[], [1, 2, 3, 4, 5]], [[9, -1, 2.5], [1, 2, 3, 4, 5]], [[3, 3, 1, 1], [1, 3]], [['2', 0], [0, 2]], [undefined, [1, 2, 3, 4, 5]], ['x', [1, 2, 3, 4, 5]]] as [any, number[]][]) {
+      const p = M.blank(); (p as any).workDays = bad; expect(M.normalize(p).workDays).toEqual(fixed);
+    }
+  });
+
+  it('shades the days off on the Gantt chart', () => {
+    const { p, s } = plan([{ name: 'A', duration: 10 }], q => { q.workDays = [0, 1, 2, 3, 4]; });
+    const svg = OP.charts.gantt({ p, s, rows: s.rows, zoom: 'day', critical: true, table: false }).svg;
+    expect((svg.match(/class="wk"/g) || []).length).toBeGreaterThan(2);
+  });
+});

@@ -46,6 +46,8 @@ export function projectFromMspXml(text: string): ImportResult {
   p.organization = txt(root, 'Company');
   const cur = txt(root, 'CurrencySymbol');
   if (cur) p.currency = cur;
+  const code = txt(root, 'CurrencyCode').toUpperCase();
+  if (/^[A-Z]{3}$/.test(code) && code !== 'XXX') p.currencyCode = code;
   const mpd = num(root, 'MinutesPerDay', 480) || 480;
   p.hoursPerDay = Math.max(1, Math.min(24, round2(mpd / 60)));
   const hpd = p.hoursPerDay;
@@ -56,11 +58,17 @@ export function projectFromMspXml(text: string): ImportResult {
   const cals = kids(kid(root, 'Calendars'), 'Calendar');
   const base = cals.find(c => txt(c, 'UID') === txt(root, 'CalendarUID')) || cals.find(c => flag(c, 'IsBaseCalendar'));
   if (base) {
-    const days = new Map<string, boolean>();
-    kids(kid(base, 'WeekDays'), 'WeekDay').forEach(w => { if (txt(w, 'DayType') !== '0') days.set(txt(w, 'DayType'), flag(w, 'DayWorking')); });
-    // DayType 1 is Sunday, 2 Monday ... 7 Saturday.
-    const normal = ['2', '3', '4', '5', '6'].every(d => days.get(d) !== false) && days.get('1') !== true && days.get('7') !== true;
-    if (!normal) warnOnce('the working week is not Monday to Friday, so Monday to Friday was used');
+    // The working week starts as Monday to Friday; each WeekDay entry then switches one day on or off.
+    // DayType 1 is Sunday, 2 Monday ... 7 Saturday (0 is a dated exception, handled below).
+    const week = new Set<number>([1, 2, 3, 4, 5]);
+    kids(kid(base, 'WeekDays'), 'WeekDay').forEach(w => {
+      const type = Number(txt(w, 'DayType'));
+      if (!(type >= 1 && type <= 7)) return;
+      const js = type === 1 ? 0 : type - 1;
+      if (flag(w, 'DayWorking')) week.add(js); else week.delete(js);
+    });
+    if (!week.size) warnOnce('the calendar has no working days, so Monday to Friday was used');
+    p.workDays = M.weekDays(Array.from(week));
     const hol = new Set<string>();
     kids(kid(base, 'Exceptions'), 'Exception').forEach(e => {
       if (flag(e, 'DayWorking')) return;
@@ -80,7 +88,7 @@ export function projectFromMspXml(text: string): ImportResult {
     const name = txt(r, 'Name');
     if (!name || txt(r, 'UID') === '0') return; // UID 0 is Project's "unassigned" placeholder
     const type = txt(r, 'Type');
-    const kind = type === '0' ? 'Material' : type === '2' ? 'Cost' : 'Work';
+    const kind = flag(r, 'IsCostResource') || type === '2' ? 'Cost' : type === '0' ? 'Material' : 'Work';
     let rate = num(r, 'StandardRate', 0);
     const fmt = txt(r, 'StandardRateFormat');
     if (kind === 'Work') {
@@ -90,7 +98,7 @@ export function projectFromMspXml(text: string): ImportResult {
     }
     const res = M.newResource(p, {
       name, initials: txt(r, 'Initials') || M.initials(name), role: txt(r, 'Group'), kind,
-      type: kind === 'Work' ? 'Full-time' : 'Supporter',
+      type: kind === 'Work' ? 'Full-time' : 'Supporter', workDays: p.workDays.slice(),
       maxUnits: Math.max(1, Math.round(num(r, 'MaxUnits', 1) * 100)),
       rate: kind === 'Cost' ? 0 : Math.max(0, round2(rate)), costPerUse: Math.max(0, num(r, 'CostPerUse', 0)),
       materialLabel: kind === 'Material' ? txt(r, 'MaterialLabel') : ''

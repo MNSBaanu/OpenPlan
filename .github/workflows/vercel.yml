@@ -21,9 +21,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Pull requests from forks don't receive the Vercel secrets, so only the checks run for them.
+    # Pull requests from forks and from Dependabot don't receive the Vercel secrets, so only the checks run for them.
     env:
-      CAN_DEPLOY: ${{ github.event_name == 'push' || !github.event.pull_request.head.repo.fork }}
+      CAN_DEPLOY: ${{ github.event_name == 'push' || (!github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]') }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 

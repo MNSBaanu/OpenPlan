@@ -57,6 +57,17 @@ describe('Microsoft Project XML import', () => {
     expect([p.name, p.organization, p.manager, p.currency, p.start, p.hoursPerDay]).toEqual(['Website Launch', 'Acme', 'Sam Rowe', '$', '2026-03-02', 8]);
   });
 
+  it('reads the working week (here Monday to Friday) and gives people the same days', () => {
+    expect(p.workDays).toEqual([1, 2, 3, 4, 5]);
+    expect(p.resources.every((r: any) => r.workDays.join() === '1,2,3,4,5')).toBe(true);
+  });
+
+  it('reads a different working week, such as Sunday to Thursday', () => {
+    const days = [[1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [6, 0], [7, 0]].map(([d, w]) => `<WeekDay><DayType>${d}</DayType><DayWorking>${w}</DayWorking></WeekDay>`).join('');
+    const xml = wrap(`<Calendars><Calendar><UID>1</UID><IsBaseCalendar>1</IsBaseCalendar><WeekDays>${days}</WeekDays></Calendar></Calendars><Tasks>${task(1, 'A', 1, dur(8))}</Tasks>`, '<CalendarUID>1</CalendarUID>');
+    expect(projectFromMspXml(xml).project.workDays).toEqual([0, 1, 2, 3, 4]);
+  });
+
   it('turns calendar exceptions into holidays (one day and a range, weekdays only)', () => {
     expect(p.holidays).toEqual(['2026-04-03', '2026-05-04', '2026-05-05', '2026-05-06']);
   });
@@ -135,7 +146,8 @@ describe('Microsoft Project XML import: edge cases', () => {
       <Resources><Resource><UID>1</UID><Name>X</Name><Type>1</Type><StandardRate>9</StandardRate><StandardRateFormat>5</StandardRateFormat></Resource></Resources>`, '<CalendarUID>1</CalendarUID>');
     const r = projectFromMspXml(xml);
     const w = r.warnings.join(' | ');
-    expect(w).toMatch(/working week is not Monday to Friday/);
+    expect(r.project.workDays).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(r.project.resources[0].workDays).toEqual([1, 2, 3, 4, 5, 6]);
     expect(w).toMatch(/1 lag given as a percentage was set to 0/);
     expect(w).toMatch(/calendar days were read as working days/);
     expect(w).toMatch(/pay rates are not hourly/);

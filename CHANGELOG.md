@@ -7,6 +7,9 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 ### Added
 - **Live collaboration.** Several people can edit one plan at the same time, with a separate undo for each person. It is end-to-end encrypted, and the relay (`collab-server/`) runs free on Cloudflare Workers.
 - **Microsoft Project XML import** (File › Open): tasks, outline, links with lag, constraints, resources, assignments and holidays. Anything that cannot be carried over is listed after the import.
+- **Microsoft Project XML export** (File › Export). The output is checked against Microsoft's published schema, and a plan exported and imported again keeps the same dates.
+- **Working week.** Choose which days the project works (a Sunday to Thursday week, a six-day week and so on) in Project Information. The schedule, the Gantt shading and the Microsoft Project import and export all follow it.
+- **Currency picker** in Project Information, with a proper currency code that other programs use. A symbol can still be typed.
 - **Browser tests in the repository** (`npm run e2e`), run on every pull request.
 - A real-screenshot preview on the landing page, with Reports as a fifth tab.
 - Limits on durations and lags (5000 working days), so a typo can no longer freeze the page.
