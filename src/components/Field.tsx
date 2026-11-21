@@ -11,11 +11,19 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> &
 
 // Text field that edits locally and commits on Enter or blur, like a spreadsheet cell.
 export default function Field({ value, onCommit, onNav, fk, ...rest }: Props) {
-  const [v, setV] = useState(value);
+  const [v, setText] = useState(value);
+  const typed = useRef(value);       // what the box holds right now
+  const shown = useRef(value);       // the last value that came from outside
   const focused = useRef(false);
   const cancelled = useRef(false);
   const last = useRef<string | null>(null);
-  useEffect(() => { last.current = null; if (!focused.current) setV(value); }, [value]);
+  const setV = (x: string) => { typed.current = x; setText(x); };
+  // An outside change (another person in a live session, undo) is shown unless you are in the middle of typing in this cell.
+  useEffect(() => {
+    last.current = null;
+    if (!focused.current || typed.current === shown.current) { typed.current = value; setText(value); }
+    shown.current = value;
+  }, [value]);
 
   const commit = () => {
     if (cancelled.current) { cancelled.current = false; return; }
