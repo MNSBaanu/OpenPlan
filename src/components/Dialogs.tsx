@@ -304,6 +304,7 @@ function LiveSection() {
   };
   const start = async () => { setBusy(true); try { await (await import('../collab/session')).startSession(); } finally { setBusy(false); } };
   const leave = async () => (await import('../collab/session')).leaveSession();
+  const rename = async (name: string) => (await import('../collab/session')).setMyName(name);
   const state = info.status === 'live' ? (info.peers > 1 ? info.peers + ' people are in this session' : 'You are the only one here so far')
     : info.status === 'offline' ? 'Connection lost. Reconnecting; your changes are kept and will be sent.' : 'Connecting…';
   return (
@@ -314,7 +315,14 @@ function LiveSection() {
         <button type="button" className="btn primary" disabled={busy} onClick={start}><Icon name="users" />Start a live session</button>
       </> : <>
         <p><b>{state}</b></p>
-        <p className="muted small">Send this invite link to the people you want to edit with. Anyone with the link can edit, so share it only with them.</p>
+        <label className="field"><span>Your name (shown to the others and on your comments)</span>
+          <input className="inp" name="myname" aria-label="Your name" maxLength={30} placeholder="Someone" defaultValue={info.me && info.me.name !== 'Someone' ? info.me.name : ''}
+            onBlur={e => rename(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
+        </label>
+        {info.status === 'live' && <ul className="people" aria-label="People in this session">
+          {[info.me, ...info.people].filter(Boolean).map(x => <li key={x!.id}><i style={{ background: x!.color }} aria-hidden="true" />{x!.name}{x!.id === info.me!.id && <span className="muted small"> (you)</span>}</li>)}
+        </ul>}
+        <p className="muted small">Send this invite link to the people you want to edit with. Anyone with the link can edit. A view-only link is not possible, because the server never sees your plan and so cannot tell who may change it. Share the link only with people you trust, or send them a file or a share link (a copy) instead.</p>
         <div className="share-row">
           <input ref={linkRef} className="inp" readOnly value={info.link} aria-label="Invite link" onFocus={e => e.target.select()} />
           <button type="button" className="btn primary" onClick={copy}><Icon name="link" />Copy invite</button>

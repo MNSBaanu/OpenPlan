@@ -5,6 +5,7 @@ import { COLLAB_URL, SESSION_KEY } from './config';
 import { COLLAB_OFF, type CollabInfo } from './types';
 import { importKey, newKeyText, open, randomId, seal } from './crypto';
 import { ROOT_TYPES, isEmpty, parts, readProject, writeProject } from './ydoc';
+import { NAME_KEY, PRESENCE_EVERY_MS, Roster, cleanName, colorFor, pickColor, readPerson, type Person } from './presence';
 
 type Mode = 'create' | 'join' | 'rejoin';
 const COMPACT_AT = 200;   // ask the relay to merge its history once it holds this many entries
@@ -23,11 +24,18 @@ class Session {
   seq = 0; logLen = 0; synced = false; closed = false; failures = 0; timer = 0; queued = false;
   chain: Promise<void> = Promise.resolve();
   myNext: number;
+  me: Person;
+  roster = new Roster();
+  beat = 0; nudge = 0; unsub: (() => void) | null = null;
 
   constructor(public room: string, public keyText: string, public key: CryptoKey, public mode: Mode) {
     // Every person allocates task and resource numbers from their own range, so two people adding a task
     // at the same moment can never pick the same number.
     this.myNext = (1 + Math.floor(Math.random() * (2 ** 20 - 1))) * 1_000_000;
+    const id = randomId(9);
+    let name = '';
+    try { name = cleanName(localStorage.getItem(NAME_KEY)); } catch { /* storage unavailable */ }
+    this.me = { id, name: name || 'Someone', color: colorFor(id), uid: null };
     this.doc.on('update', (u: Uint8Array, origin: unknown) => { if (origin !== 'net') this.push(u); });
     this.doc.on('afterTransaction', tr => { if (this.synced && tr.origin !== 'local' && tr.origin !== 'seed') this.queueRebuild(); });
   }
@@ -35,7 +43,7 @@ class Session {
   link() { return location.origin + location.pathname + '#collab=' + this.room + '.' + this.keyText; }
 
   start() {
-    setInfo({ status: 'connecting', peers: 0, link: this.link() });
+    setInfo({ status: 'connecting', peers: 0, link: this.link(), people: [], me: this.me });
     try { localStorage.setItem(SESSION_KEY, JSON.stringify({ room: this.room, key: this.keyText })); } catch { /* storage unavailable */ }
     this.connect();
   }
@@ -48,7 +56,8 @@ class Session {
     ws.onclose = () => {
       if (this.closed || this.ws !== ws) return;
       this.sendable = false;
-      setInfo({ status: this.synced ? 'offline' : 'connecting', peers: 0 });
+      this.roster.clear();
+      setInfo({ status: this.synced ? 'offline' : 'connecting', peers: 0, people: [] });
       this.failures++;
       if (!this.synced && this.failures >= 4) { this.fail('Could not reach the live-session server. Check your connection and try again.'); return; }
       this.timer = window.setTimeout(() => this.connect(), Math.min(30_000, 1000 * 2 ** Math.min(this.failures, 5)));
@@ -76,14 +85,47 @@ class Session {
       this.failures = 0;
       this.logLen = m.count;
       await this.ready();
+    } else if (m.t === 'p' && typeof m.d === 'string') {
+      try {
+        const person = readPerson(JSON.parse(new TextDecoder().decode(await open(this.key, m.d))));
+        if (person && person.id !== this.me.id && this.roster.update(person)) { this.publish(); this.sendPresence(); }
+      } catch { /* a presence message that cannot be read is ignored */ }
     } else if (m.t === 'n') {
       setInfo({ peers: m.n });
+      this.sendPresence();   // someone joined or left: tell the newcomer who we are
     } else if (m.t === 'err') {
       S().toast(ERRORS[m.m] || 'The live session reported a problem.', true);
     }
   }
 
+  // ----- who is here -----
+  async sendPresence() {
+    const ws = this.ws;
+    if (!ws || ws.readyState !== 1 || !this.sendable) return;
+    const color = pickColor(this.me, this.roster.list());
+    if (color !== this.me.color) { this.me = { ...this.me, color }; this.publish(); }
+    this.me = { ...this.me, uid: S().sel[0] ?? null };
+    ws.send(JSON.stringify({ t: 'p', d: await seal(this.key, new TextEncoder().encode(JSON.stringify(this.me))) }));
+  }
+  publish() { setInfo({ people: this.roster.list(), me: this.me }); }
+  setName(name: string) {
+    this.me = { ...this.me, name: cleanName(name) || 'Someone' };
+    this.publish();
+    this.sendPresence();
+  }
+  startPresence() {
+    if (this.beat) return;
+    this.beat = window.setInterval(() => { if (this.roster.prune()) this.publish(); this.sendPresence(); }, PRESENCE_EVERY_MS);
+    this.unsub = useStore.subscribe((now, before) => {
+      if (now.sel === before.sel) return;
+      clearTimeout(this.nudge);
+      this.nudge = window.setTimeout(() => { this.sendPresence(); }, 150);
+    });
+  }
+
   async ready() {
+    this.startPresence();
+    this.sendPresence();
     if (this.synced) {
       // Reconnected: send everything, so changes made while offline reach the others.
       this.push(Y.encodeStateAsUpdate(this.doc));
@@ -148,7 +190,8 @@ class Session {
 
   leave() {
     this.closed = true;
-    clearTimeout(this.timer);
+    clearTimeout(this.timer); clearTimeout(this.nudge); clearInterval(this.beat);
+    this.unsub?.();
     try { this.ws?.close(); } catch { /* already closed */ }
     setCollabHooks(null);
     this.um?.destroy();
@@ -180,4 +223,11 @@ export async function joinSession(room: string, keyText: string, mode: Exclude<M
 export function leaveSession() {
   current?.leave();
   S().toast('Left the live session. The plan stays on this computer.');
+}
+
+// Change the name other people see (and put on comments); remembered on this computer.
+export function setMyName(name: string) {
+  const clean = cleanName(name);
+  try { if (clean) localStorage.setItem(NAME_KEY, clean); else localStorage.removeItem(NAME_KEY); } catch { /* storage unavailable */ }
+  current?.setName(clean);
 }

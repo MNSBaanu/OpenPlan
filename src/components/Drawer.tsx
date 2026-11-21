@@ -3,7 +3,8 @@ import { useApp, type Store } from '../store';
 import * as ops from '../lib/taskOps';
 import Field, { DateField } from './Field';
 import Icon from './Icon';
-import type { Project, Resource, Row, Task } from '../types';
+import { NAME_KEY, cleanName } from '../collab/presence';
+import type { Comment, Project, Resource, Row, Task } from '../types';
 
 const U = OP.util, M = OP.model;
 const VIEWS = ['gantt', 'board', 'network', 'wbs'];
@@ -232,8 +233,41 @@ function DrawerBody({ st, t, r }: { st: Store; t: Task; r: Row }) {
         <label className="field"><span>Notes</span>
           <textarea className="inp" defaultValue={t.notes} key={uid + ':' + t.notes} onBlur={e => { if (e.target.value !== t.notes) set('notes', e.target.value); }} />
         </label>
+        <Comments st={st} t={t} edit={edit} />
       </div>
     </aside>
   );
 }
 
+
+// Short notes from different people on one task. Each comment keeps who wrote it and when.
+const myName = () => { try { return cleanName(localStorage.getItem(NAME_KEY)) || 'Someone'; } catch { return 'Someone'; } };
+const when = (iso: string) => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+export const newComment = (text: string, by = myName()): Comment => ({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), by, at: new Date().toISOString(), text: text.trim().slice(0, 1000) });
+
+function Comments({ st, t, edit }: { st: Store; t: Task; edit: (fn: (t: Task, p: Project) => void | false) => boolean }) {
+  const colors = new Map(st.collab.people.map(x => [x.name, x.color] as const));
+  if (st.collab.me) colors.set(st.collab.me.name, st.collab.me.color);
+  const add = (el: HTMLTextAreaElement) => {
+    if (!el.value.trim()) return;
+    const c = newComment(el.value);
+    if (edit(x => { x.comments.push(c); })) el.value = '';
+  };
+  return (
+    <div className="comments">
+      <div className="section-title">Comments{t.comments.length > 0 && ' (' + t.comments.length + ')'}</div>
+      {t.comments.map(c => (
+        <div className="comment" key={c.id}>
+          <div className="comment-head">
+            <b style={colors.has(c.by) ? { color: colors.get(c.by) } : undefined}>{c.by || 'Someone'}</b><span className="muted small">{when(c.at)}</span>
+            <button className="icon-btn" aria-label="Delete comment" title="Delete comment" onClick={() => edit(x => { x.comments = x.comments.filter(y => y.id !== c.id); })}><Icon name="x" /></button>
+          </div>
+          <div className="comment-text">{c.text}</div>
+        </div>
+      ))}
+      <textarea className="inp" rows={2} aria-label="Add a comment" placeholder="Write a comment… (Ctrl+Enter to add)" maxLength={1000}
+        onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); add(e.currentTarget); } }} />
+      <button className="btn" onClick={e => add(e.currentTarget.previousElementSibling as HTMLTextAreaElement)}>Add comment</button>
+    </div>
+  );
+}

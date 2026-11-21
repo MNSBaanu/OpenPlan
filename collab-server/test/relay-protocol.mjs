@@ -40,6 +40,11 @@ await t('flooding is rate limited', async () => {
   const id = room(), a = await client(id); await a.until(m => m.t === 'ready'); for (let i = 0; i < 700; i++) a.send({ t: 'u', d: enc('f' + i) }); await a.until(m => m.t === 'err' && m.m === 'slow', 6000); a.ws.close(); });
 await t('garbage input is ignored without crashing', async () => {
   const id = room(), a = await client(id); await a.until(m => m.t === 'ready'); a.send('not json'); a.send({ t: 'u' }); a.send({ t: 's', upTo: -5, d: 'x' }); a.send({ t: 'zzz', d: 'x' }); a.send({ t: 'u', d: enc('still works') }); await a.until(m => m.t === 'a'); a.ws.close(); });
+await t('presence is passed on to the others, not echoed back and never stored', async () => {
+  const id = room(), a = await client(id), b = await client(id); await a.until(m => m.t === 'ready'); await b.until(m => m.t === 'ready');
+  a.send({ t: 'p', d: enc('who') }); const got = await b.until(m => m.t === 'p'); eq(got.d, enc('who')); await wait(200); eq(a.msgs.filter(m => m.t === 'p').length, 0, 'echo');
+  a.send({ t: 'p', d: 'x'.repeat(5000) }); await wait(200); eq(b.msgs.filter(m => m.t === 'p').length, 1, 'oversize presence must be dropped');
+  const c = await client(id); const r = await c.until(m => m.t === 'ready'); eq([r.count, c.msgs.filter(m => m.t === 'p').length], [0, 0]); a.ws.close(); b.ws.close(); c.ws.close(); });
 await t('wrong website origin is rejected (403)', async () => { try { await client(room(), 'https://evil.example'); throw new Error('connected!'); } catch (e) { if (/connected!/.test(e.message)) throw e; } });
 await t('bad room name is rejected; plain GET shows the health text', async () => { try { await client('short'); throw new Error('connected!'); } catch (e) { if (/connected!/.test(e.message)) throw e; } const r = await fetch('http://localhost:8787/'); eq(r.status, 200); });
 await t('rooms are isolated from each other', async () => { const a = await client(room()), b = await client(room()); await a.until(m => m.t === 'ready'); await b.until(m => m.t === 'ready'); a.send({ t: 'u', d: enc('private') }); await a.until(m => m.t === 'a'); await wait(300); eq(b.msgs.filter(m => m.t === 'u').length, 0); a.ws.close(); b.ws.close(); });

@@ -26,6 +26,7 @@ export interface Task {
   levelDelay: number;
   priority: number;
   custom: Record<string, string | number>;
+  comments: Comment[];
 }
 
 export interface Resource {
@@ -46,6 +47,9 @@ export interface Resource {
 }
 
 export interface CustomField { id: string; name: string; type: 'text' | 'number' }
+
+// A note from one person on a task. Each has its own id so comments added at the same moment by two people both survive.
+export interface Comment { id: string; by: string; at: string; text: string }
 
 export interface Project {
   version: number;

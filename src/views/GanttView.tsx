@@ -189,6 +189,8 @@ function Cell({ st, k, r, idx }: { st: Store; k: string; r: Row; idx: any }) {
 function Grid({ st, list }: { st: Store; list: (Row | GroupItem)[] }) {
   const ks = activeCols(st), idx = useMemo(() => M.indexByUid(st.p), [st.p]);
   const selSet = new Set(st.sel);
+  const here = new Map<number, { name: string; color: string }>();   // tasks other people have selected
+  st.collab.people.forEach(x => { if (x.uid != null) here.set(x.uid, x); });
   return (
     <>
       <table className="grid">
@@ -205,7 +207,8 @@ function Grid({ st, list }: { st: Store; list: (Row | GroupItem)[] }) {
               </td></tr>
             )
             : (
-              <tr key={item.task.uid} className={(selSet.has(item.task.uid) ? 'sel ' : '') + (item.summary ? 'summary' : '')}>
+              <tr key={item.task.uid} className={(selSet.has(item.task.uid) ? 'sel ' : '') + (item.summary ? 'summary' : '') + (here.has(item.task.uid) ? ' peer' : '')}
+                style={here.has(item.task.uid) ? { '--peer': here.get(item.task.uid)!.color, '--peer-name': JSON.stringify(here.get(item.task.uid)!.name) } as React.CSSProperties : undefined}>
                 {ks.map(k => <Cell key={k} st={st} k={k} r={item} idx={idx} />)}
               </tr>
             ))}

@@ -8,7 +8,9 @@
  * Protocol (JSON text messages)
  *   client -> server  {t:"u", d}             append update d and send it to everyone else
  *   client -> server  {t:"s", upTo, d}       replace log entries 1..upTo with one snapshot d
+ *   client -> server  {t:"p", d}            presence (who is here): sent to everyone else, never stored
  *   server -> client  {t:"u", seq, d}        an update (the stored history is sent this way on connect)
+ *   server -> client  {t:"p", d}            someone's presence
  *   server -> client  {t:"a", seq}           your update was stored with this sequence number
  *   server -> client  {t:"ready", count}     the stored history has been sent (count = entries)
  *   server -> client  {t:"n", n}             people connected right now
@@ -91,6 +93,10 @@ export class Room {
       const out = JSON.stringify({ t: 'u', seq, d: msg.d });
       for (const s of this.open()) if (s !== ws) s.send(out);
       await this.touch();
+    } else if (msg.t === 'p') {
+      if (msg.d.length > 2000) return;   // a name and a colour: anything bigger is not presence
+      const out = JSON.stringify({ t: 'p', d: msg.d });
+      for (const s of this.open()) if (s !== ws) s.send(out);
     } else if (msg.t === 's' && Number.isInteger(msg.upTo) && msg.upTo > 0) {
       this.sql.exec('DELETE FROM log WHERE seq <= ?', msg.upTo);
       this.sql.exec('INSERT INTO log (seq, d) VALUES (?, ?)', msg.upTo, msg.d);

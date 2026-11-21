@@ -6,6 +6,7 @@ import { TEMPLATES } from '../lib/templates';
 import { deleteVersion, listVersions, saveVersion, type Version } from '../lib/versions';
 import Icon from './Icon';
 import type { ViewName } from '../types';
+import { initialsOf } from '../collab/presence';
 
 const U = OP.util;
 const LOGO_MARK = './assets/OpenPlan.png';
@@ -41,6 +42,7 @@ export function TitleBar() {
         {st.collab.status !== 'off' && (
           <button className={'live-badge ' + st.collab.status} title="Live session: click for the invite link" aria-label="Live session" onClick={() => runAction('share')}>
             <i aria-hidden="true" />{st.collab.status === 'live' ? 'Live · ' + Math.max(1, st.collab.peers) : st.collab.status === 'offline' ? 'Reconnecting…' : 'Connecting…'}
+            {st.collab.status === 'live' && st.collab.people.slice(0, 4).map(x => <span key={x.id} className="avatar" style={{ background: x.color }} title={x.name}>{initialsOf(x.name)}</span>)}
           </button>
         )}
         <button className="qat-btn" title="Dark / light" aria-label="Toggle dark mode" onClick={() => st.setUI({ theme: st.theme === 'dark' ? 'light' : 'dark' })}>

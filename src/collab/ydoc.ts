@@ -8,12 +8,16 @@ import type { Project } from '../types';
 //   res       resource uid -> a map of that resource's fields
 //   rorder    resource uids in sheet order
 // Values are plain JSON, so a task's links or assignments change as one unit; other fields merge independently.
+// A task's comments are the exception: each one is its own entry ("c:" + its id) in the task's map, so two people
+// commenting on the same task at the same moment both keep their comment.
 
 export const ROOT_TYPES = ['meta', 'tasks', 'order', 'res', 'rorder'] as const;
 const SKIP_META = new Set(['version', 'nextUid', 'tasks', 'resources']);
 const BATCH = 150;
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+const CKEY = 'c:';
+const cmap = (list: any): Map<string, any> => new Map((Array.isArray(list) ? list : []).filter((c: any) => c && typeof c.id === 'string').map((c: any) => [c.id, c]));
 
 export const parts = (doc: Y.Doc) => ({
   meta: doc.getMap<any>('meta'), tasks: doc.getMap<Y.Map<any>>('tasks'), order: doc.getArray<number>('order'),
@@ -31,12 +35,18 @@ function writeItems(map: Y.Map<Y.Map<any>>, prev: any[], next: any[]) {
     let m = map.get(key);
     if (!old || !m) {
       m = new Y.Map<any>();
-      for (const k in o) if (o[k] !== undefined) m.set(k, o[k]);
+      for (const k in o) if (k !== 'comments' && o[k] !== undefined) m.set(k, o[k]);
+      cmap(o.comments).forEach((c, id) => m!.set(CKEY + id, c));
       map.set(key, m);
       continue;
     }
-    for (const k in o) if (!same(o[k], old[k])) m.set(k, o[k]);
-    for (const k in old) if (!(k in o)) m.delete(k);
+    for (const k in o) if (k !== 'comments' && !same(o[k], old[k])) m.set(k, o[k]);
+    for (const k in old) if (k !== 'comments' && !(k in o)) m.delete(k);
+    if ('comments' in o || 'comments' in old) {
+      const was = cmap(old.comments), now = cmap(o.comments);
+      was.forEach((_, id) => { if (!now.has(id)) m!.delete(CKEY + id); });
+      now.forEach((c, id) => { if (!was.has(id) || !same(c, was.get(id))) m!.set(CKEY + id, c); });
+    }
   }
 }
 
@@ -89,7 +99,10 @@ function readItems(map: Y.Map<Y.Map<any>>, order: Y.Array<number>): any[] {
     const m = map.get(String(uid));
     if (!m || seen.has(uid)) return;
     seen.add(uid);
-    out.push(m.toJSON());
+    const raw = m.toJSON(), item: any = {}, comments: any[] = [];
+    for (const k in raw) { if (k.startsWith(CKEY)) comments.push(raw[k]); else item[k] = raw[k]; }
+    if (comments.length) item.comments = comments.sort((a, b) => String(a.at).localeCompare(String(b.at)) || String(a.id).localeCompare(String(b.id)));
+    out.push(item);
   };
   order.forEach(take);
   // Items that are in the map but missing from the order (an edit that crossed a delete) go last.

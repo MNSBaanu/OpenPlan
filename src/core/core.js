@@ -162,10 +162,22 @@ OP.model = (function () {
     return p;
   }
 
+  // Comments on a task: at most 200 of 1000 characters each, with a unique id; anything malformed is dropped.
+  var MAX_COMMENTS = 200, MAX_COMMENT_CHARS = 1000;
+  function cleanComments(list) {
+    var seen = {}, out = [];
+    (Array.isArray(list) ? list : []).forEach(function (c) {
+      if (!c || typeof c !== 'object' || typeof c.id !== 'string' || !c.id || seen[c.id] || typeof c.text !== 'string' || !c.text.trim()) return;
+      seen[c.id] = 1;
+      out.push({ id: c.id.slice(0, 40), by: String(c.by || '').slice(0, 40), at: String(c.at || '').slice(0, 30), text: c.text.slice(0, MAX_COMMENT_CHARS) });
+    });
+    return out.slice(-MAX_COMMENTS);
+  }
+
   var TASK_DEFAULTS = {
     name: '', level: 1, duration: 1, milestone: false, percent: 0, notes: '', preds: [], assignments: [],
     constraint: 'ASAP', constraintDate: '', deadline: '', type: 'FixedUnits', effortDriven: true, fixedCost: 0,
-    actualStart: '', actualFinish: '', splits: [], levelDelay: 0, priority: 500, custom: {}
+    actualStart: '', actualFinish: '', splits: [], levelDelay: 0, priority: 500, custom: {}, comments: []
   };
   var RES_DEFAULTS = {
     name: '', initials: '', role: '', type: 'Full-time', kind: 'Work', materialLabel: '', maxUnits: 100, rate: 0,
@@ -226,6 +238,7 @@ OP.model = (function () {
       t.milestone = !!t.milestone;
       t.percent = Math.max(0, Math.min(100, num(t.percent, 0)));
       t.effortDriven = !!t.effortDriven;
+      t.comments = cleanComments(t.comments);
       t.fixedCost = num(t.fixedCost, 0);
       t.levelDelay = Math.max(0, num(t.levelDelay, 0));
       t.priority = Math.max(0, Math.min(1000, num(t.priority, 500)));

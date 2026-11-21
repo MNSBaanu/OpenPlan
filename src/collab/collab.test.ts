@@ -164,3 +164,55 @@ describe('two people editing at once', () => {
     expect(readProject(b).tasks[2].name).toBe('B1');
   });
 });
+
+describe('comments', () => {
+  const c = (id: string, text: string, at = '2026-01-01T10:00:00.000Z', by = 'Ana') => ({ id, by, at, text });
+
+  it('round-trips through the shared document, oldest first', () => {
+    const doc = new Y.Doc(), p = demo();
+    p.tasks[1].comments = [c('b', 'second', '2026-01-02T00:00:00.000Z'), c('a', 'first')];
+    writeProject(doc, null, p);
+    expect(readProject(doc).tasks[1].comments.map(x => x.text)).toEqual(['first', 'second']);
+    expect(norm(readProject(doc)).tasks[0].comments).toEqual([]);
+  });
+
+  it('keeps comments that two people add to the same task at the same time', () => {
+    const { a, b, offline, online } = pair(), p = demo();
+    writeProject(a, null, p);
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a), 'net');
+    offline();
+    const pa = JSON.parse(JSON.stringify(p)) as Project; pa.tasks[2].comments.push(c('a1', 'from Ana'));
+    const pb = JSON.parse(JSON.stringify(p)) as Project; pb.tasks[2].comments.push(c('b1', 'from Bo', '2026-01-01T11:00:00.000Z', 'Bo'));
+    writeProject(a, p, pa); writeProject(b, p, pb);
+    online();
+    for (const d of [a, b]) expect(readProject(d).tasks[2].comments.map(x => x.text)).toEqual(['from Ana', 'from Bo']);
+  });
+
+  it('deletes and edits one comment without touching the others', () => {
+    const doc = new Y.Doc(), p = demo();
+    p.tasks[0].comments = [c('a', 'one'), c('b', 'two', '2026-01-01T11:00:00.000Z')];
+    writeProject(doc, null, p);
+    const next = JSON.parse(JSON.stringify(p)) as Project; next.tasks[0].comments = [next.tasks[0].comments[1]];
+    writeProject(doc, p, next);
+    expect(readProject(doc).tasks[0].comments.map(x => x.id)).toEqual(['b']);
+  });
+
+  it('does not store comments as an ordinary field of the task', () => {
+    const doc = new Y.Doc(), p = demo();
+    p.tasks[0].comments = [c('a', 'one')];
+    writeProject(doc, null, p);
+    const m = doc.getMap<Y.Map<any>>('tasks').get(String(p.tasks[0].uid))!;
+    expect(m.has('comments')).toBe(false);
+    expect(m.has('c:a')).toBe(true);
+  });
+
+  it('cleans comments when a plan is opened: no duplicates, no blanks, no oversize text', () => {
+    const p = M.blank(); const t = M.newTask(p, { name: 'T' });
+    (t as any).comments = [c('a', 'ok'), c('a', 'duplicate id'), c('b', '   '), { id: 'c' }, null, 'junk', c('d', 'x'.repeat(5000))];
+    p.tasks.push(t);
+    const n = M.normalize(p);
+    expect(n.tasks[0].comments.map((x: any) => x.id)).toEqual(['a', 'd']);
+    expect(n.tasks[0].comments[1].text).toHaveLength(1000);
+    expect(M.normalize({ ...M.blank(), tasks: [{ uid: 1, name: 'Old file without comments' }] }).tasks[0].comments).toEqual([]);
+  });
+});
