@@ -1,6 +1,9 @@
 {
   "name": "openplan",
   "private": true,
+  "license": "MIT",
+  "author": "MNS Baanu",
+  "repository": { "type": "git", "url": "git+https://github.com/MNSBaanu/OpenPlan.git" },
   "version": "2.0.0",
   "type": "module",
   "scripts": {
@@ -10,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint .",
-    "e2e": "node e2e/run.mjs"
+    "e2e": "node e2e/run.mjs",
+    "notices": "node scripts/make-notices.mjs"
   },
   "dependencies": {
     "@fontsource-variable/source-sans-3": "^5.3.1",

@@ -48,6 +48,7 @@ A failing test prints the step that failed. The suites are in `e2e/`; each one i
 
 ## Guidelines
 
+- By sending a pull request you confirm that you wrote the work yourself (or have the right to share it) and that it may be released under the project's [MIT License](LICENSE). Do not copy code, text, images or fonts from other sources unless their license allows it. If you add a library, run `npm run notices` and commit the updated `public/third-party-notices.txt`.
 - Keep a pull request to one change, and say what it does and why.
 - Add or update a test when you fix a bug or add a feature. A scheduling change needs a unit test in `src/core/`.
 - Write plain English in the interface and the docs. Short sentences are best.

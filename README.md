@@ -85,3 +85,5 @@ Built with React, TypeScript, Vite, Zustand and Yjs. Scheduling and charts are p
 ## Author and license
 
 Made by [MNS Baanu](https://github.com/MNSBaanu). Released under the [MIT License](LICENSE).
+
+OpenPlan includes open-source libraries and the Source Sans 3 font, listed with their licenses in [third-party-notices.txt](public/third-party-notices.txt). It is an independent project, not affiliated with Microsoft or ProjectLibre. Microsoft, Microsoft Project and Excel are trademarks of the Microsoft group of companies, named here only to say which file formats it can read and write.

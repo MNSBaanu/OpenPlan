@@ -240,7 +240,7 @@ export default function Landing() {
                 </tbody>
               </table>
             </div>
-            <p className="lp-fine">OpenPlan is an independent project and is not affiliated with Microsoft. Microsoft Project is a trademark of Microsoft Corporation.</p>
+            <p className="lp-fine">OpenPlan is an independent project. It is not affiliated with or endorsed by Microsoft or ProjectLibre. Microsoft, Microsoft Project and Excel are trademarks of the Microsoft group of companies, and other names are the property of their owners. They are used here only to say which file formats OpenPlan can read and write.</p>
           </div>
         </section>
 

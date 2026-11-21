@@ -21,7 +21,7 @@ export default tseslint.config(
     rules: { 'no-unused-vars': 'off', 'no-empty': 'off', 'no-undef': 'off', 'no-irregular-whitespace': 'off' }
   },
   {
-    files: ['e2e/**/*.mjs'],
+    files: ['e2e/**/*.mjs', 'scripts/**/*.mjs'],
     languageOptions: { sourceType: 'module', globals: { ...globals.node, fetch: 'readonly' } }
   },
   {
