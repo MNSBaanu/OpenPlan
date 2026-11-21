@@ -44,6 +44,11 @@ jobs:
       - name: Test
         run: npm test
 
+      # Deploying builds the app too; fork pull requests skip that, so check the build here.
+      - name: Build check
+        if: env.CAN_DEPLOY != 'true'
+        run: npm run build
+
       - name: Install Vercel CLI
         if: env.CAN_DEPLOY == 'true'
         run: npm install --global vercel@65.16.0
