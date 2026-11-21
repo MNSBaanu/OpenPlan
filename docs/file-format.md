@@ -124,7 +124,7 @@ The baseline is `null` until saved. A saved baseline contains a `savedAt` timest
 
 ## Example
 
-\`\`\`json
+```json
 {
   "version": 2,
   "name": "Website launch",
@@ -146,9 +146,6 @@ The baseline is `null` until saved. A saved baseline contains a `savedAt` timest
   "tasks": [],
   "resources": []
 }
-\`\`\`
+```
 
 Dates are stored as strings, commonly in ISO format (`YYYY-MM-DD`). Task and resource UIDs are numeric and unique within a project. When loading files, missing fields are filled with defaults and invalid values are normalized.
-</WritingBlock}
-
-The `.openplan` file format is documented in the [file format reference](docs/file-format.md).
