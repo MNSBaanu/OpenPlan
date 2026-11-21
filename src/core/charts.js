@@ -2,21 +2,21 @@ import OP from './core.js';
 /* SVG renderers: Gantt chart, network (AON) diagram, WBS chart, organisation chart, cost charts. */
 OP.charts = (function () {
   var U = OP.util, esc = U.esc;
-  var FONT = "'Segoe UI', Tahoma, Arial, sans-serif";
+  var FONT = 'var(--font)';
 
   var STYLE =
-    'text{font-family:' + FONT + ';font-size:11.5px;fill:var(--text)}' +
-    '.m{fill:var(--text-muted)}.b{font-weight:600}.sm{font-size:10.5px}.lg{font-size:13px}' +
+    'text{font-family:' + FONT + ';font-size:12.5px;fill:var(--text)}' +
+    '.m{fill:var(--text-muted)}.b{font-weight:600}.sm{font-size:11.5px}.lg{font-size:14px}' +
     '.gl{stroke:var(--border);stroke-width:1}.gls{stroke:var(--border-strong);stroke-width:1}' +
     '.hdr{fill:var(--surface-2)}.wk{fill:var(--weekend)}.gsel{fill:var(--accent-soft)}' +
-    '.bar{fill:var(--bar);stroke:var(--bar-edge);stroke-width:1}.bar.c{fill:var(--critical);stroke:var(--critical-edge)}.prog{fill:var(--bar-progress)}' +
+    '.bar{fill:var(--bar);stroke:var(--bar-edge);stroke-width:1;rx:2px;ry:2px}.prog{rx:1px;ry:1px}.bar.c{fill:var(--critical);stroke:var(--critical-edge)}.prog{fill:var(--bar-progress)}' +
     '.sum{fill:var(--summary)}.ms{fill:var(--milestone)}.ms.c{fill:var(--critical)}' +
     '.lnk{stroke:var(--link);fill:none;stroke-width:1.25}.lnk.c{stroke:var(--critical)}' +
     '.ah{fill:var(--link)}.ah.c{fill:var(--critical)}.today{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 3}' +
     '.node{fill:var(--surface);stroke:var(--border-strong);stroke-width:1.25}.node.c{stroke:var(--critical);stroke-width:2}' +
     '.nh{fill:var(--surface-2)}.nh.c{fill:var(--critical-soft)}.cap{fill:var(--accent)}' +
-    '.wbs0{fill:var(--accent);stroke:none}.wbs0t{fill:#fff;font-weight:600}.wbs1{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.25}' +
-    '.wbs2{fill:var(--surface);stroke:var(--border-strong);stroke-width:1}.con{stroke:var(--border-strong);fill:none;stroke-width:1.25}' +
+    '.wbs0{fill:var(--accent);stroke:none;rx:3px}.wbs0t{fill:#fff;font-weight:600}.wbs1{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.25;rx:3px}' +
+    '.wbs2{fill:var(--surface);stroke:var(--border-strong);stroke-width:1;rx:3px}.con{stroke:var(--border-strong);fill:none;stroke-width:1.25}' +
     '.t-Manager{fill:var(--c1)}.t-Full-time{fill:var(--c2)}.t-Part-time{fill:var(--c3)}.t-Supporter{fill:var(--c4)}' +
     '.cbar{fill:var(--bar)}.cline{stroke:var(--bar);stroke-width:2;fill:none}.bud{stroke:var(--critical);stroke-width:1.5;stroke-dasharray:6 4}' +
     '.hit{fill:transparent}.hit:hover{fill:var(--accent);fill-opacity:.12}.grp{fill:var(--surface-3)}.bl{fill:var(--baseline)}.bar.late{fill:var(--warn)}' +

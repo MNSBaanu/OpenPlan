@@ -35,7 +35,7 @@ export function TitleBar() {
               onBlur={e => rename(e.target.value)}
               onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.value = st.p.name; if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur(); }} />
           : <button className="title-btn" title="Rename project" onClick={() => setRenaming(true)}>{st.p.name}</button>}
-        {' - OpenPlan'}
+        <span className="title-app">{' - OpenPlan'}</span>
       </div>
       <div className="tb-right">
         {st.collab.status !== 'off' && (
