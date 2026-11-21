@@ -150,17 +150,3 @@ The baseline is `null` until saved. A saved baseline contains a `savedAt` timest
 
 Dates are stored as strings, commonly in ISO format (`YYYY-MM-DD`). Task and resource UIDs are numeric and unique within a project. When loading files, missing fields are filled with defaults and invalid values are normalized.
 </WritingBlock}
-
-## Step 5 — Commit the new file
-
-After pasting:
-
-1. Scroll down and click **Commit changes…**
-2. Commit message, leave as:
-
-   `docs: document .openplan file format`
-
-3. Select **Commit directly to the `docs/openplan-file-format` branch** (make sure it's not `main`).
-4. Click **Commit changes**.
-
-Once it's committed, reply **done** or send me a screenshot. Then we'll edit the README and create the Pull Request. You're doing great—you're almost at the submission stage.
