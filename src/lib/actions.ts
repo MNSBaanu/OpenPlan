@@ -68,6 +68,25 @@ export function handleLaunchFiles() {
   });
 }
 
+// Print options are remembered in this browser.
+export interface PrintPrefs { paper: string; landscape: boolean; fitOne: boolean }
+const PRINT_KEY = 'openplan.print';
+export function printPrefs(): PrintPrefs {
+  const d: PrintPrefs = { paper: 'A4', landscape: true, fitOne: false };
+  try {
+    const v = JSON.parse(localStorage.getItem(PRINT_KEY) || '{}');
+    return { paper: v.paper in IO.PAPER ? v.paper : d.paper, landscape: v.landscape !== false, fitOne: v.fitOne === true };
+  } catch { return d; }
+}
+
+// Prints the current chart. A tall Gantt chart is split over pages with its header repeated.
+export function printView(o: PrintPrefs) {
+  try { localStorage.setItem(PRINT_KEY, JSON.stringify(o)); } catch { /* storage unavailable */ }
+  const st = S(), svg = viewSvgString(st);
+  if (!svg) { window.print(); return; }
+  IO.printSVG(svgElement(svg), st.p.name + ' — ' + VIEW_NAMES[st.view], { ...o, ...(st.view === 'gantt' ? { hdr: C.HDR, rowH: C.ROW, tableW: C.TABLE_W } : {}) });
+}
+
 export function scopeRows(st: Store) {
   if (st.netScope === 'all') return st.s.rows;
   const r = st.s.rows.find((x: any) => String(x.task.uid) === String(st.netScope));
@@ -149,8 +168,7 @@ export function runAction(a: string) {
       break;
     }
     case 'print': {
-      const svg = viewSvgString(st);
-      if (svg) IO.printSVG(svgElement(svg), st.p.name + ' — ' + VIEW_NAMES[st.view]);
+      if (viewSvgString(st)) st.openDialog('print');
       else window.print();
       break;
     }

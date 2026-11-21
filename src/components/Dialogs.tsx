@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import OP from '../core';
-import { useStore, S } from '../store';
+import { useStore, S, VIEW_NAMES } from '../store';
 import * as ops from '../lib/taskOps';
 import Icon from './Icon';
 import type { CustomField, Resource } from '../types';
 import { version } from '../../package.json';
 import { projectFromTable } from '../lib/importTable';
 import { shareUrl } from '../lib/share';
-import { loadProject } from '../lib/actions';
+import { loadProject, printPrefs, printView } from '../lib/actions';
 import { COLLAB_URL } from '../collab/config';
 import { CURRENCIES, currencyOf } from '../lib/currencies';
 
@@ -325,6 +325,29 @@ function LiveSection() {
   );
 }
 
+// Paper and direction for printing a chart. A tall Gantt chart is split over pages, with its header on every page.
+function PrintDialog() {
+  const st = useStore(), saved = printPrefs(), gantt = st.view === 'gantt';
+  return (
+    <Modal title="Print" okLabel="Print" onSubmit={fd => {
+      const o = { paper: String(fd.get('paper')), landscape: fd.get('direction') !== 'portrait', fitOne: fd.get('fit') === 'on' };
+      setTimeout(() => printView(o), 50);
+    }}>
+      <p>Printing the <b>{VIEW_NAMES[st.view]}</b>. In the print window, choose “Save as PDF” as the printer to make a PDF.</p>
+      <div className="row2">
+        <label className="field"><span>Paper</span><select className="sel" name="paper" defaultValue={saved.paper}>
+          <option value="A4">A4</option><option value="A3">A3</option><option value="Letter">US Letter</option>
+        </select></label>
+        <label className="field"><span>Direction</span><select className="sel" name="direction" defaultValue={saved.landscape ? 'landscape' : 'portrait'}>
+          <option value="landscape">Landscape</option><option value="portrait">Portrait</option>
+        </select></label>
+      </div>
+      {gantt && <label className="chk"><input type="checkbox" name="fit" defaultChecked={saved.fitOne} />Fit the whole chart on one page (the text gets smaller)</label>}
+      {gantt && <p className="muted small">A long Gantt chart is split over several pages. Rows are never cut, and the dates stay at the top of every page.</p>}
+    </Modal>
+  );
+}
+
 function ConfirmDialog({ title, message, okLabel, onOk }: { title: string; message: string; okLabel: string; onOk: () => void }) {
   return (
     <Modal title={title} okLabel={okLabel} onSubmit={() => { S().closeDialog(); onOk(); return false; }}>
@@ -343,6 +366,7 @@ export default function DialogHost() {
     case 'about': return <AboutDialog />;
     case 'import': return <ImportDialog />;
     case 'share': return <ShareDialog />;
+    case 'print': return <PrintDialog />;
     case 'confirm': return <ConfirmDialog {...dialog.props} />;
     default: return null;
   }

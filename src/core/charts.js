@@ -44,7 +44,7 @@ OP.charts = (function () {
   /* ---------- Gantt ---------- */
 
   var ZOOM = { day: 30, week: 12, month: 4, quarter: 1.4 };
-  var ROW = 24, HDR = 40;
+  var ROW = 24, HDR = 40, TABLE_W = 34 + 280 + 66 + 78 + 78;   // the task table at the left of the Gantt chart, in pixels
 
   // opts: {p, s, rows, zoom, critical, selected:{uid:true}, table:bool, baseline:bool, flat:bool}
   // rows may contain group headers: {group:true, key, label, count, cost, startDn, finishDn}
@@ -554,5 +554,5 @@ OP.charts = (function () {
     return h.join('');
   }
 
-  return { gantt: gantt, network: network, wbs: wbs, org: org, monthlyCost: monthlyCost, costChart: costChart, ROW: ROW, HDR: HDR, ZOOM: ZOOM };
+  return { gantt: gantt, network: network, wbs: wbs, org: org, monthlyCost: monthlyCost, costChart: costChart, ROW: ROW, HDR: HDR, TABLE_W: TABLE_W, ZOOM: ZOOM };
 })();

@@ -117,7 +117,85 @@ OP.io = (function () {
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(standaloneSVG(svg));
   }
 
-  function printSVG(svg, title) {
+  /* ---------- printing ---------- */
+
+  // Page sizes in millimetres, landscape (long side first).
+  var PAPER = { A4: [297, 210], A3: [420, 297], Letter: [279.4, 215.9] };
+  var MM = 96 / 25.4, MARGIN = 10, EXTRA = 36; // EXTRA: room for the title above and the page number below, in pixels
+
+  // The rows that go on each page. Rows are never cut, and the header (hdr high) is repeated at the top of every
+  // page. availH is the page height in chart units. Returns [{y, h, hdr}].
+  function splitRows(H, hdr, rowH, availH) {
+    if (H <= availH) return [{ y: 0, h: H, hdr: 0 }];
+    var per = Math.max(1, Math.floor((availH - hdr) / rowH)), rows = Math.ceil((H - hdr) / rowH), pages = [];
+    for (var r = 0; r < rows; r += per) pages.push({ y: hdr + r * rowH, h: Math.min(per, rows - r) * rowH, hdr: hdr });
+    return pages;
+  }
+
+  // A chart scaled to the page width, split into pages down the rows.
+  function splitPages(W, H, hdr, rowH, pageW, pageH) { return splitRows(H, hdr, rowH, pageH / (pageW / W)); }
+
+  // Pages for a wide, tall chart. The chart is shown at the page width unless that would make it smaller than
+  // minScale; then it is shown at minScale and split sideways too. Every sideways page repeats the first tableW
+  // units (the task table) and then continues the timeline where the last one stopped.
+  // Returns {scale, bands: [{x, w, left}], rows: [{y, h, hdr}]}; pages go down each band, then across.
+  function layoutPages(W, H, o, pageW, pageH) {
+    var scale = pageW / W, bands, min = o.minScale || 0.8;
+    if (scale >= min || !o.tableW || o.tableW >= pageW / min) {
+      bands = [{ x: 0, w: W, left: null }];
+    } else {
+      scale = min;
+      var availW = pageW / scale, rw = availW - o.tableW, x = availW;
+      bands = [{ x: 0, w: Math.min(W, availW), left: null }];
+      while (x < W) { bands.push({ x: x, w: Math.min(rw, W - x), left: { x: 0, w: o.tableW } }); x += rw; }
+    }
+    return { scale: scale, bands: bands, rows: splitRows(H, o.hdr, o.rowH, pageH / scale) };
+  }
+
+  // The same picture shown through a window: x from x to x + w, y from y to y + h, drawn at the given scale.
+  function windowSVG(text, x, y, w, h, scale) {
+    var tag = text.match(/<svg\b[^>]*>/)[0];
+    var next = tag.replace(/\swidth="[^"]*"/, ' width="' + Math.round(w * scale * 100) / 100 + '"').replace(/\sheight="[^"]*"/, ' height="' + Math.round(h * scale * 100) / 100 + '"')
+      .replace(/\sviewBox="[^"]*"/, ' viewBox="' + x + ' ' + y + ' ' + w + ' ' + h + '"');
+    return text.replace(tag, next);
+  }
+
+  // The page(s) for one chart as HTML.
+  // opts: {paper: 'A4' | 'A3' | 'Letter', landscape, fitOne, hdr, rowH, tableW, minScale, date}.
+  // With hdr and rowH a tall chart is split over pages (and, with tableW, a wide one too); otherwise, or with
+  // fitOne, the whole chart is fitted onto one page.
+  function printHTML(text, W, H, title, opts) {
+    opts = opts || {};
+    var paper = PAPER[opts.paper] || PAPER.A4, land = opts.landscape !== false;
+    var wmm = land ? paper[0] : paper[1], hmm = land ? paper[1] : paper[0];
+    var pageW = (wmm - 2 * MARGIN) * MM, pageH = (hmm - 2 * MARGIN) * MM - EXTRA;
+    var size = (opts.paper && PAPER[opts.paper] ? opts.paper : 'A4') + ' ' + (land ? 'landscape' : 'portrait');
+    var date = opts.date || new Date().toLocaleDateString();
+    var pages = [];   // each: the HTML of the picture on that page
+    if (opts.hdr && opts.rowH && !opts.fitOne) {
+      var lay = layoutPages(W, H, opts, pageW, pageH), sc = lay.scale;
+      lay.bands.forEach(function (band) {
+        lay.rows.forEach(function (rp) {
+          var cols = band.left ? [band.left, { x: band.x, w: band.w }] : [{ x: band.x, w: band.w }];
+          var line = function (y, h) { return '<div class="r">' + cols.map(function (c) { return windowSVG(text, c.x, y, c.w, h, sc); }).join('') + '</div>'; };
+          pages.push((rp.hdr ? line(0, rp.hdr) : '') + line(rp.y, rp.h));
+        });
+      });
+    } else {
+      var k = Math.min(pageW / W, pageH / H);
+      pages.push('<div class="r">' + windowSVG(text, 0, 0, W, H, k) + '</div>');
+    }
+    var body = pages.map(function (pic, i) {
+      return '<section class="page"><div class="t">' + U.esc(title) + '</div><div class="pic">' + pic + '</div>' +
+        '<div class="f"><span>' + U.esc(date) + '</span><span>Page ' + (i + 1) + ' of ' + pages.length + '</span></div></section>';
+    }).join('');
+    return '<!doctype html><meta charset="utf-8"><title>' + U.esc(title) + '</title><style>' +
+      '@page{size:' + size + ';margin:' + MARGIN + 'mm}*{box-sizing:border-box}body{margin:0;font:11px "Source Sans 3 Variable","Segoe UI",Arial,sans-serif;color:#333}' +
+      '.page{break-after:page}.page:last-child{break-after:auto}.t{font-weight:700;font-size:13px;height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.r{display:flex;align-items:flex-start}.r svg{display:block;flex:none}.f{display:flex;justify-content:space-between;color:#777;font-size:10px;margin-top:6px}</style>' + body;
+  }
+
+  function printSVG(svg, title, opts) {
     var f = document.createElement('iframe');
     f.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
     document.body.appendChild(f);
@@ -125,14 +203,13 @@ OP.io = (function () {
     w.onafterprint = function () { setTimeout(function () { f.remove(); }, 0); };
     // Some browsers (Safari) do not fire afterprint reliably.
     setTimeout(function () { f.remove(); }, 60000);
-    w.document.write('<!doctype html><title>' + U.esc(title) + '</title><style>@page{size:landscape;margin:10mm}body{margin:0}svg{width:100%;height:auto}</style>' +
-      standaloneSVG(svg));
+    w.document.write(printHTML(standaloneSVG(svg), +svg.getAttribute('width'), +svg.getAttribute('height'), title, opts));
     w.document.close();
     w.focus();
     setTimeout(function () { w.print(); }, 300);
   }
 
   return {
-    toJSON: toJSON, fromJSON: fromJSON, taskTable: taskTable, toCSV: toCSV, insertProject: insertProject, exportSVG: exportSVG, exportPNG: exportPNG, printSVG: printSVG
+    toJSON: toJSON, fromJSON: fromJSON, taskTable: taskTable, toCSV: toCSV, insertProject: insertProject, exportSVG: exportSVG, exportPNG: exportPNG, printSVG: printSVG, printHTML: printHTML, splitPages: splitPages, layoutPages: layoutPages, PAPER: PAPER
   };
 })();

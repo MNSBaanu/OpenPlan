@@ -28,7 +28,7 @@ const fs = require('fs'); const T = L.OUT;
   await step('export Excel: real .xlsx (zip) with task names', async () => { await file('Export'); const [n, d] = await dl(() => tile('Excel workbook').click()); const buf = fs.readFileSync(d); ok(buf.slice(0, 2).toString() === 'PK', 'not a zip'); const txt = buf.toString('latin1'); ok(/xl\/worksheets\/sheet1\.xml/.test(txt), 'no sheet'); return n + ' ' + buf.length + 'B'; });
   await step('export CSV: header + one row per task, BOM, quoting', async () => { await file('Export'); const [n, d] = await dl(() => tile('CSV (.csv)').click()); const t = fs.readFileSync(d, 'utf8'); const lines = t.replace(/^﻿/, '').split('\r\n'); eq(lines.length, (await proj(pg)).tasks.length + 1); ok(/^ID,WBS,Task Name/.test(lines[0]), lines[0]); ok(t.charCodeAt(0) === 0xFEFF, 'no BOM'); });
   await step('export PNG + SVG of the Gantt chart', async () => { await file('Export'); const [n1, p1] = await dl(() => tile('(.png)').click()); ok(fs.readFileSync(p1).slice(1, 4).toString() === 'PNG', 'png'); await file('Export'); const [n2, p2] = await dl(() => tile('Vector picture').click()); const s = fs.readFileSync(p2, 'utf8'); ok(/<svg/.test(s) && !/var\(--/.test(s), 'svg has unresolved vars'); return n1 + ', ' + n2; });
-  await step('File ▸ Print opens the print preview frame', async () => { await file('Print'); await tile('Print').click(); await pg.waitForTimeout(500); ok(await pg.locator('iframe').count() >= 1 || (await pg.evaluate(() => window.__printed)) >= 1, 'no print'); });
+  await step('File ▸ Print opens the Print dialog, then the print preview frame', async () => { await file('Print'); await tile('Print').click(); await pg.waitForSelector('dialog[open]'); ok(/A4/.test(await pg.locator('dialog[open]').innerText()), 'no paper choice'); await confirm(pg); await pg.waitForTimeout(500); ok(await pg.locator('iframe').count() >= 1 || (await pg.evaluate(() => window.__printed)) >= 1, 'no print'); });
   await step('About page + keyboard shortcuts dialog + guide', async () => { await file('About'); await tile('Keyboard shortcuts').click(); await pg.waitForSelector('dialog[open]'); ok(/Ctrl/.test(await pg.locator('dialog[open]').innerText()), 'no shortcuts'); await pg.keyboard.press('Escape'); });
   // import
   await L.open(pg);
@@ -70,6 +70,28 @@ const fs = require('fs'); const T = L.OUT;
     const j = JSON.parse(fs.readFileSync(A, 'utf8')); const base = j.tasks[1]; j.tasks = []; j.nextUid = 5000; for (let i = 1; i <= 2000; i++) j.tasks.push({ ...JSON.parse(JSON.stringify(base)), uid: 100 + i, name: 'Task ' + i, level: 1, duration: 1 + (i % 4), preds: i > 1 ? [{ uid: 100 + i - 1, type: 'FS', lag: 0 }] : [], assignments: [] });
     fs.writeFileSync(T + 'big2000.openplan', JSON.stringify(j)); await L.open(pg); await file('Open'); const t0 = Date.now(); await chooser(() => tile('Browse').click(), T + 'big2000.openplan'); await pg.waitForSelector('table.grid'); const t1 = Date.now() - t0;
     const t2 = Date.now(); const inp = pg.locator('[aria-label="Task 2 Duration"]'); await inp.fill('9'); await inp.press('Enter'); await pg.waitForTimeout(100); const edit = Date.now() - t2; ok(t1 < 8000 && edit < 3000, 'open ' + t1 + 'ms edit ' + edit + 'ms'); return 'open ' + t1 + ' ms, edit ' + edit + ' ms'; });
+  await step('print: a long Gantt chart is split over pages with the header on each; PDF page counts match', async () => {
+    const j = JSON.parse(fs.readFileSync(A, 'utf8')); const base = j.tasks[1]; j.tasks = [];
+    for (let i = 1; i <= 120; i++) j.tasks.push({ ...JSON.parse(JSON.stringify(base)), uid: 100 + i, name: 'Task ' + i, level: 1, duration: 1 + (i % 3), preds: i > 1 ? [{ uid: 100 + i - 1, type: 'FS', lag: 0 }] : [], assignments: [] });
+    fs.writeFileSync(T + 'print120.openplan', JSON.stringify(j)); await L.open(pg); await file('Open'); await chooser(() => tile('Browse').click(), T + 'print120.openplan'); await pg.locator('.statusbar button[title="Gantt Chart"]').click(); await pg.waitForSelector('table.grid');
+    const render = async (paper, direction, fit) => {
+      await pg.evaluate(() => document.querySelectorAll('iframe').forEach(f => f.remove()));
+      await pg.locator('.rtab.file').click(); await pg.locator('.bs-item', { hasText: 'Print' }).click(); await tile('Print').click(); await pg.waitForSelector('dialog[open]');
+      await pg.locator('dialog[open] select[name=paper]').selectOption(paper); await pg.locator('dialog[open] select[name=direction]').selectOption(direction);
+      const box = pg.locator('dialog[open] input[name=fit]'); if ((await box.isChecked()) !== fit) await box.setChecked(fit); await pg.locator('dialog[open] .btn.primary').click();
+      await pg.waitForFunction(() => document.querySelector('iframe') && document.querySelector('iframe').contentDocument.querySelector('.page'), null, { timeout: 5000 });
+      const html = await pg.evaluate(() => '<!doctype html>' + document.querySelector('iframe').contentDocument.documentElement.outerHTML);
+      const pdfPage = await pg.context().newPage(); await pdfPage.setContent(html); const pdf = await pdfPage.pdf({ preferCSSPageSize: true, printBackground: true }); await pdfPage.close();
+      const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length, sections = (html.match(/<section class="page">/g) || []).length, headers = (html.match(/viewBox="[\d.]+ 0 [\d.]+ 40"/g) || []).length;
+      fs.writeFileSync(T + 'print_' + paper + '_' + direction + (fit ? '_fit' : '') + '.pdf', pdf); await pg.waitForTimeout(300); return { pages, sections, headers, html };
+    };
+    const land = await render('A4', 'landscape', false); eq(land.pages, land.sections); ok(land.sections >= 3, 'expected several pages, got ' + land.sections); ok(land.headers >= land.sections, 'a page has no header: ' + land.headers + ' headers on ' + land.sections + ' pages');
+    ok(new RegExp('Page ' + land.sections + ' of ' + land.sections).test(land.html), 'no page numbers');
+    const fit = await render('A4', 'landscape', true); eq([fit.pages, fit.sections], [1, 1]);
+    const a3 = await render('A3', 'landscape', false); ok(a3.sections < land.sections, 'A3 should need fewer pages than A4: ' + a3.sections + ' vs ' + land.sections); eq(a3.pages, a3.sections);
+    const portrait = await render('A4', 'portrait', false); ok(portrait.sections >= 1 && portrait.pages === portrait.sections, 'portrait pages ' + portrait.pages + '/' + portrait.sections);
+    const mem = await pg.evaluate(() => JSON.parse(localStorage.getItem('openplan.print'))); eq([mem.paper, mem.landscape], ['A4', false]);   // the last choice is remembered
+    return land.sections + ' pages A4 landscape, ' + a3.sections + ' on A3, ' + portrait.sections + ' portrait'; });
   await step('keyboard: Insert, Delete, arrows, indent, Ctrl+F1, Escape', async () => {
     await L.open(pg); await file('New'); await tile('Sample Project').click(); await confirm(pg); await L.open(pg);
     await pg.locator('[aria-label="Task 3 name"]').click(); await pg.keyboard.press('Insert'); await pg.waitForTimeout(250); const n1 = (await proj(pg)).tasks.length; eq(n1, 23);
