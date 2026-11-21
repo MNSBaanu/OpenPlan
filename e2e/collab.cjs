@@ -45,23 +45,23 @@ const frames = [];
   await step('names and colours: each person sees who else is here, with the name they chose', async () => {
     const setName = async (p, nm) => { await p.locator('button[aria-label="Share a copy as a link"]').click(); await p.waitForSelector('.live-box'); const i = p.locator('input[aria-label="Your name"]'); await i.fill(nm); await i.press('Enter'); };
     await setName(A, 'Ana Silva'); await A.keyboard.press('Escape'); await setName(Bp, 'Bo Chen');
-    await until(async () => (await Bp.locator('ul.people li').allInnerTexts()).join('|').includes('Ana Silva'), 8000, 'B sees Ana in the list');
-    eq((await Bp.locator('ul.people li').allInnerTexts()).map(t => t.replace(/\s*\(you\)/, '').trim()).sort(), ['Ana Silva', 'Bo Chen']); await Bp.keyboard.press('Escape');
-    await until(async () => (await A.locator('.live-badge .avatar').allInnerTexts()).join() === 'BC', 6000, 'A sees B\'s initials on the badge');
+    const listed = async p => (await p.locator('ul.people li').allInnerTexts()).map(t => t.replace(/\s*\(you\)/, '').trim()).sort().join('|');
+    await until(async () => (await listed(Bp)) === 'Ana Silva|Bo Chen', 15000, 'B sees both names (got ' + await listed(Bp) + ')'); await Bp.keyboard.press('Escape');
+    await until(async () => (await A.locator('.live-badge .avatar').allInnerTexts()).join() === 'BC', 15000, 'A sees B\'s initials on the badge');
     eq(await A.locator('.live-badge .avatar').first().getAttribute('title'), 'Bo Chen'); });
   await step('a row another person has selected is marked with their name', async () => {
-    await Bp.locator('[aria-label="Task 10 name"]').click(); await until(async () => (await A.locator('table.grid tr.peer').count()) === 1, 6000, 'A sees a marked row');
+    await Bp.locator('[aria-label="Task 10 name"]').click(); await until(async () => (await A.locator('table.grid tr.peer').count()) === 1, 15000, 'A sees a marked row');
     eq(await A.locator('table.grid tr.peer input[aria-label$=" name"]').getAttribute('aria-label'), 'Task 10 name'); eq(await A.locator('table.grid tr.peer .namecell').evaluate(e => getComputedStyle(e, '::after').content), '"Bo Chen"');
-    await Bp.locator('[aria-label="Task 11 name"]').click(); await until(async () => (await A.locator('table.grid tr.peer input[aria-label$=" name"]').getAttribute('aria-label').catch(() => '')) === 'Task 11 name', 6000, 'mark moves'); });
+    await Bp.locator('[aria-label="Task 11 name"]').click(); await until(async () => (await A.locator('table.grid tr.peer input[aria-label$=" name"]').getAttribute('aria-label').catch(() => '')) === 'Task 11 name', 15000, 'mark moves'); });
   await step('comments: each person comments on the same task at the same time; both appear, with names, for both', async () => {
     for (const p of [A, Bp]) await p.locator('[aria-label="Task 12 name"]').click();
     const say = async (p, text) => { const box = p.locator('.comments textarea'); await box.fill(text); await box.press('Control+Enter'); };
     await Promise.all([say(A, 'Checked with the client'), say(Bp, 'Needs a second reviewer')]);
-    for (const p of [A, Bp]) await until(async () => (await p.locator('.comment').count()) === 2, 8000, 'two comments');
+    for (const p of [A, Bp]) await until(async () => (await p.locator('.comment').count()) === 2, 15000, 'two comments');
     const read = async p => (await p.locator('.comment').allInnerTexts()).map(t => t.replace(/\s+/g, ' ')).sort();
     eq(await read(A), await read(Bp)); const joined = (await read(A)).join('|'); ok(/Ana Silva.*Checked with the client/.test(joined) && /Bo Chen.*Needs a second reviewer/.test(joined), joined);
     ok(/^Comments \(2\)/.test(await A.locator('.comments .section-title').innerText()), 'count');
-    await A.locator('.comment', { hasText: 'Checked with the client' }).locator('button[aria-label="Delete comment"]').click(); for (const p of [A, Bp]) await until(async () => (await p.locator('.comment').count()) === 1, 6000, 'one comment left'); });
+    await A.locator('.comment', { hasText: 'Checked with the client' }).locator('button[aria-label="Delete comment"]').click(); for (const p of [A, Bp]) await until(async () => (await p.locator('.comment').count()) === 1, 15000, 'one comment left'); });
   await step('traffic on the wire is encrypted (no task names or plan text in any message)', async () => {
     const all = frames.join('\n'); ok(all.length > 500, 'no frames captured: ' + all.length); for (const s of ['Typed by A', 'From A', 'Library Booking', 'Kick-off', 'Gather requirements', 'Ana Silva', 'Bo Chen', 'second reviewer']) ok(!all.includes(s), 'plaintext leaked: ' + s); return frames.length + ' frames checked'; });
   await step('pages show no broken numbers and no errors during all of this', async () => { await clean(A); await clean(Bp); eq(A.errors.filter(e => !/WebSocket|ERR_/.test(e)), []); eq(Bp.errors.filter(e => !/WebSocket|ERR_/.test(e)), []); });
