@@ -2,237 +2,85 @@
 
 <img src="public/assets/OpenPlan.png" alt="OpenPlan" height="64">
 
-**A free project planner that runs in the browser.**
+# OpenPlan
 
-Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and a budget without a paid licence.
+**A free project planner that runs in your browser.**
+Plan with a Gantt chart, the critical path, resources and a budget. No account, no install, no cost.
 
-**[Open OpenPlan](https://openplan-xi.vercel.app)**
+### [Open OpenPlan →](https://openplan-xi.vercel.app)
 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-5a3a22)
+
+![A short tour of OpenPlan](docs/screenshots/demo.gif)
 
 </div>
 
----
+## What you can do
 
-## Table of contents
+- **Plan tasks** in an outline with links (FS, SS, FF, SF), lag, milestones and deadlines. Drag bars on the Gantt chart to move or link them.
+- **See the critical path** and the slack on every task. Set your own working week, hours per day, holidays and currency.
+- **Draw diagrams**: network diagram, WBS chart and team chart, as PNG or SVG.
+- **Manage people and money**: resources, workload, leveling, baselines, earned value, costs and 10 ready-made reports.
+- **Use a task board** (Not started, In progress, Done) or start from a template.
+- **Move files in and out**: `.openplan`, Excel and CSV, and Microsoft Project XML (both ways). Print to PDF with paged Gantt charts.
+- **Edit together, live** (optional): names, colours and comments, end-to-end encrypted. See [below](#edit-together).
+- **Work offline.** After one visit the app runs without internet, in a light or dark theme.
 
-- [About](#about)
-- [Screenshots](#screenshots)
-- [Features](#features)
-- [Live collaboration](#live-collaboration)
-- [Tech stack](#tech-stack)
-- [Getting started](#getting-started)
-- [Usage](#usage)
-- [Project structure](#project-structure)
-- [Contributing](#contributing)
-- [Author](#author)
-- [License](#license)
+## Your data
 
-## About
+Everything stays on your computer. Changes are saved in the browser as you type. For anything important, use **File › Save** (Ctrl+S) to keep a `.openplan` file, because clearing browser data deletes the browser copy. You can also share a copy as a link: the plan travels inside the link and nothing is uploaded.
 
-OpenPlan is a project management tool for students and small teams who need to plan a project with the standard techniques (WBS, Gantt chart, critical path method, resource allocation and budgeting) but don't have access to paid desktop software.
+## Edit together
 
-It runs entirely in the browser and has no account. Projects are saved on your own computer. The only thing that uses a server is the optional [live collaboration](#live-collaboration), which is encrypted end to end.
+Click the link button in the title bar, choose **Start a live session**, and send the invite link. Everyone sees changes as they happen and has their own undo. Everything is encrypted in your browser, so the small relay server (free to run on Cloudflare, see [`collab-server/`](collab-server/README.md)) only sees scrambled data.
 
-## Screenshots
+Anyone with the link can edit. A view-only link is not possible, because the server cannot see the plan and so cannot tell who may change it. To show a plan to someone who should not edit it, send a copy (a share link or a file).
 
-![A short tour: editing a task, the board, the network diagram, reports, costs and the dark theme](docs/screenshots/demo.gif)
+## Run it on your computer
 
-![The OpenPlan landing page](docs/screenshots/landing.png)
-
-| Gantt chart with the critical path | Network diagram |
-|---|---|
-| ![Gantt chart](docs/screenshots/gantt.png) | ![Network diagram](docs/screenshots/network.png) |
-
-![Cost and budget](docs/screenshots/budget.png)
-
-## Features
-
-- **Gantt chart**: an outline of summary tasks and subtasks, FS/SS/FF/SF links with lag, milestones, constraints, deadlines, split tasks and a timeline strip. You can drag bars to move tasks, resize them or link them.
-- **Critical path**: forward and backward passes that give ES, EF, LS, LF, total slack and free slack. The project has its own working week, hours per day, holidays and currency.
-- **Diagrams**: a network diagram (activity on node), a WBS chart and a team org chart. Each one exports to PNG or SVG.
-- **Resources**: work, material and cost resources, calendars, vacations, rate changes, a workload heatmap and resource leveling.
-- **Tracking**: baselines, % complete, actual dates, a status date and earned value (SPI, CPI, EAC).
-- **Budget and reports**: cost by work package and by resource, monthly and cumulative cost, and 10 ready-made reports.
-- **Task board**: a Not started / In progress / Done board; dragging a card updates its % complete.
-- **Getting started**: templates (final-year project, software sprint, event, research project) and a first-run checklist.
-- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import task lists from Excel or CSV, import and export Microsoft Project XML, and export Excel (.xlsx) and CSV.
-- **Sharing and versions**: share a copy of a plan as a link (the plan travels inside the link, nothing is uploaded), and save named versions in the browser.
-- **Offline**: once installed or visited, the app works without an internet connection.
-- **Interface**: a warm paper-and-ink look (ink-black type, a dark brown accent and one font family, Source Sans 3), a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, light and dark themes, and a layout that adapts to phones and tablets.
-
-## Live collaboration
-
-Several people can edit the same plan at the same time. Click the link button in the title bar, choose **Start a live session**,
-and send the invite link. Changes appear for everyone as they happen, each person has their own undo, and the plan keeps
-working if the connection drops. Choose a name in the same dialog: people see each other's names and colours, a row
-that someone else has selected is marked with their name, and anyone can leave a comment on a task (saved with the plan).
-
-Anyone who has the invite link can edit. A view-only link is not possible by design: the relay never sees your plan, so it
-cannot tell who is allowed to change it. To show a plan to someone who should not edit it, send them a copy (a share link,
-or a file).
-
-It is optional and off by default. Plans stay in your browser until you start a session, and a session is end-to-end
-encrypted: the small relay server (in [`collab-server/`](collab-server/README.md), free to run on Cloudflare Workers) only
-stores and forwards scrambled data. The button appears once `VITE_COLLAB_URL` points at a deployed relay; see
-[`collab-server/README.md`](collab-server/README.md).
-
-## Tech stack
-
-| Layer | Technology |
-|---|---|
-| UI | React 19, TypeScript 6, with Source Sans 3 bundled as the font |
-| State | Zustand 5 |
-| Build | Vite 8 |
-| Tests and lint | Vitest, ESLint |
-| Scheduling and charts | Plain JavaScript modules rendering SVG (`src/core/`) |
-| Storage | Browser localStorage, and the File System Access API for project files |
-| Live sessions | Yjs, AES-GCM encryption, and a Cloudflare Workers relay (`collab-server/`) |
-
-## Getting started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org) 22.12 or later
-
-### Installation
+You need [Node.js](https://nodejs.org) 22.12 or later.
 
 ```bash
 git clone https://github.com/MNSBaanu/OpenPlan.git
 cd OpenPlan
 npm install
+npm run dev
 ```
 
-### Run in development
+Then open http://localhost:5173. Other commands:
 
 ```bash
-npm run dev        # http://localhost:5173
+npm run build      # makes the app in dist/
+npm test           # unit tests
+npm run lint       # code checks
+npm run e2e        # browser tests (first time: npx playwright install chromium)
 ```
 
-### Build for production
+To host your own copy, see [docs/deploy.md](docs/deploy.md).
 
-```bash
-npm run build      # outputs to dist/
-npm run lint       # ESLint
-npm test           # Vitest
-npm run e2e        # browser tests (first run: npx playwright install chromium)
-npm run preview    # serves dist/ at http://localhost:4173
-```
-
-### Deployment
-
-`dist/` uses relative paths, so it can be hosted on any static host, such as GitHub Pages or Netlify. Opening `dist/index.html` directly from disk does not work in most browsers.
-
-#### Vercel (automatic)
-
-`.github/workflows/vercel.yml` deploys to [Vercel](https://vercel.com). Every push to `main` goes to production, and every pull request gets a preview URL.
-
-One-time setup:
-
-1. Create the Vercel project. Either import the repository at vercel.com/new, or run `npx vercel link` in the project folder.
-2. Create a token at **vercel.com › Account Settings › Tokens**.
-3. Find the IDs in `.vercel/project.json` (created by `vercel link`), or under **Project › Settings › General**.
-4. In GitHub, go to **Settings › Secrets and variables › Actions** and add three repository secrets:
-   - `VERCEL_TOKEN`: the token
-   - `VERCEL_ORG_ID`: the `orgId`
-   - `VERCEL_PROJECT_ID`: the `projectId`
-
-If you imported the repository into Vercel, turn off Vercel's own Git deployments (**Project › Settings › Git**) so each push deploys only once.
-
-### Visitor counts
-
-OpenPlan counts visitors with [GoatCounter](https://www.goatcounter.com), a free analytics service that uses no cookies. The script tag is in `index.html`. It counts visits to the landing page (`/`) and to the app (`/app`) separately. Project data is never sent.
-
-To use your own GoatCounter account, change `mnsbaanu` in the `data-goatcounter` address in `index.html` to your site code. GoatCounter ignores visits from `localhost`, so only the deployed site is counted.
-
-## Usage
-
-### Saving your work
-
-- **Autosave**: every change is saved in the browser's localStorage. That copy exists only in the browser and computer you are using, and clearing your browser data deletes it.
-- **Save** (Ctrl+S) writes an `.openplan` file. In Chrome and Edge, the first save asks where to put the file, and later saves write back to that same file. **Save As** makes a copy. Other browsers download the file instead.
-- **Open** loads an `.openplan` file or an older `.json` project file.
-
-Keep a project file for anything important.
-
-### Opening files by double-clicking
-
-In Chrome or Edge, install OpenPlan as an app. After that, double-clicking an `.openplan` file opens it in OpenPlan.
-
-1. Open OpenPlan from an HTTPS address or from `localhost`.
-2. Click the **Install** icon in the address bar, or choose **Cast, save and share › Install page as app** from the browser menu.
-3. Double-click an `.openplan` file. The first time, choose **Allow** when the browser asks whether OpenPlan may open this file type.
-
-### Toolbar
-
-- The **Task**, **Resource**, **Report**, **Project** and **View** tabs each show a set of commands. **Format** appears when the Gantt chart is open.
-- **File** opens the menu for new, open, save, export and print.
-- **Hide toolbar** (or Ctrl+F1, or double-clicking a tab) collapses the toolbar to its tabs. While it is hidden, clicking a tab shows the commands over your work.
-
-### Import and export
-
-| Format | Support |
-|---|---|
-| Excel (.xlsx) | Export the task list with real dates |
-| Excel / CSV | Import a task list: paste from a spreadsheet or choose a CSV file (File › Open) |
-| Microsoft Project XML | Import a plan saved with File › Save As › XML (also from ProjectLibre): tasks, links and lag, constraints, resources, assignments and holidays. Export the whole plan the same way (File › Export). The export follows Microsoft's published schema. `.mpp` files are not read directly. |
-| CSV | Export the task list |
-| Share link | A copy of the plan inside a link (File › Save, or the link button in the title bar) |
-| PNG / SVG / PDF | Chart images, printing to PDF, and all 10 reports at once (Reports › Print all reports) |
-
-### Keyboard shortcuts
+## Keyboard shortcuts
 
 | Keys | Action |
 |---|---|
 | Ctrl+S | Save |
 | Ctrl+Z / Ctrl+Y | Undo / redo |
+| Insert / Delete | Add / delete a task |
+| Alt+Shift+→ / ← | Indent / outdent |
+| ↑ / ↓ | Move between rows |
 | Ctrl+F1 | Hide or show the toolbar |
-| Alt+Shift+→ / ← | Indent or outdent the selected tasks |
-| Insert | Insert a task |
-| Delete | Delete the selected tasks |
-| ↑ / ↓ | Move between rows while editing |
 
-## Project structure
+## More
 
-```
-OpenPlan/
-├── docs/
-│   └── screenshots/         images used in this README
-├── public/
-│   ├── assets/              logo, favicon and app icons
-│   ├── manifest.webmanifest app install and .openplan file handling
-│   ├── sw.js                offline support
-│   └── count.js             GoatCounter visit counter (self-hosted)
-├── src/
-│   ├── core/                scheduling engine, file formats and CSV export, SVG charts, sample project
-│   ├── components/          toolbar, title and status bars, File menu, dialogs, task details panel
-│   ├── views/               Gantt, task board, diagrams, resource sheet, workload, budget, reports, landing page
-│   ├── lib/                 task commands, grid columns and filters, file actions, templates, import,
-│   │                        share links, versions, Excel writer, undo history (with tests)
-│   ├── collab/              live sessions: encryption, shared plan, connection (with tests)
-│   ├── store.ts             app state, undo/redo, autosave
-│   ├── App.tsx              layout and keyboard shortcuts
-│   └── main.tsx             entry point
-├── collab-server/           the live-session relay (Cloudflare Worker) and its tests
-├── index.html
-├── package.json
-└── vite.config.ts
-```
+- [Contributing](CONTRIBUTING.md): how to help, and a map of the code
+- [Changelog](CHANGELOG.md): what changed in each version
+- [Security](SECURITY.md): how to report a problem
+- [Live-session relay](collab-server/README.md): how to run the relay
 
-## Contributing
+Built with React, TypeScript, Vite, Zustand and Yjs. Scheduling and charts are plain JavaScript that draws SVG.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. In short:
+## Author and license
 
-1. Fork the repository and create a branch: `git checkout -b feature/my-change`
-2. Make your changes and check that `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` pass. The same checks run on every pull request.
-3. Commit, push, and open a pull request.
-
-## Author
-
-OpenPlan is made by [MNS Baanu](https://github.com/MNSBaanu).
-
-## License
-
-OpenPlan is released under the [MIT License](LICENSE).
+Made by [MNS Baanu](https://github.com/MNSBaanu). Released under the [MIT License](LICENSE).
