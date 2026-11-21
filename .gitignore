@@ -9,3 +9,4 @@ OpenPlan.md
 .wrangler/
 !.env.example
 !.env.production
+e2e/.out/

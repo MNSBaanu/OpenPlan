@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['dist', 'public', 'collab-server/node_modules', 'collab-server/.wrangler'] },
+  { ignores: ['dist', 'public', 'collab-server/node_modules', 'collab-server/.wrangler', 'e2e/.out'] },
   js.configs.recommended,
   {
     files: ['src/core/**/*.js'],
@@ -13,6 +13,16 @@ export default tseslint.config(
   {
     files: ['collab-server/src/**/*.js'],
     languageOptions: { sourceType: 'module', globals: { ...globals.serviceworker, WebSocketPair: 'readonly' } }
+  },
+  {
+    // End-to-end tests drive a browser; they read like scripts, so a few style rules are relaxed.
+    files: ['e2e/**/*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.browser } },
+    rules: { 'no-unused-vars': 'off', 'no-empty': 'off', 'no-undef': 'off', 'no-irregular-whitespace': 'off' }
+  },
+  {
+    files: ['e2e/**/*.mjs'],
+    languageOptions: { sourceType: 'module', globals: { ...globals.node, fetch: 'readonly' } }
   },
   {
     files: ['collab-server/test/**/*.mjs'],

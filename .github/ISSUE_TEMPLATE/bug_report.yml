@@ -1,0 +1,31 @@
+name: Bug report
+description: Something does not work as it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Say what you did and what you expected. A screenshot helps.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to repeat it
+      placeholder: |
+        1. Open the sample project
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: Chrome 130 on Windows 10
+  - type: textarea
+    id: file
+    attributes:
+      label: A project file, if it is about a file
+      description: Attach a small .openplan file or Microsoft Project XML file that shows the problem. Remove anything private first.

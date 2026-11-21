@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Try OpenPlan
+    url: https://openplan-xi.vercel.app
+    about: Open the planner in your browser. Nothing to install.

@@ -110,6 +110,7 @@ npm run dev        # http://localhost:5173
 npm run build      # outputs to dist/
 npm run lint       # ESLint
 npm test           # Vitest
+npm run e2e        # browser tests (first run: npx playwright install chromium)
 npm run preview    # serves dist/ at http://localhost:4173
 ```
 
@@ -214,6 +215,8 @@ OpenPlan/
 ```
 
 ## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. In short:
 
 1. Fork the repository and create a branch: `git checkout -b feature/my-change`
 2. Make your changes and check that `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` pass. The same checks run on every pull request.
