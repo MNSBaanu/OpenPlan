@@ -30,7 +30,7 @@ const frames = [];
     const add = async (p, nm) => { await p.locator('.ribbon-tabs .rtab', { hasText: 'Task' }).click(); await p.locator('.ribbon button', { hasText: /^Task$/ }).first().click(); await p.keyboard.type(nm); await p.keyboard.press('Enter'); };
     await Promise.all([add(A, 'From A'), add(Bp, 'From B')]);
     await until(async () => (await rowCount(A)) === 24 && (await rowCount(Bp)) === 24, 8000, '24 rows');
-    const names = async p => p.locator('table.grid tbody tr input[aria-label$=" name"]').evaluateAll(es => es.map(e => e.value).filter(Boolean)); const na = await names(A), nb = await names(Bp);
+    const names = async p => p.locator('table.grid tbody tr input[aria-label$=" name"]').evaluateAll(es => es.map(e => e.value).filter(Boolean)); await until(async () => JSON.stringify(await names(A)) === JSON.stringify(await names(Bp)), 8000, 'same task names on both'); const na = await names(A), nb = await names(Bp);
     eq(na, nb); ok(na.includes('From A') && na.includes('From B'), 'missing'); });
   await step('edits to different fields of the same task at once both survive', async () => {
     await Promise.all([(async () => { const a = A.locator('[aria-label="Task 6 name"]'); await a.fill('Sprint one (A)'); await a.press('Enter'); })(), (async () => { const d = Bp.locator('[aria-label="Task 5 Duration"]'); await d.fill('3d'); await d.press('Enter'); })()]);
