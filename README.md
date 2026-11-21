@@ -19,6 +19,7 @@ Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and
 ## Table of contents
 
 - [About](#about)
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
@@ -33,6 +34,16 @@ Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and
 OpenPlan is a project management tool for students and small teams who need to plan a project with the standard techniques (WBS, Gantt chart, critical path method, resource allocation and budgeting) but don't have access to paid desktop software.
 
 It runs entirely in the browser and has no server or account. Projects are saved on your own computer.
+
+## Screenshots
+
+![The OpenPlan landing page](docs/screenshots/landing.png)
+
+| Gantt chart with the critical path | Network diagram |
+|---|---|
+| ![Gantt chart](docs/screenshots/gantt.png) | ![Network diagram](docs/screenshots/network.png) |
+
+![Cost and budget](docs/screenshots/budget.png)
 
 ## Features
 
@@ -165,6 +176,8 @@ In Chrome or Edge, install OpenPlan as an app. After that, double-clicking an `.
 
 ```
 OpenPlan/
+├── docs/
+│   └── screenshots/         images used in this README
 ├── public/
 │   ├── assets/              logo, favicon and app icons
 │   ├── manifest.webmanifest app install and .openplan file handling
@@ -187,7 +200,7 @@ OpenPlan/
 ## Contributing
 
 1. Fork the repository and create a branch: `git checkout -b feature/my-change`
-2. Make your changes and check that `npm run lint`, `npm test` and `npm run build` pass.
+2. Make your changes and check that `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` pass. The same checks run on every pull request.
 3. Commit, push, and open a pull request.
 
 ## Author
