@@ -35,7 +35,8 @@ function onKeyDown(e: KeyboardEvent) {
     if (fk) requestAnimationFrame(() => (document.querySelector('[data-fk="' + fk + '"]') as HTMLElement | null)?.focus());
     return;
   }
-  if (editing) return;
+  // Insert does nothing in a text box, so it can add a task even while the cursor is in a task cell.
+  if (editing && !(e.key === 'Insert' && (e.target as HTMLElement).classList.contains('cell'))) return;
   if (e.key === 'Delete') { e.preventDefault(); ops.deleteSelected(); }
   else if (e.key === 'Insert') { e.preventDefault(); ops.addTask(false); }
 }

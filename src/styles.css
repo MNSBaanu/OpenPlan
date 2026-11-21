@@ -431,7 +431,9 @@ table.data.rpt th { position: static; }
 /* ---------- status bar ---------- */
 .statusbar { height: 24px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px; font-size: var(--fs-sm); background: var(--surface-2); border-top: 1px solid var(--border); color: var(--text); }
 .sb-sep { width: 1px; height: 14px; background: var(--border-strong); }
-.save-state { display: inline-flex; align-items: center; gap: 4px; color: var(--text-muted); }
+.save-state { display: inline-flex; align-items: center; gap: 4px; color: var(--text-muted); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.statusbar > * { flex: none; }
+.statusbar > .save-state { flex: 0 1 auto; }
 .save-state svg.i { width: 12px; height: 12px; }
 .sb-views { display: flex; gap: 1px; }
 .sb-views button { width: 24px; height: 20px; border: 1px solid transparent; background: transparent; display: grid; place-items: center; cursor: pointer; color: var(--accent); }
