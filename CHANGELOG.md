@@ -6,10 +6,12 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 
 ### Added
 - **Live collaboration.** Several people can edit one plan at the same time, with a separate undo for each person. It is end-to-end encrypted, and the relay (`collab-server/`) runs free on Cloudflare Workers.
+- **Names, colours and comments in live sessions.** Each person chooses a name; the Share dialog and the title bar show who is here, a row someone else has selected carries their name, and comments on a task (in the details panel) merge cleanly when two people write at once. Redeploy the relay (`cd collab-server && npm run deploy`) to switch on names and colours; without it, the plan and comments still work.
 - **Microsoft Project XML import** (File › Open): tasks, outline, links with lag, constraints, resources, assignments and holidays. Anything that cannot be carried over is listed after the import.
 - **Microsoft Project XML export** (File › Export). The output is checked against Microsoft's published schema, and a plan exported and imported again keeps the same dates.
 - **Working week.** Choose which days the project works (a Sunday to Thursday week, a six-day week and so on) in Project Information. The schedule, the Gantt shading and the Microsoft Project import and export all follow it.
 - **Currency picker** in Project Information, with a proper currency code that other programs use. A symbol can still be typed.
+- **Printing that fits the paper.** File › Print asks for paper size and direction, splits a long Gantt chart over pages without cutting a row, repeats the date header on every page, and — for a very wide chart — repeats the task table on each sideways page. "Fit on one page" is still there.
 - **Browser tests in the repository** (`npm run e2e`), run on every pull request.
 - A real-screenshot preview on the landing page, with Reports as a fifth tab.
 - Limits on durations and lags (5000 working days), so a typo can no longer freeze the page.
@@ -20,6 +22,7 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 - The logo and app icons are brown to match.
 - Bar colour choices in the Format tab: brown (the default), green, indigo, amber and slate.
 - The landing page text now says that live sessions are optional and encrypted.
+- The two stylesheets are now one file (`src/styles.css`), 13 KB smaller, with no change to how anything looks (checked screen by screen).
 
 ### Fixed
 - Clicking a card on the Task Board now opens the details panel.

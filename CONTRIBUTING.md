@@ -44,7 +44,7 @@ A failing test prints the step that failed. The suites are in `e2e/`; each one i
 | `src/collab/` | Live collaboration: encryption, shared plan, connection |
 | `collab-server/` | The relay for live sessions (Cloudflare Worker) |
 | `e2e/` | Browser tests |
-| `src/ui.css` | The look of the app and the landing page |
+| `src/styles.css` | The look of the app and the landing page (colours and fonts are variables at the top) |
 
 ## Guidelines
 

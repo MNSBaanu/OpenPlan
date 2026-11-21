@@ -10,7 +10,6 @@ import { SHARE_PREFIX, decodePlan } from './lib/share';
 import '@fontsource-variable/source-sans-3';
 import '@fontsource-variable/source-sans-3/wght-italic.css';
 import './styles.css';
-import './ui.css';
 
 const W = window as any;
 

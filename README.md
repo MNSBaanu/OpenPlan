@@ -38,6 +38,8 @@ It runs entirely in the browser and has no account. Projects are saved on your o
 
 ## Screenshots
 
+![A short tour: editing a task, the board, the network diagram, reports, costs and the dark theme](docs/screenshots/demo.gif)
+
 ![The OpenPlan landing page](docs/screenshots/landing.png)
 
 | Gantt chart with the critical path | Network diagram |
@@ -65,7 +67,12 @@ It runs entirely in the browser and has no account. Projects are saved on your o
 
 Several people can edit the same plan at the same time. Click the link button in the title bar, choose **Start a live session**,
 and send the invite link. Changes appear for everyone as they happen, each person has their own undo, and the plan keeps
-working if the connection drops.
+working if the connection drops. Choose a name in the same dialog: people see each other's names and colours, a row
+that someone else has selected is marked with their name, and anyone can leave a comment on a task (saved with the plan).
+
+Anyone who has the invite link can edit. A view-only link is not possible by design: the relay never sees your plan, so it
+cannot tell who is allowed to change it. To show a plan to someone who should not edit it, send them a copy (a share link,
+or a file).
 
 It is optional and off by default. Plans stay in your browser until you start a session, and a session is end-to-end
 encrypted: the small relay server (in [`collab-server/`](collab-server/README.md), free to run on Cloudflare Workers) only
