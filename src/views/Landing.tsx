@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import '@fontsource-variable/archivo';
 import OP from '../core';
 import { useApp, S, ask } from '../store';
@@ -20,11 +20,34 @@ function openSample() {
   }, 'Open sample');
 }
 
-const STEPS: [string, string][] = [
-  ['List the work', 'Type your tasks and durations, and indent them into phases. That outline becomes your WBS.'],
-  ['Link the tasks', 'Say which task depends on which. OpenPlan schedules everything and finds the critical path.'],
-  ['Add people and costs', 'Assign team members, rates and materials. Overloaded people are flagged and costs are totalled.'],
-  ['Export the results', 'Download the Gantt chart, network diagram, WBS, budget and reports for your document.']
+const TRUST: [string, string][] = [
+  ['check', 'Free forever'],
+  ['shield', 'No sign-up'],
+  ['bolt', 'Works offline'],
+  ['save', 'Data stays on your computer']
+];
+
+const STATS: [string, string][] = [['8', 'views of one plan'], ['10', 'ready-made reports'], ['4', 'dependency link types'], ['4', 'project templates']];
+
+const STEPS: [string, string, string][] = [
+  ['table', 'List the work', 'Type your tasks and durations, then indent them into phases. That outline becomes your WBS.'],
+  ['link', 'Link the tasks', 'Say which task depends on which. OpenPlan schedules everything and finds the critical path.'],
+  ['users', 'Add people and costs', 'Assign team members, rates and materials. Overloaded people are flagged and costs are totalled.'],
+  ['download', 'Export the results', 'Download the Gantt chart, network diagram, WBS, budget and reports for your document.']
+];
+
+// [icon, title, text, wide]
+const FEATURES: [string, string, string, boolean?][] = [
+  ['gantt', 'Gantt chart', 'A task outline with summary tasks and subtasks, FS/SS/FF/SF links with lag, milestones, constraints and deadlines. Drag bars to move tasks, resize them or link them.', true],
+  ['network', 'Critical path', 'Forward and backward passes give ES, EF, LS, LF, total and free slack, highlighted in every view.'],
+  ['tree', 'WBS and network diagrams', 'Drawn from your outline and exported as PNG or SVG.'],
+  ['users', 'Resources and leveling', 'Work, material and cost resources, calendars, vacations, a workload heatmap and leveling.'],
+  ['target', 'Baselines and earned value', 'Track % complete and actual dates, then read SPI, CPI and EAC against your baseline.'],
+  ['wallet', 'Budget', 'Cost by work package and by resource, with monthly and cumulative spend.'],
+  ['columns', 'Task board', 'A Not started, In progress and Done board. Dragging a card updates its % complete.'],
+  ['sparkle', 'Templates', 'Start from a final-year project, software sprint, event or research project.'],
+  ['report', '10 printable reports', 'Project overview, critical tasks, milestones, cost, earned value, baseline variance and more. Print them one by one or all at once, or save them as PDF.', true],
+  ['share', 'Share and versions', 'Share a copy of a plan as a link (nothing is uploaded) and keep named versions in your browser.']
 ];
 
 const OUTPUTS = [
@@ -36,26 +59,35 @@ const OUTPUTS = [
   'Baseline, progress tracking and earned value'
 ];
 
-const SPEC: [string, string][] = [
-  ['Scheduling', 'Summary tasks, FS/SS/FF/SF links with lag, milestones, constraints, deadlines, split and recurring tasks, working calendars.'],
-  ['Critical path', 'Forward and backward pass with ES, EF, LS, LF, total and free slack, highlighted in every view.'],
-  ['Resources', 'Work, material and cost resources, rates and rate changes, vacations, a weekly workload view and leveling.'],
-  ['Tracking', 'Baselines, % complete, actual dates, a status date, and earned value: SPI, CPI and EAC.'],
-  ['Cost', 'Budget versus planned cost, cost by work package and by resource, monthly and cumulative spend.'],
-  ['Output', '10 printable reports, PNG and SVG export of every chart, and CSV export.']
-];
-
-const STATS: [string, string][] = [['8', 'views of one plan'], ['10', 'ready-made reports'], ['4', 'dependency link types'], ['4', 'file formats']];
-
 const AUDIENCE: [string, string, string][] = [
   ['report', 'Students', 'Coursework that asks for a WBS, Gantt chart, network diagram, resource plan and budget, all produced from one plan.'],
   ['users', 'Small teams', 'Plan phases or sprints, assign people, and see who is overloaded before it becomes a problem, with no licences to buy.'],
   ['target', 'Lecturers', 'One free tool the whole class can open in a browser, with charts and reports ready to hand in.']
 ];
 
+const PRIVACY: [string, string, string][] = [
+  ['save', 'In your browser', 'Every change is saved automatically on this device, so you can close the tab and continue later.'],
+  ['file', 'In .openplan files', 'Save to a file on your computer. In Chrome and Edge, install the app and double-click a file to open it.'],
+  ['download', 'In other tools', 'Export Excel or CSV for spreadsheets, and PNG or SVG for your report.']
+];
+
+// [feature, OpenPlan, paid desktop software]; true = yes, false = no, string = text
+const COMPARE: [string, boolean | string, boolean | string][] = [
+  ['Price', 'Free and open source', 'Paid licence or subscription'],
+  ['Account or sign-up', 'None', 'Licence needed'],
+  ['Gantt chart, critical path and WBS', true, true],
+  ['Resources, baselines and earned value', true, true],
+  ['Charts and reports ready for coursework', true, true],
+  ['Real-time team collaboration', false, true],
+  ['Opens .mpp files', false, true],
+  ['Enterprise portfolio management', false, true]
+];
+
 const FAQ: [string, string][] = [
-  ['Is OpenPlan really free?', 'Yes. There are no accounts, trials or paid tiers.'],
+  ['Is OpenPlan really free?', 'Yes. There are no accounts, trials or paid tiers, and the source code is open under the MIT License.'],
+  ['How is it different from Microsoft Project?', 'OpenPlan covers the planning techniques that courses and small teams use: scheduling, the critical path, resources, baselines, earned value, budgets and reports. It runs in your browser for free. It does not have real-time collaboration, .mpp support or enterprise features. It is not affiliated with Microsoft.'],
   ['Where is my project stored?', 'In this browser, saved automatically as you work, and in .openplan files you save to your computer. Your plan is never uploaded anywhere.'],
+  ['Can I move a task list in from a spreadsheet?', 'Yes. Paste rows from Excel, or choose a CSV file with File › Open, and OpenPlan turns them into tasks.'],
   ['Can I put the charts in my report?', 'Yes. Every chart exports as PNG or SVG, and each of the 10 reports prints or saves as a PDF.'],
   ['Does it work on a phone?', 'This page does. The planner itself has a spreadsheet-style grid and a timeline, so it works best on a laptop or desktop screen.']
 ];
@@ -94,14 +126,32 @@ function Preview({ sample }: { sample: ReturnType<typeof useSample> }) {
       </div>
       <div className="lp-shot">
         <div className="lp-shot-bar">
+          <span className="lp-dots" aria-hidden="true"><i /><i /><i /></span>
           <img className="logo" src="./assets/OpenPlan.png" alt="" width={16} height={16} />
-          <span>Library Booking App (Sample) — {cur[1]}</span>
+          <span className="lp-shot-title">Library Booking App (Sample) — {cur[1]}</span>
         </div>
         <div className={'lp-shot-body ' + tab} role="tabpanel" dangerouslySetInnerHTML={{ __html: sample[tab] }} />
       </div>
       <p className="lp-caption">{cur[3]} Drawn live from the sample project.</p>
     </div>
   );
+}
+
+function Head({ label, title, text }: { label: string; title: string; text: string }) {
+  return (
+    <div className="lp-head">
+      <p className="lp-label">{label}</p>
+      <h2>{title}</h2>
+      <p>{text}</p>
+    </div>
+  );
+}
+
+function Cell({ v }: { v: boolean | string }) {
+  if (typeof v === 'string') return <>{v}</>;
+  return v
+    ? <span className="lp-yes"><Icon name="check" /><span className="sr">Yes</span></span>
+    : <span className="lp-no"><Icon name="minus" /><span className="sr">No</span></span>;
 }
 
 export default function Landing() {
@@ -114,11 +164,13 @@ export default function Landing() {
         <a className="lp-brand" href="#" onClick={e => { e.preventDefault(); document.querySelector('.landing')?.scrollTo({ top: 0, behavior: 'smooth' }); }}>
           <img className="logo" src="./assets/OpenPlan.png" alt="" width={26} height={26} />OpenPlan
         </a>
-        <nav className="lp-links">
+        <nav className="lp-links" aria-label="Sections">
+          <button onClick={() => scrollTo('features')}>Features</button>
           <button onClick={() => scrollTo('how')}>How it works</button>
-          <button onClick={() => scrollTo('outputs')}>What you get</button>
-          <button onClick={() => scrollTo('included')}>Features</button>
+          <button onClick={() => scrollTo('compare')}>Compare</button>
+          <button onClick={() => scrollTo('faq')}>FAQ</button>
         </nav>
+        <a className="lp-star" href={REPO} target="_blank" rel="noreferrer"><Icon name="star" />Star on GitHub</a>
         <button className="lp-theme" aria-label="Toggle dark mode" title="Dark / light" onClick={() => st.setUI({ theme: st.theme === 'dark' ? 'light' : 'dark' })}>
           <Icon name={st.theme === 'dark' ? 'sun' : 'moon'} />
         </button>
@@ -127,106 +179,103 @@ export default function Landing() {
 
       <main>
         <section className="lp-hero">
-          <div className="lp-hero-top">
-            <div className="lp-hero-copy">
-              <p className="lp-label">Free online project planning</p>
-              <h1>Turn a task list into a complete project plan.</h1>
-              <p className="lp-lede">
-                Enter your tasks, how long they take and what depends on what. OpenPlan builds the schedule and
-                gives you the Gantt chart, critical path, network diagram, WBS, resource plan and budget,
-                ready to export into your report.
-              </p>
-              <div className="lp-actions">
-                <button className="lp-btn lg" onClick={enterApp}>Start planning <Icon name="chevR" /></button>
-                <button className="lp-btn lg ghost" onClick={openSample}>Try the sample project</button>
-              </div>
-              <p className="lp-note">Free · No sign-up · Nothing to install · Your project data stays on your computer</p>
-            </div>
-            <div className="lp-summary">
-              <p className="lp-label" id="lp-glance">At a glance</p>
-              <ul className="lp-stats" aria-labelledby="lp-glance">
-                {STATS.map(([n, label]) => <li key={label}><b>{n}</b><span>{label}</span></li>)}
-              </ul>
-            </div>
+          <a className="lp-pill" href={REPO} target="_blank" rel="noreferrer">
+            <span>Open source</span>Free project planning, built for students and small teams <Icon name="chevR" />
+          </a>
+          <h1>Turn a task list into a <em>complete project plan.</em></h1>
+          <p className="lp-lede">
+            Enter your tasks, how long they take and what depends on what. OpenPlan builds the schedule and
+            gives you the Gantt chart, critical path, network diagram, WBS, resource plan and budget,
+            ready to export into your report.
+          </p>
+          <div className="lp-actions center">
+            <button className="lp-btn lg" onClick={enterApp}>Start planning <Icon name="chevR" /></button>
+            <button className="lp-btn lg ghost" onClick={openSample}>Try the sample project</button>
           </div>
-          <Preview sample={sample} />
+          <ul className="lp-trust" aria-label="Highlights">
+            {TRUST.map(([icon, label]) => <li key={label}><Icon name={icon} />{label}</li>)}
+          </ul>
+          <div className="lp-stage">
+            <Preview sample={sample} />
+          </div>
+          <ul className="lp-stats" aria-label="At a glance">
+            {STATS.map(([n, label]) => <li key={label}><b>{n}</b><span>{label}</span></li>)}
+          </ul>
+        </section>
+
+        <section className="lp-block" id="features">
+          <Head label="Features" title="Everything a course project plan needs" text="The parts of desktop project software that students and small teams actually use, in one free tool." />
+          <div className="lp-bento">
+            {FEATURES.map(([icon, title, text, wide]) => (
+              <article key={title} className={'lp-card' + (wide ? ' wide' : '')}>
+                <span className="lp-chip"><Icon name={icon} /></span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="lp-block" id="how">
-          <div className="lp-head">
-            <h2>How it works</h2>
-            <p>Four steps take you from a list of tasks to a finished plan. You don’t need any project management software experience.</p>
-          </div>
-          <div className="lp-gantt">
-            <div className="lp-g-row lp-g-head" aria-hidden="true">
-              <span className="lp-g-id">ID</span><span>Task</span><span className="lp-g-pred">Pred.</span><span className="lp-g-time">Timeline</span>
-            </div>
-            <ol>
-              {STEPS.map(([title, text], i) => (
-                <li className="lp-g-row" key={title}>
-                  <span className="lp-g-id">{i + 1}</span>
-                  <div><h3>{title}</h3><p>{text}</p></div>
-                  <span className="lp-g-pred">{i ? i : '–'}</span>
-                  <span className="lp-g-time" aria-hidden="true"><i className="lp-g-bar" style={{ '--i': i } as CSSProperties} /></span>
-                </li>
-              ))}
-              <li className="lp-g-row ms">
-                <span className="lp-g-id">{STEPS.length + 1}</span>
-                <div><h3>Plan ready</h3></div>
-                <span className="lp-g-pred">{STEPS.length}</span>
-                <span className="lp-g-time" aria-hidden="true"><i className="lp-g-ms" /></span>
+          <Head label="How it works" title="From a list of tasks to a finished plan" text="Four steps. You don’t need any project management software experience." />
+          <ol className="lp-steps">
+            {STEPS.map(([icon, title, text], i) => (
+              <li key={title}>
+                <span className="lp-num">{i + 1}</span>
+                <Icon name={icon} />
+                <h3>{title}</h3>
+                <p>{text}</p>
               </li>
-            </ol>
-          </div>
+            ))}
+          </ol>
         </section>
 
         <section className="lp-block" id="outputs">
-          <div className="lp-head">
-            <h2>What you get</h2>
-            <p>Every chart is drawn from your plan and updates as you edit, so your diagrams always match your schedule.</p>
-          </div>
+          <Head label="What you get" title="Charts that always match your schedule" text="Every chart is drawn from your plan and updates as you edit, so your diagrams never drift out of date." />
           <ul className="lp-outputs">
             {OUTPUTS.map(o => <li key={o}><Icon name="check" />{o}</li>)}
           </ul>
         </section>
 
-        <section className="lp-block" id="audience">
-          <div className="lp-head">
-            <h2>Who it’s for</h2>
-            <p>Anyone who needs a proper project plan without buying desktop project management software.</p>
-          </div>
-          <div className="lp-cols">
-            {AUDIENCE.map(([icon, title, text]) => <div key={title}><Icon name={icon} /><h3>{title}</h3><p>{text}</p></div>)}
+        <section className="lp-block" id="compare">
+          <Head label="Compare" title="Free, and honest about what it does" text="OpenPlan covers the core planning techniques without a licence. It is not a replacement for enterprise tools." />
+          <div>
+            <div className="lp-table-wrap">
+              <table className="lp-table">
+                <thead>
+                  <tr><th scope="col"><span className="sr">Feature</span></th><th scope="col" className="us">OpenPlan</th><th scope="col">Paid desktop software<small>such as Microsoft Project</small></th></tr>
+                </thead>
+                <tbody>
+                  {COMPARE.map(([k, a, b]) => (
+                    <tr key={k}><th scope="row">{k}</th><td className="us"><Cell v={a} /></td><td><Cell v={b} /></td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="lp-fine">OpenPlan is an independent project and is not affiliated with Microsoft. Microsoft Project is a trademark of Microsoft Corporation.</p>
           </div>
         </section>
 
-        <section className="lp-block" id="included">
-          <div className="lp-head">
-            <h2>Features</h2>
-            <p>The parts of desktop project software that courses and small teams actually use.</p>
+        <section className="lp-block" id="audience">
+          <Head label="Who it’s for" title="Plan without buying a licence" text="Anyone who needs a proper project plan without buying desktop project management software." />
+          <div className="lp-cols">
+            {AUDIENCE.map(([icon, title, text]) => (
+              <article key={title} className="lp-card"><span className="lp-chip"><Icon name={icon} /></span><h3>{title}</h3><p>{text}</p></article>
+            ))}
           </div>
-          <dl className="lp-spec">
-            {SPEC.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
-          </dl>
         </section>
 
         <section className="lp-block" id="files">
-          <div className="lp-head">
-            <h2>Your work stays with you</h2>
-            <p>OpenPlan has no server and no account. Here’s where your plans are kept. Anonymous visit counts (page, referrer, screen size, browser) are collected with cookie-free GoatCounter analytics; project data is never sent.</p>
-          </div>
+          <Head label="Privacy" title="Your work stays with you" text="OpenPlan has no server and no account. Anonymous visit counts (page, referrer, screen size, browser) are collected with cookie-free GoatCounter analytics. Project data is never sent." />
           <div className="lp-cols">
-            <div><Icon name="save" /><h3>In your browser</h3><p>Every change is saved automatically on this device, so you can close the tab and continue later.</p></div>
-            <div><Icon name="file" /><h3>In .openplan files</h3><p>Save to a file on your computer. In Chrome and Edge, install the app and double-click a file to open it.</p></div>
-            <div><Icon name="download" /><h3>In other tools</h3><p>Export CSV for spreadsheets, and PNG or SVG for your report.</p></div>
+            {PRIVACY.map(([icon, title, text]) => (
+              <article key={title} className="lp-card"><span className="lp-chip"><Icon name={icon} /></span><h3>{title}</h3><p>{text}</p></article>
+            ))}
           </div>
         </section>
 
         <section className="lp-block" id="faq">
-          <div className="lp-head">
-            <h2>Questions</h2>
-            <p>Short answers to what people usually ask first.</p>
-          </div>
+          <Head label="FAQ" title="Questions" text="Short answers to what people usually ask first." />
           <div className="lp-faq">
             {FAQ.map(([q, a]) => <details key={q}><summary>{q}<Icon name="chevD" /></summary><p>{a}</p></details>)}
           </div>
@@ -245,15 +294,18 @@ export default function Landing() {
       </main>
 
       <footer className="lp-footer">
-        <span>OpenPlan</span>
-        <span className="lp-dot">·</span>
-        <span>Free, browser-based project planning</span>
-        <span className="lp-dot">·</span>
-        <span>Open source under the <a href={REPO + '/blob/main/LICENSE'} target="_blank" rel="noreferrer">MIT License</a></span>
-        <span className="lp-dot">·</span>
-        <a href={REPO} target="_blank" rel="noreferrer">Source on GitHub</a>
-        <span className="lp-dot">·</span>
-        <span>Made by <a href="https://github.com/MNSBaanu" target="_blank" rel="noreferrer">MNS Baanu</a></span>
+        <div className="lp-foot-brand">
+          <a className="lp-brand" href="#" onClick={e => { e.preventDefault(); document.querySelector('.landing')?.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            <img className="logo" src="./assets/OpenPlan.png" alt="" width={22} height={22} />OpenPlan
+          </a>
+          <p>Free, browser-based project planning.</p>
+        </div>
+        <nav aria-label="Footer">
+          <a href={REPO} target="_blank" rel="noreferrer">Source on GitHub</a>
+          <a href={REPO + '/issues'} target="_blank" rel="noreferrer">Report an issue</a>
+          <a href={REPO + '/blob/main/LICENSE'} target="_blank" rel="noreferrer">MIT License</a>
+        </nav>
+        <p className="lp-foot-credit">Made by <a href="https://github.com/MNSBaanu" target="_blank" rel="noreferrer">MNS Baanu</a></p>
       </footer>
     </div>
   );

@@ -26,7 +26,12 @@ const ICONS: Record<string, string> = {
   report: 'M4 3h16v18H4zM8 7h8M8 11h8M8 15h5', clock: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2',
   repeat: 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3',
   filter: 'M3 4h18l-7 8v6l-4 2v-8z', columns: 'M3 4h18v16H3zM9 4v16M15 4v16', layers: 'M12 2l10 6-10 6L2 8zM2 14l10 6 10-6',
-  balance: 'M12 3v18M5 7h14M5 7l-3 7a4 4 0 0 0 6 0zM19 7l-3 7a4 4 0 0 0 6 0z', deadline: 'M6 3h12l-6 8zM12 11v10'
+  balance: 'M12 3v18M5 7h14M5 7l-3 7a4 4 0 0 0 6 0zM19 7l-3 7a4 4 0 0 0 6 0z', deadline: 'M6 3h12l-6 8zM12 11v10',
+  star: 'M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2 2 9.3l6.9-1z',
+  shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4',
+  bolt: 'M13 2L4 14h7l-1 8 9-12h-7z',
+  share: 'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.6 13.5l6.8 4M15.4 6.5l-6.8 4',
+  minus: 'M5 12h14'
 };
 
 export default function Icon({ name }: { name: string }) {
