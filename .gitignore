@@ -8,3 +8,4 @@ dist/
 OpenPlan.md
 .wrangler/
 !.env.example
+!.env.production
