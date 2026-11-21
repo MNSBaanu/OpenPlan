@@ -2,6 +2,7 @@ import OP from '../core';
 import { S, VIEW_NAMES, ask, PREV_STORE, type Store } from '../store';
 import { gridItems } from './grid';
 import { toXlsx } from './xlsx';
+import { projectFromMspXml } from './importMsp';
 import { fromTemplate, type Template } from './templates';
 import type { Project } from '../types';
 
@@ -10,6 +11,15 @@ const U = OP.util, C = OP.charts, IO = OP.io;
 const W = window as any;
 const FS = !!W.showSaveFilePicker;
 const TYPES = [{ description: 'OpenPlan project', accept: { 'application/x-openplan': ['.openplan'] } }];
+
+// A project file is either an OpenPlan project or a plan saved from Microsoft Project as XML.
+function readProjectFile(text: string, name: string, asXml = false): { project: Project; message: string } {
+  if (asXml || /\.xml$/i.test(name) || /^\s*</.test(text)) {
+    const r = projectFromMspXml(text);
+    return { project: r.project, message: 'Imported ' + name + ': ' + r.tasks + ' tasks, ' + r.resources + ' resources' + (r.warnings.length ? '. Note: ' + r.warnings.join('; ') + '.' : '') };
+  }
+  return { project: IO.fromJSON(text), message: 'Opened ' + name };
+}
 let handle: any = null;
 
 const MAX_FILE_MB = 20;
@@ -34,13 +44,15 @@ async function saveFile(as: boolean) {
 async function openHandle(h: any) {
   const file = await h.getFile();
   checkSize(file);
-  S().replaceProject(IO.fromJSON(await file.text()), 'Opened ' + file.name);
-  handle = h;
+  const r = readProjectFile(await file.text(), file.name);
+  S().replaceProject(r.project, r.message);
+  // A plan read from XML has no .openplan file to save back to.
+  handle = /\.xml$/i.test(file.name) ? null : h;
 }
 
 async function openFile() {
   try {
-    const [h] = await W.showOpenFilePicker({ types: [{ description: 'Project files', accept: { 'application/x-openplan': ['.openplan'], 'application/json': ['.json'] } }] });
+    const [h] = await W.showOpenFilePicker({ types: [{ description: 'Project files', accept: { 'application/x-openplan': ['.openplan'], 'application/json': ['.json'], 'application/xml': ['.xml'] } }] });
     await openHandle(h);
   } catch (e: any) {
     if (e.name !== 'AbortError') S().toast('Could not open file: ' + e.message, true);
@@ -115,8 +127,9 @@ export function runAction(a: string) {
       try { handle = null; st.replaceProject(IO.fromJSON(text), 'Previous project restored'); } catch (e: any) { st.toast('Could not restore: ' + e.message, true); }
       break;
     }
-    case 'open': if (FS) openFile(); else pickFile(false); break;
-    case 'insert': pickFile(true); break;
+    case 'open': if (FS) openFile(); else pickFile('open'); break;
+    case 'insert': pickFile('insert'); break;
+    case 'importxml': pickFile('xml'); break;
     case 'import': st.openDialog('import'); break;
     case 'share': st.openDialog('share'); break;
     case 'save': saveFile(false); break;
@@ -144,10 +157,11 @@ export function runAction(a: string) {
   }
 }
 
-function pickFile(insert: boolean) {
+function pickFile(mode: 'open' | 'insert' | 'xml') {
+  const insert = mode === 'insert';
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.openplan,.json,application/json';
+  input.accept = mode === 'xml' ? '.xml,application/xml,text/xml' : '.openplan,.json,.xml,application/json,application/xml,text/xml';
   input.onchange = () => {
     const file = input.files && input.files[0];
     if (!file) return;
@@ -156,13 +170,13 @@ function pickFile(insert: boolean) {
     reader.onload = () => {
       const st = S();
       try {
-        const p: Project = IO.fromJSON(String(reader.result));
+        const read = readProjectFile(String(reader.result), file.name, mode === 'xml'), p: Project = read.project;
         if (insert) {
           let res = { uid: 0, warnings: [] as string[] };
           st.commit(pp => { res = IO.insertProject(pp, p); });
           st.select([res.uid], res.uid);
           st.toast('Inserted ' + file.name + ' as a subproject' + (res.warnings.length ? '. Note: ' + res.warnings.join('; ') + '.' : ''), res.warnings.length > 0);
-        } else st.replaceProject(p, 'Opened ' + file.name);
+        } else { handle = null; st.replaceProject(p, read.message); }
       } catch (e: any) {
         st.toast('Could not open file: ' + e.message, true);
       }

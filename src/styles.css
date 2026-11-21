@@ -682,13 +682,7 @@ kbd { font: var(--fs-xs) Consolas, monospace; padding: 0 4px; border: 1px solid 
 .lp-tabs button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .lp-tabs button.on svg.i { color: var(--accent); }
 .lp-shot { text-align: left; border: 1px solid var(--border-strong); border-radius: var(--lp-r); overflow: hidden; background: var(--surface); box-shadow: 0 1px 3px rgba(20, 22, 40, 0.08), 0 16px 36px -18px rgba(20, 22, 40, 0.25); }
-.lp-shot-bar { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: var(--fs-base); }
-.lp-shot-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.lp-shot-body { height: 420px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.lp-shot-body.gantt { display: block; padding: 0; }
-.lp-shot-body.gantt::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: linear-gradient(transparent, var(--surface)); }
-.lp-shot-body svg { display: block; }
-.lp-shot-body:not(.gantt) svg { max-width: 100%; max-height: 100%; width: auto; height: auto; }
+.lp-shot img { display: block; width: 100%; height: auto; }
 .lp-caption { margin: 14px 0 0; font-size: var(--fs-md); color: var(--text-muted); }
 
 .lp-stats { list-style: none; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: var(--lp-r); background: var(--surface); text-align: center; }
@@ -784,7 +778,9 @@ kbd { font: var(--fs-xs) Consolas, monospace; padding: 0 4px; border: 1px solid 
   .lp-hero { padding-top: 40px; }
   .lp-lede { font-size: var(--fs-2xl); }
   .lp-actions.center .lp-btn { width: 100%; }
-  .lp-shot-body { height: 260px; }
+  .lp-shot { overflow-x: auto; }
+  .lp-shot img { min-width: 760px; }
+  .lp-tabs { flex-wrap: wrap; }
   .lp-tabs { display: flex; }
   .lp-tabs button { flex: 1; justify-content: center; padding: 0 8px; font-size: var(--fs-md); }
   .lp-tabs svg.i { display: none; }

@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import OP from '../core';
 import { S, ask } from '../store';
 import Icon from '../components/Icon';
-import type { Schedule } from '../types';
 
-const C = OP.charts;
 const REPO = 'https://github.com/MNSBaanu/OpenPlan';
 // The page title from index.html; the app replaces it with the project name.
 const PAGE_TITLE = document.title;
@@ -78,42 +76,44 @@ const COMPARE: [string, boolean | string, boolean | string][] = [
   ['Resources, baselines and earned value', true, true],
   ['Charts and reports ready for coursework', true, true],
   ['Real-time team collaboration', 'Optional live sessions', true],
-  ['Opens .mpp files', false, true],
   ['Enterprise portfolio management', false, true]
 ];
 
 const FAQ: [string, string][] = [
   ['Is OpenPlan really free?', 'Yes. There are no accounts, trials or paid tiers, and the source code is open under the MIT License.'],
-  ['How is it different from Microsoft Project?', 'OpenPlan covers the planning techniques that courses and small teams use: scheduling, the critical path, resources, baselines, earned value, budgets and reports. It runs in your browser for free, and several people can edit one plan together live. It does not have .mpp support or enterprise features. It is not affiliated with Microsoft.'],
+  ['How is it different from Microsoft Project?', 'OpenPlan covers the planning techniques that courses and small teams use: scheduling, the critical path, resources, baselines, earned value, budgets and reports. It runs in your browser for free, and several people can edit one plan together live. It does not open .mpp files directly and has no enterprise features. It is not affiliated with Microsoft.'],
   ['Where is my project stored?', 'In this browser, saved automatically as you work, and in .openplan files you save to your computer. Your plan is not uploaded anywhere unless you start an optional live session, and then it is encrypted in your browser before it leaves.'],
   ['Can I move a task list in from a spreadsheet?', 'Yes. Paste rows from Excel, or choose a CSV file with File › Open, and OpenPlan turns them into tasks.'],
+  ['Can I bring in a plan from Microsoft Project?', 'Yes, as XML. In Microsoft Project choose File › Save As and pick XML (ProjectLibre, which is free, can do the same and can also open .mpp files). Then use File › Open › Import from Microsoft Project XML in OpenPlan. Tasks, links with lag, constraints, resources, assignments and holidays come across, and anything that cannot is listed after the import. OpenPlan does not open .mpp files directly.'],
   ['Can I put the charts in my report?', 'Yes. Every chart exports as PNG or SVG, and each of the 10 reports prints or saves as a PDF.'],
   ['Does it work on a phone?', 'This page does. The planner itself has a spreadsheet-style grid and a timeline, so it works best on a laptop or desktop screen.']
 ];
 
-function useSample() {
-  return useMemo(() => {
-    const p = OP.demo(), s: Schedule = OP.schedule(p);
-    const sprint = s.rows.find(r => r.summary && r.task.name.startsWith('Sprint 1'));
-    return {
-      gantt: C.gantt({ p, s, rows: s.rows, zoom: 'week', critical: true, table: true }).svg,
-      network: C.network({ p, s, rows: sprint ? sprint.leaves.map(i => s.rows[i]) : s.rows, critical: true, dates: false, title: sprint ? 'Sprint 1' : 'Sample project' }).svg,
-      wbs: C.wbs({ p, s, depth: 2 }).svg,
-      cost: C.costChart({ p, data: C.monthlyCost(p, s), kind: 'cumulative' })
-    };
-  }, []);
-}
+// Screenshots of the real app, taken from the sample project (see public/assets/shots).
+const SHOTS = ['gantt', 'network', 'wbs', 'budget', 'reports'] as const;
+type ShotKey = (typeof SHOTS)[number];
 
-const TABS: [keyof ReturnType<typeof useSample>, string, string, string][] = [
-  ['gantt', 'Gantt chart', 'gantt', 'Schedule with milestones and the critical path in red.'],
-  ['network', 'Network diagram', 'network', 'Activity-on-node with ES, EF, LS, LF and slack for each task.'],
-  ['wbs', 'WBS', 'tree', 'Work breakdown structure generated from your task outline.'],
-  ['cost', 'Budget', 'wallet', 'Cumulative planned cost against your approved budget.']
+const TABS: [ShotKey, string, string, string, string][] = [
+  ['gantt', 'Gantt chart', 'gantt', 'Gantt chart with milestones, links and the critical path in red.',
+    'The OpenPlan Gantt chart: a task table on the left, a timeline strip above, and bars, links, milestones and the critical path in red on the right.'],
+  ['network', 'Network diagram', 'network', 'Network diagram of one sprint, with ES, EF, LS, LF and slack on every task.',
+    'The OpenPlan network diagram: each task is a box showing its early and late start and finish, its duration and its slack, joined by arrows.'],
+  ['wbs', 'WBS', 'tree', 'Work breakdown structure, generated from your task outline.',
+    'The OpenPlan work breakdown structure: the project at the top, four phases below it, and the tasks under each phase.'],
+  ['budget', 'Budget', 'wallet', 'Cost and budget: planned spend against your approved budget.',
+    'The OpenPlan budget view: budget, planned cost and remaining amount, with a monthly cost chart and a cumulative cost chart.'],
+  ['reports', 'Reports', 'report', 'Printable reports, such as this project overview. There are ten.',
+    'An OpenPlan report: the project overview with start, finish, cost and task figures, and a table of work packages.']
 ];
 
-function Preview({ sample }: { sample: ReturnType<typeof useSample> }) {
-  const [tab, setTab] = useState<(typeof TABS)[number][0]>('gantt');
+function Preview() {
+  const [tab, setTab] = useState<ShotKey>('gantt');
   const cur = TABS.find(t => t[0] === tab)!;
+  // Fetch the other screenshots shortly after the page loads, so switching tabs is instant.
+  useEffect(() => {
+    const t = setTimeout(() => SHOTS.forEach(k => { new Image().src = './assets/shots/' + k + '.webp'; }), 1200);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="lp-preview">
       <div className="lp-tabs" role="tablist" aria-label="Preview">
@@ -123,14 +123,10 @@ function Preview({ sample }: { sample: ReturnType<typeof useSample> }) {
           </button>
         ))}
       </div>
-      <div className="lp-shot">
-        <div className="lp-shot-bar">
-          <img className="logo" src="./assets/OpenPlan.png" alt="" width={16} height={16} />
-          <span className="lp-shot-title">Library Booking App (Sample) — {cur[1]}</span>
-        </div>
-        <div className={'lp-shot-body ' + tab} role="tabpanel" dangerouslySetInnerHTML={{ __html: sample[tab] }} />
+      <div className="lp-shot" role="tabpanel">
+        <img src={'./assets/shots/' + tab + '.webp'} width={2400} height={1520} alt={cur[4]} decoding="async" />
       </div>
-      <p className="lp-caption">{cur[3]} Drawn live from the sample project.</p>
+      <p className="lp-caption">{cur[3]} From the Library Booking sample project.</p>
     </div>
   );
 }
@@ -153,7 +149,6 @@ function Cell({ v }: { v: boolean | string }) {
 }
 
 export default function Landing() {
-  const sample = useSample();
   useEffect(() => { document.title = PAGE_TITLE; }, []);
   return (
     <div className="landing">
@@ -189,7 +184,7 @@ export default function Landing() {
             {TRUST.map(([icon, label]) => <li key={label}><Icon name={icon} />{label}</li>)}
           </ul>
           <div className="lp-stage">
-            <Preview sample={sample} />
+            <Preview />
           </div>
           <ul className="lp-stats" aria-label="At a glance">
             {STATS.map(([n, label]) => <li key={label}><b>{n}</b><span>{label}</span></li>)}

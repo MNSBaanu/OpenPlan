@@ -56,7 +56,7 @@ It runs entirely in the browser and has no account. Projects are saved on your o
 - **Budget and reports**: cost by work package and by resource, monthly and cumulative cost, and 10 ready-made reports.
 - **Task board**: a Not started / In progress / Done board; dragging a card updates its % complete.
 - **Getting started**: templates (final-year project, software sprint, event, research project) and a first-run checklist.
-- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import task lists from Excel or CSV, and export Excel (.xlsx) and CSV.
+- **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import task lists from Excel or CSV, import plans saved from Microsoft Project as XML, and export Excel (.xlsx) and CSV.
 - **Sharing and versions**: share a copy of a plan as a link (the plan travels inside the link, nothing is uploaded), and save named versions in the browser.
 - **Offline**: once installed or visited, the app works without an internet connection.
 - **Interface**: a warm paper-and-ink look (ink-black type, a dark brown accent and one font family, Source Sans 3), a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, light and dark themes, and a layout that adapts to phones and tablets.
@@ -169,6 +169,7 @@ In Chrome or Edge, install OpenPlan as an app. After that, double-clicking an `.
 |---|---|
 | Excel (.xlsx) | Export the task list with real dates |
 | Excel / CSV | Import a task list: paste from a spreadsheet or choose a CSV file (File › Open) |
+| Microsoft Project XML | Import a plan saved with File › Save As › XML (also from ProjectLibre): tasks, links and lag, constraints, resources, assignments and holidays. `.mpp` files are not read directly. |
 | CSV | Export the task list |
 | Share link | A copy of the plan inside a link (File › Save, or the link button in the title bar) |
 | PNG / SVG / PDF | Chart images, printing to PDF, and all 10 reports at once (Reports › Print all reports) |

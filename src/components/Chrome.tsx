@@ -167,6 +167,7 @@ export function Backstage() {
     body = <><h1>Open</h1>
       <Tile icon="upload" title="Browse…" sub="OpenPlan project files (.openplan, .json)" act="open" />
       <Tile icon="table" title="Import from Excel or CSV…" sub="Paste a task list from a spreadsheet, or choose a CSV file" act="import" />
+      <Tile icon="layers" title="Import from Microsoft Project XML…" sub="A plan saved from Microsoft Project (File › Save As › XML) or from ProjectLibre" act="importxml" />
       <Tile icon="layers" title="Insert as Subproject…" sub="Add another project file under a new summary task" act="insert" />
       <Tile icon="undo" title="Restore Previous Project" sub="Bring back the plan that was open before the last New, Open or Sample" act="restore" disabled={!hasPrevious()} />
     </>;

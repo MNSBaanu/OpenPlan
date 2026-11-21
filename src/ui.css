@@ -331,7 +331,6 @@ kbd { border-radius: 3px; padding: 1px 5px; }
 .lp-tabs button.on { background: var(--accent); color: var(--accent-text); }
 .lp-tabs button.on svg.i { color: var(--accent-text); }
 .lp-shot { border-radius: var(--r-md); border-color: var(--border-strong); box-shadow: 0 22px 44px -26px rgba(28, 26, 22, 0.4); }
-.lp-shot-bar { background: var(--surface-2); font-size: var(--fs-sm); }
 .lp-caption { font-style: italic; font-size: var(--fs-md); }
 
 .lp-stats { border-radius: var(--r-md); border-color: var(--border-strong); }
