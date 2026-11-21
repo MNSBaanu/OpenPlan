@@ -9,7 +9,10 @@
   --brand-light: var(--accent-soft);
   --brand-mid: var(--hover-strong);
   --on-brand: #ffffff;
-  --title-text: var(--on-brand);
+  /* title bar, File menu sidebar and primary buttons: light in the light theme */
+  --chrome-bg: var(--surface); --chrome-text: var(--text); --chrome-border: var(--border);
+  --chrome-hover: rgba(30, 27, 75, 0.08); --chrome-on: var(--accent-soft); --chrome-on-text: var(--accent);
+  --primary-bg: var(--accent); --primary-border: var(--accent-hover); --primary-hover: var(--accent-hover); --on-primary: #ffffff;
   --bg: #ffffff;
   --app: #e7e9ef;
   --ribbon: #f5f6fa;
@@ -70,6 +73,9 @@
 
 :root[data-theme="dark"] {
   --brand: #15132f; --brand-dark: #0d0c1f; --brand-fg: var(--accent);
+  --chrome-bg: var(--brand); --chrome-text: #ffffff; --chrome-border: var(--brand-dark);
+  --chrome-hover: rgba(255, 255, 255, 0.18); --chrome-on: var(--brand-dark); --chrome-on-text: #ffffff;
+  --primary-bg: var(--brand); --primary-border: var(--brand-dark); --primary-hover: var(--brand-dark); --on-primary: #ffffff;
   --bg: #16171f; --app: #111218; --ribbon: #1d1e28; --surface: #1a1b24; --surface-2: #232431; --surface-3: #2c2d3c;
   --border: #363849; --border-strong: #4d5066; --grid-line: #2b2d3b; --text: #e6e7ef; --text-muted: #9a9db0;
   --accent: #8b85ff; --accent-hover: #a5a0ff; --accent-soft: #26244a; --accent-text: #0e0d24;
@@ -102,19 +108,19 @@ svg.i { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none;
 
 /* ---------- title bar ---------- */
 .titlebar {
-  height: 32px; flex: none; display: flex; align-items: center; background: var(--brand); color: var(--title-text); padding: 0 6px; gap: 8px; user-select: none;
+  height: 32px; flex: none; display: flex; align-items: center; background: var(--chrome-bg); color: var(--chrome-text); border-bottom: 1px solid var(--chrome-border); padding: 0 6px; gap: 8px; user-select: none;
 }
 .qat, .tb-right { display: flex; align-items: center; gap: 2px; }
 .app-icon { width: 20px; height: 20px; margin: 0 6px 0 2px; object-fit: contain; }
 img.logo { object-fit: contain; }
 .qat-btn { width: 28px; height: 26px; border: 0; background: transparent; color: inherit; display: grid; place-items: center; cursor: pointer; }
-.qat-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.qat-btn:hover { background: var(--chrome-hover); }
 .qat-btn:disabled { opacity: 0.45; pointer-events: none; }
 .qat-btn svg.i { width: 15px; height: 15px; }
 .title { flex: 1; text-align: center; font-size: var(--fs-base); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .title-btn { max-width: 60%; padding: 2px 6px; border: 0; background: transparent; color: inherit; font: inherit; cursor: text; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.title-btn:hover { background: rgba(255, 255, 255, 0.18); }
-.title-inp { field-sizing: content; min-width: 8ch; max-width: 60%; height: 22px; padding: 2px 6px; border: 0; outline: 1px solid rgba(255, 255, 255, 0.45); background: rgba(255, 255, 255, 0.18); color: inherit; font: inherit; vertical-align: middle; }
+.title-btn:hover { background: var(--chrome-hover); }
+.title-inp { field-sizing: content; min-width: 8ch; max-width: 60%; height: 22px; padding: 2px 6px; border: 0; outline: 1px solid var(--accent); background: var(--surface); color: inherit; font: inherit; vertical-align: middle; }
 
 /* ---------- toolbar ---------- */
 .ribbon-tabs { flex: none; display: flex; align-items: center; background: var(--surface); border-bottom: 1px solid var(--border); height: 42px; padding: 0 10px; gap: 4px; overflow-x: auto; overflow-y: hidden; }
@@ -208,9 +214,9 @@ main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: colu
 .btn { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid var(--border-strong); background: var(--surface); cursor: pointer; white-space: nowrap; font-size: var(--fs-base); }
 .btn:hover { background: var(--hover); border-color: var(--brand-fg); }
 .btn svg.i { width: 14px; height: 14px; color: var(--accent); }
-.btn.primary { background: var(--brand); border-color: var(--brand-dark); color: var(--on-brand); }
-.btn.primary svg.i { color: var(--on-brand); }
-.btn.primary:hover { background: var(--brand-dark); }
+.btn.primary { background: var(--primary-bg); border-color: var(--primary-border); color: var(--on-primary); }
+.btn.primary svg.i { color: var(--on-primary); }
+.btn.primary:hover { background: var(--primary-hover); }
 .btn.ghost { border-color: transparent; background: transparent; }
 .btn.ghost:hover { background: var(--hover); border-color: var(--hover-strong); }
 .btn:disabled, .icon-btn:disabled { opacity: 0.4; pointer-events: none; }
@@ -440,13 +446,13 @@ table.data.rpt th { position: static; }
 /* ---------- File backstage ---------- */
 .backstage { position: fixed; inset: 32px 0 0 0; z-index: 80; display: flex; background: var(--surface); }
 .backstage[hidden] { display: none; }
-.bs-nav { width: 180px; flex: none; background: var(--brand); color: var(--on-brand); display: flex; flex-direction: column; padding-top: 8px; }
-.bs-back { width: 40px; height: 40px; margin: 4px 0 14px 12px; border: 1.5px solid rgba(255, 255, 255, 0.85); background: transparent; color: var(--on-brand); display: grid; place-items: center; cursor: pointer; }
+.bs-nav { width: 180px; flex: none; background: var(--chrome-bg); color: var(--chrome-text); border-right: 1px solid var(--chrome-border); display: flex; flex-direction: column; padding-top: 8px; }
+.bs-back { width: 40px; height: 40px; margin: 4px 0 14px 12px; border: 1.5px solid var(--chrome-text); background: transparent; color: var(--chrome-text); display: grid; place-items: center; cursor: pointer; }
 .bs-back svg.i { transform: rotate(-90deg); width: 18px; height: 18px; }
-.bs-back:hover { background: rgba(255, 255, 255, 0.15); }
-.bs-item { border: 0; background: transparent; color: var(--on-brand); text-align: left; padding: 9px 24px; font-size: var(--fs-lg); cursor: pointer; }
-.bs-item:hover { background: rgba(255, 255, 255, 0.14); }
-.bs-item.on { background: var(--brand-dark); }
+.bs-back:hover { background: var(--chrome-hover); }
+.bs-item { border: 0; background: transparent; color: var(--chrome-text); text-align: left; padding: 9px 24px; font-size: var(--fs-lg); cursor: pointer; }
+.bs-item:hover { background: var(--chrome-hover); }
+.bs-item.on { background: var(--chrome-on); color: var(--chrome-on-text); font-weight: 600; }
 .bs-body { flex: 1; overflow: auto; padding: 22px 36px; }
 .bs-body h1 { font-size: var(--fs-5xl); font-weight: 300; margin: 0 0 18px; }
 .bs-body h2 { font-size: var(--fs-3xl); font-weight: 400; margin: 0 0 12px; }
@@ -563,7 +569,6 @@ kbd { font: var(--fs-xs) Consolas, monospace; padding: 0 4px; border: 1px solid 
   --brand-light: var(--accent-soft);
   --brand-mid: var(--hover-strong);
   --on-brand: #ffffff;
-  --title-text: var(--on-brand);
   --bg: #ffffff;
   --app: #e7e9ef;
   --ribbon: #f5f6fa;
@@ -794,8 +799,8 @@ kbd { font: var(--fs-xs) Consolas, monospace; padding: 0 4px; border: 1px solid 
   .rpt-all .paper + .paper { break-before: page; }
   .paper { border: 0; box-shadow: none; padding: 0; }
 }
-.titlebar .icon-btn { color: var(--on-brand); border: 0; width: 28px; height: 26px; }
-.titlebar .icon-btn:hover { background: rgba(255, 255, 255, 0.18); color: var(--on-brand); }
+.titlebar .icon-btn { color: var(--chrome-text); border: 0; width: 28px; height: 26px; }
+.titlebar .icon-btn:hover { background: var(--chrome-hover); color: var(--chrome-text); }
 
 /* React root fills the window like the old body layout. */
 #root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
