@@ -331,7 +331,7 @@ function FormatTab({ st }: { st: Store }) {
     </Group>
     <Group label="Gantt Chart Style">
       <div className="swatches">
-        {['teal', 'indigo', 'amber', 'slate'].map(c => (
+        {['brown', 'green', 'indigo', 'amber', 'slate'].map(c => (
           <button key={c} className={'swatch sw-' + c + (st.bars === c ? ' on' : '')} title={c + ' bars'} onClick={() => st.setUI({ bars: c })}><i /><i /></button>
         ))}
       </div>

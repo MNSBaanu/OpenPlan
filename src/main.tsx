@@ -8,7 +8,7 @@ import { handleLaunchFiles } from './lib/actions';
 import { openCollabLink, resumeSession } from './collab/boot';
 import { SHARE_PREFIX, decodePlan } from './lib/share';
 import '@fontsource-variable/source-sans-3';
-import '@fontsource-variable/source-serif-4';
+import '@fontsource-variable/source-sans-3/wght-italic.css';
 import './styles.css';
 import './ui.css';
 

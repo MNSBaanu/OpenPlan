@@ -48,7 +48,7 @@ export interface UIState {
 const UI_DEFAULTS: UIState = {
   view: 'gantt', zoom: 'week', critical: true, gridW: 600, ganttHide: 'none', drawer: window.innerWidth > 1100, netScope: 'all', netDates: false,
   netZoom: 1, wbsDepth: 99, filter: 'all', group: 'none', sort: 'id', cols: DEFAULT_COLS.slice(), showBaseline: true,
-  report: 'overview', tab: 'task', timeline: true, ribbonMin: window.innerWidth <= 640, theme: 'light', bars: 'teal', fullYear: false, guide: true
+  report: 'overview', tab: 'task', timeline: true, ribbonMin: window.innerWidth <= 640, theme: 'light', bars: 'brown', fullYear: false, guide: true
 };
 const PERSISTED_UI: (keyof UIState)[] = ['view', 'zoom', 'critical', 'gridW', 'ganttHide', 'drawer', 'netDates', 'wbsDepth', 'filter', 'group', 'sort', 'cols', 'showBaseline', 'report', 'tab', 'timeline', 'theme', 'bars', 'fullYear', 'guide'];
 
@@ -95,6 +95,7 @@ function loadUI(): Partial<UIState> {
       if (Array.isArray(def) ? Array.isArray(v) && v.every((x: unknown) => typeof x === 'string') : typeof v === typeof def) out[k] = v;
     });
     if (out.view && !(out.view in VIEW_NAMES)) delete out.view;
+    if (out.bars === 'teal') out.bars = 'brown'; // the old default colour is now the brown one
     if (out.theme && out.theme !== 'light' && out.theme !== 'dark') delete out.theme;
     if (out.zoom && !(ZOOMS as readonly string[]).includes(out.zoom)) delete out.zoom;
     if (out.ganttHide && !['none', 'table', 'chart'].includes(out.ganttHide)) delete out.ganttHide;

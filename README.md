@@ -34,7 +34,7 @@ Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and
 
 OpenPlan is a project management tool for students and small teams who need to plan a project with the standard techniques (WBS, Gantt chart, critical path method, resource allocation and budgeting) but don't have access to paid desktop software.
 
-It runs entirely in the browser and has no server or account. Projects are saved on your own computer.
+It runs entirely in the browser and has no account. Projects are saved on your own computer. The only thing that uses a server is the optional [live collaboration](#live-collaboration), which is encrypted end to end.
 
 ## Screenshots
 
@@ -59,7 +59,7 @@ It runs entirely in the browser and has no server or account. Projects are saved
 - **Files**: save to `.openplan` files, open them by double-clicking once the app is installed, import task lists from Excel or CSV, and export Excel (.xlsx) and CSV.
 - **Sharing and versions**: share a copy of a plan as a link (the plan travels inside the link, nothing is uploaded), and save named versions in the browser.
 - **Offline**: once installed or visited, the app works without an internet connection.
-- **Interface**: a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, and light and dark themes.
+- **Interface**: a warm paper-and-ink look (ink-black type, a dark brown accent and one font family, Source Sans 3), a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, light and dark themes, and a layout that adapts to phones and tablets.
 
 ## Live collaboration
 
@@ -76,7 +76,7 @@ stores and forwards scrambled data. The button appears once `VITE_COLLAB_URL` po
 
 | Layer | Technology |
 |---|---|
-| UI | React 19, TypeScript 6 |
+| UI | React 19, TypeScript 6, with Source Sans 3 bundled as the font |
 | State | Zustand 5 |
 | Build | Vite 8 |
 | Tests and lint | Vitest, ESLint |

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import '@fontsource-variable/archivo';
 import OP from '../core';
 import { S, ask } from '../store';
 import Icon from '../components/Icon';
@@ -78,15 +77,15 @@ const COMPARE: [string, boolean | string, boolean | string][] = [
   ['Gantt chart, critical path and WBS', true, true],
   ['Resources, baselines and earned value', true, true],
   ['Charts and reports ready for coursework', true, true],
-  ['Real-time team collaboration', false, true],
+  ['Real-time team collaboration', 'Optional live sessions', true],
   ['Opens .mpp files', false, true],
   ['Enterprise portfolio management', false, true]
 ];
 
 const FAQ: [string, string][] = [
   ['Is OpenPlan really free?', 'Yes. There are no accounts, trials or paid tiers, and the source code is open under the MIT License.'],
-  ['How is it different from Microsoft Project?', 'OpenPlan covers the planning techniques that courses and small teams use: scheduling, the critical path, resources, baselines, earned value, budgets and reports. It runs in your browser for free. It does not have real-time collaboration, .mpp support or enterprise features. It is not affiliated with Microsoft.'],
-  ['Where is my project stored?', 'In this browser, saved automatically as you work, and in .openplan files you save to your computer. Your plan is never uploaded anywhere.'],
+  ['How is it different from Microsoft Project?', 'OpenPlan covers the planning techniques that courses and small teams use: scheduling, the critical path, resources, baselines, earned value, budgets and reports. It runs in your browser for free, and several people can edit one plan together live. It does not have .mpp support or enterprise features. It is not affiliated with Microsoft.'],
+  ['Where is my project stored?', 'In this browser, saved automatically as you work, and in .openplan files you save to your computer. Your plan is not uploaded anywhere unless you start an optional live session, and then it is encrypted in your browser before it leaves.'],
   ['Can I move a task list in from a spreadsheet?', 'Yes. Paste rows from Excel, or choose a CSV file with File › Open, and OpenPlan turns them into tasks.'],
   ['Can I put the charts in my report?', 'Yes. Every chart exports as PNG or SVG, and each of the 10 reports prints or saves as a PDF.'],
   ['Does it work on a phone?', 'This page does. The planner itself has a spreadsheet-style grid and a timeline, so it works best on a laptop or desktop screen.']
@@ -260,7 +259,7 @@ export default function Landing() {
         </section>
 
         <section className="lp-block" id="files">
-          <Head label="Privacy" title="Your work stays with you" text="OpenPlan has no server and no account. Anonymous visit counts (page, referrer, screen size, browser) are collected with cookie-free GoatCounter analytics. Project data is never sent." />
+          <Head label="Privacy" title="Your work stays with you" text="OpenPlan has no account, and your plan stays in your browser. Anonymous visit counts (page, referrer, screen size, browser) are collected with cookie-free GoatCounter analytics. Project data is never sent, unless you start an optional live session: it is then encrypted in your browser, and the relay only sees scrambled data." />
           <div className="lp-cols">
             {PRIVACY.map(([icon, title, text]) => (
               <article key={title} className="lp-card"><span className="lp-chip"><Icon name={icon} /></span><h3>{title}</h3><p>{text}</p></article>
