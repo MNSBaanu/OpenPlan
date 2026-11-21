@@ -4,11 +4,19 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['dist', 'public'] },
+  { ignores: ['dist', 'public', 'collab-server/node_modules', 'collab-server/.wrangler'] },
   js.configs.recommended,
   {
     files: ['src/core/**/*.js'],
     languageOptions: { sourceType: 'module', globals: globals.browser }
+  },
+  {
+    files: ['collab-server/src/**/*.js'],
+    languageOptions: { sourceType: 'module', globals: { ...globals.serviceworker, WebSocketPair: 'readonly' } }
+  },
+  {
+    files: ['collab-server/test/**/*.mjs'],
+    languageOptions: { sourceType: 'module', globals: { ...globals.node, WebSocket: 'readonly', fetch: 'readonly' } }
   },
   {
     files: ['**/*.{ts,tsx}'],

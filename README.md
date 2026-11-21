@@ -21,6 +21,7 @@ Build a WBS, a Gantt chart, a critical-path network diagram, a resource plan and
 - [About](#about)
 - [Screenshots](#screenshots)
 - [Features](#features)
+- [Live collaboration](#live-collaboration)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
 - [Usage](#usage)
@@ -60,6 +61,17 @@ It runs entirely in the browser and has no server or account. Projects are saved
 - **Offline**: once installed or visited, the app works without an internet connection.
 - **Interface**: a tabbed toolbar that you can hide, keyboard shortcuts, undo and redo, and light and dark themes.
 
+## Live collaboration
+
+Several people can edit the same plan at the same time. Click the link button in the title bar, choose **Start a live session**,
+and send the invite link. Changes appear for everyone as they happen, each person has their own undo, and the plan keeps
+working if the connection drops.
+
+It is optional and off by default. Plans stay in your browser until you start a session, and a session is end-to-end
+encrypted: the small relay server (in [`collab-server/`](collab-server/README.md), free to run on Cloudflare Workers) only
+stores and forwards scrambled data. The button appears once `VITE_COLLAB_URL` points at a deployed relay; see
+[`collab-server/README.md`](collab-server/README.md).
+
 ## Tech stack
 
 | Layer | Technology |
@@ -70,6 +82,7 @@ It runs entirely in the browser and has no server or account. Projects are saved
 | Tests and lint | Vitest, ESLint |
 | Scheduling and charts | Plain JavaScript modules rendering SVG (`src/core/`) |
 | Storage | Browser localStorage, and the File System Access API for project files |
+| Live sessions | Yjs, AES-GCM encryption, and a Cloudflare Workers relay (`collab-server/`) |
 
 ## Getting started
 
@@ -189,9 +202,11 @@ OpenPlan/
 │   ├── views/               Gantt, task board, diagrams, resource sheet, workload, budget, reports, landing page
 │   ├── lib/                 task commands, grid columns and filters, file actions, templates, import,
 │   │                        share links, versions, Excel writer, undo history (with tests)
+│   ├── collab/              live sessions: encryption, shared plan, connection (with tests)
 │   ├── store.ts             app state, undo/redo, autosave
 │   ├── App.tsx              layout and keyboard shortcuts
 │   └── main.tsx             entry point
+├── collab-server/           the live-session relay (Cloudflare Worker) and its tests
 ├── index.html
 ├── package.json
 └── vite.config.ts

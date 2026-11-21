@@ -1,0 +1,15 @@
+{
+  "name": "openplan-collab",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Relay for OpenPlan live sessions. It stores only encrypted messages.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node test/relay-protocol.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

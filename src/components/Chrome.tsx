@@ -38,6 +38,11 @@ export function TitleBar() {
         {' - OpenPlan'}
       </div>
       <div className="tb-right">
+        {st.collab.status !== 'off' && (
+          <button className={'live-badge ' + st.collab.status} title="Live session: click for the invite link" aria-label="Live session" onClick={() => runAction('share')}>
+            <i aria-hidden="true" />{st.collab.status === 'live' ? 'Live · ' + Math.max(1, st.collab.peers) : st.collab.status === 'offline' ? 'Reconnecting…' : 'Connecting…'}
+          </button>
+        )}
         <button className="qat-btn" title="Dark / light" aria-label="Toggle dark mode" onClick={() => st.setUI({ theme: st.theme === 'dark' ? 'light' : 'dark' })}>
           <Icon name={st.theme === 'dark' ? 'sun' : 'moon'} />
         </button>

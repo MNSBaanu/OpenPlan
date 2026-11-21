@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import OP from './core';
 import type { Project, Schedule, ViewName } from './types';
 import { capHistory } from './lib/history';
+import { COLLAB_OFF, type CollabInfo } from './collab/types';
 
 const STORE = 'openplan.project';
 export const PREV_STORE = 'openplan.project.previous';
@@ -60,6 +61,7 @@ export interface Store extends UIState {
   undo: string[];
   redo: string[];
   saveState: SaveState;
+  collab: CollabInfo;
   sel: number[];
   anchor: number | null;
   collapsed: Record<string, boolean>;
@@ -110,6 +112,11 @@ function saveUI(st: Store) {
     localStorage.setItem(UISTORE, JSON.stringify(ui));
   } catch { /* storage unavailable */ }
 }
+
+// While a live session is open, edits go into the shared document and undo/redo work on this person's own changes.
+export interface CollabHooks { onCommit: (prev: Project, next: Project) => void; undo: () => void; redo: () => void }
+let collabHooks: CollabHooks | null = null;
+export function setCollabHooks(h: CollabHooks | null) { collabHooks = h; }
 
 let loadError = false, autosaveBlocked = false;
 
@@ -164,6 +171,7 @@ export const useStore = create<Store>((set, get) => ({
   undo: [],
   redo: [],
   saveState: loadError ? (autosaveBlocked ? 'off' : 'ok') : persistNow(JSON.stringify(initial)),
+  collab: COLLAB_OFF,
   sel: [],
   anchor: null,
   collapsed: {},
@@ -194,6 +202,12 @@ export const useStore = create<Store>((set, get) => ({
     OP.model.clampLimits(next);
     const after = JSON.stringify(next);
     if (after === before) return false;
+    if (collabHooks) {
+      collabHooks.onCommit(get().p, next);
+      set({ p: next, s: OP.schedule(next) });
+      persist(after);
+      return true;
+    }
     const undo = capHistory(get().undo.concat([before]));
     set({ p: next, s: OP.schedule(next), undo, redo: [] });
     persist(after);
@@ -201,6 +215,7 @@ export const useStore = create<Store>((set, get) => ({
   },
 
   undoAct: () => {
+    if (collabHooks) { collabHooks.undo(); return; }
     const { undo, redo, p } = get();
     if (!undo.length) return;
     const text = undo[undo.length - 1], prev = JSON.parse(text);
@@ -209,6 +224,7 @@ export const useStore = create<Store>((set, get) => ({
   },
 
   redoAct: () => {
+    if (collabHooks) { collabHooks.redo(); return; }
     const { undo, redo, p } = get();
     if (!redo.length) return;
     const text = redo[redo.length - 1], next = JSON.parse(text);
@@ -218,6 +234,7 @@ export const useStore = create<Store>((set, get) => ({
 
   // The replaced project is kept in browser storage so it can be restored after a reload.
   replaceProject: (p, msg) => {
+    if (collabHooks) { get().toast('Leave the live session first (Share button), then open another plan.', true); return; }
     OP.model.normalize(p);
     const old = JSON.stringify(get().p);
     try { localStorage.setItem(PREV_STORE, old); } catch { /* storage unavailable */ }
@@ -234,6 +251,13 @@ export const useStore = create<Store>((set, get) => ({
 }));
 OP.util.setFullYear(useStore.getState().fullYear);
 
+// Show a plan that arrived from the live session (not an edit made here).
+export function syncProject(p: Project) {
+  const keep = new Set(p.tasks.map(t => t.uid));
+  useStore.setState(st => ({ p, s: OP.schedule(p), sel: st.sel.filter(u => keep.has(u)) }));
+  persist(JSON.stringify(p));
+}
+
 // Non-reactive access for event handlers and helpers.
 export const S = () => useStore.getState();
 
@@ -249,7 +273,7 @@ window.addEventListener('pagehide', flush);
 
 // Another tab saved the project: show its version here so the two tabs don't overwrite each other.
 window.addEventListener('storage', e => {
-  if (e.key !== STORE || !e.newValue) return;
+  if (collabHooks || e.key !== STORE || !e.newValue) return;
   try {
     const p = OP.io.fromJSON(e.newValue);
     pending = null;

@@ -6,3 +6,5 @@ dist/
 .env*
 .obsidian/
 OpenPlan.md
+.wrangler/
+!.env.example

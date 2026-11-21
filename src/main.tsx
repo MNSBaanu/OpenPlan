@@ -5,6 +5,7 @@ import DialogHost from './components/Dialogs';
 import { Toast } from './components/Toast';
 import { useStore, S, ask } from './store';
 import { handleLaunchFiles } from './lib/actions';
+import { openCollabLink, resumeSession } from './collab/boot';
 import { SHARE_PREFIX, decodePlan } from './lib/share';
 import './styles.css';
 
@@ -48,7 +49,7 @@ function Root() {
   const theme = useStore(s => s.theme);
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
   useEffect(() => {
-    const onHash = () => { openSharedPlan(); setInApp(location.hash === '#app'); W.goatcounter?.count?.(); };
+    const onHash = () => { openSharedPlan(); openCollabLink(); setInApp(location.hash === '#app'); W.goatcounter?.count?.(); };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
@@ -96,6 +97,8 @@ createRoot(document.getElementById('root')!).render(
 );
 handleLaunchFiles();
 openSharedPlan();
+openCollabLink();
+resumeSession();
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => { /* offline support is optional */ }); });
 }

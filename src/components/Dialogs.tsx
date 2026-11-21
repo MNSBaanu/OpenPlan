@@ -8,6 +8,7 @@ import { version } from '../../package.json';
 import { projectFromTable } from '../lib/importTable';
 import { shareUrl } from '../lib/share';
 import { loadProject } from '../lib/actions';
+import { COLLAB_URL } from '../collab/config';
 
 const U = OP.util;
 const STATUSES = ['Draft', 'In review', 'Approved', 'Baselined', 'Final'];
@@ -268,7 +269,40 @@ function ShareDialog() {
       </div>
       {url && <p className="muted small">Link length: {Math.ceil(url.length / 1024)} KB.{url.length > 8000 ? ' Some chat and email apps cut off long links; if it does not open, send the .openplan file instead.' : ''}</p>}
       {error && <p className="alert inline">Could not create the link: {error}</p>}
+      {COLLAB_URL && <LiveSection />}
     </Modal>
+  );
+}
+
+// Start, share or leave a live session, where several people edit the same plan at once.
+function LiveSection() {
+  const info = useStore(s => s.collab);
+  const [busy, setBusy] = useState(false);
+  const linkRef = useRef<HTMLInputElement>(null);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(info.link); S().toast('Invite link copied'); }
+    catch { linkRef.current?.select(); S().toast('Press Ctrl+C to copy the selected link.'); }
+  };
+  const start = async () => { setBusy(true); try { await (await import('../collab/session')).startSession(); } finally { setBusy(false); } };
+  const leave = async () => (await import('../collab/session')).leaveSession();
+  const state = info.status === 'live' ? (info.peers > 1 ? info.peers + ' people are in this session' : 'You are the only one here so far')
+    : info.status === 'offline' ? 'Connection lost. Reconnecting; your changes are kept and will be sent.' : 'Connecting…';
+  return (
+    <section className="live-box" aria-label="Live collaboration">
+      <h3>Edit together, live</h3>
+      {info.status === 'off' ? <>
+        <p className="muted">Several people edit the same plan at the same time. Changes appear for everyone as they happen. Everything is encrypted in your browser, so the relay server only sees scrambled data. A session ends 30 days after its last change.</p>
+        <button type="button" className="btn primary" disabled={busy} onClick={start}><Icon name="users" />Start a live session</button>
+      </> : <>
+        <p><b>{state}</b></p>
+        <p className="muted small">Send this invite link to the people you want to edit with. Anyone with the link can edit, so share it only with them.</p>
+        <div className="share-row">
+          <input ref={linkRef} className="inp" readOnly value={info.link} aria-label="Invite link" onFocus={e => e.target.select()} />
+          <button type="button" className="btn primary" onClick={copy}><Icon name="link" />Copy invite</button>
+        </div>
+        <p><button type="button" className="btn" onClick={leave}>Leave the session</button></p>
+      </>}
+    </section>
   );
 }
 
