@@ -1065,3 +1065,7 @@ table.grid tr.peer .namecell::after { content: var(--peer-name); position: absol
 .comment-text { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 2px; }
 .comments textarea { width: 100%; margin-top: 8px; resize: vertical; }
 .comments > .btn { margin-top: 6px; }
+
+/* ---- editing bars on the Gantt chart ---- */
+svg .gbar.link-to .bar, svg .gbar.link-to .ms { stroke: var(--focus); stroke-width: 2.5; }
+svg .ghost-t { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }

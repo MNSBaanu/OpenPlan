@@ -19,7 +19,7 @@ OP.charts = (function () {
     '.wbs2{fill:var(--surface);stroke:var(--border-strong);stroke-width:1;rx:3px}.con{stroke:var(--border-strong);fill:none;stroke-width:1.25}' +
     '.t-Manager{fill:var(--c1)}.t-Full-time{fill:var(--c2)}.t-Part-time{fill:var(--c3)}.t-Supporter{fill:var(--c4)}' +
     '.cbar{fill:var(--bar)}.cline{stroke:var(--bar);stroke-width:2;fill:none}.bud{stroke:var(--critical);stroke-width:1.5;stroke-dasharray:6 4}' +
-    '.hit{fill:transparent}.hit:hover{fill:var(--accent);fill-opacity:.12}.grp{fill:var(--surface-3)}.bl{fill:var(--baseline)}.bar.late{fill:var(--warn)}' +
+    '.grip{fill:var(--bar-edge);opacity:0}.ldot{fill:var(--surface);stroke:var(--bar-edge);stroke-width:1.5;opacity:0}.pmark{fill:var(--bar-progress);opacity:0}.gbar:hover .grip,.gbar:hover .ldot,.gbar:hover .pmark,.gbar:focus-visible .grip,.gbar:focus-visible .ldot,.gbar:focus-visible .pmark{opacity:1}.hit{fill:transparent}.hit:hover{fill:var(--accent);fill-opacity:.12}.grp{fill:var(--surface-3)}.bl{fill:var(--baseline)}.bar.late{fill:var(--warn)}' +
     '.gsplit{stroke:var(--bar);stroke-width:1.5;stroke-dasharray:2 3}.dl{fill:var(--good);stroke:var(--good);stroke-width:1.5}.dl.miss{fill:var(--critical);stroke:var(--critical)}' +
     '.gstat{stroke:var(--warn);stroke-width:1.5}.gstat-t{fill:var(--warn)}';
 
@@ -144,7 +144,7 @@ OP.charts = (function () {
       var crit = o.critical && r.critical ? ' c' : '';
       var x1 = X(r.startDn), x2 = X(r.finishDn) + ppd;
       var showBase = o.baseline && r.base;
-      var by = showBase ? y + 3 : y + 6, bh = showBase ? 11 : 12;
+      var by = showBase ? y + 3 : y + 5, bh = showBase ? 12 : 14;
       var tip = '<title>' + esc(r.id + '. ' + r.task.name + ' — ' + U.fmt(r.startDn) + ' to ' + U.fmt(r.finishDn) + ', ' + OP.model.fmtDuration(r.duration) +
         (r.slack > 0 ? ', slack ' + U.num(r.slack) + 'd' : '') + (r.percent ? ', ' + r.percent + '% complete' : '') +
         (r.base ? '\nBaseline: ' + U.fmt(r.base.startDn) + ' to ' + U.fmt(r.base.finishDn) : '') +
@@ -159,7 +159,7 @@ OP.charts = (function () {
         var mx = r.es > 0 ? X(r.startDn) + ppd : X(r.startDn), my = showBase ? y + 9 : y + ROW / 2;
         h.push('<path class="ms' + crit + '" d="M' + mx + ',' + (my - 6) + 'l6,6l-6,6l-6,-6z"/>');
         h.push('<text class="m sm" x="' + (mx + 10) + '" y="' + (my + 4) + '">' + U.fmt(r.startDn) + '</text>');
-        pos[r.task.uid] = { s: mx - 6, e: mx + 6, y: my };
+        pos[r.task.uid] = { s: mx - 6, e: mx + 6, y: my, ms: true };
       } else if (r.summary) {
         h.push('<path class="sum" d="M' + x1 + ',' + (y + 7) + 'H' + x2 + 'v8l-5,-4H' + (x1 + 5) + 'l-5,4z"/>');
         if (r.percent > 0) h.push('<rect class="prog" x="' + x1 + '" y="' + (y + 9) + '" width="' + ((x2 - x1) * r.percent / 100) + '" height="3"/>');
@@ -176,15 +176,21 @@ OP.charts = (function () {
           lastEnd = sx2;
         });
         x2 = lastEnd;
-        if (r.names) h.push('<text class="m sm" x="' + (x2 + 8) + '" y="' + (by + bh - 2) + '">' + esc(trunc(r.names, 60)) + '</text>');
-        pos[r.task.uid] = { s: x1, e: x2, y: by + bh / 2 };
+        if (o.edit) {
+          // Handles that show when the pointer is over the bar (only in the live chart, never in exports).
+          if (x2 - x1 >= 14) h.push('<rect class="grip" x="' + (x1 + 2) + '" y="' + (by + 3) + '" width="2" height="' + (bh - 6) + '"/><rect class="grip" x="' + (x2 - 4) + '" y="' + (by + 3) + '" width="2" height="' + (bh - 6) + '"/>');
+          h.push('<circle class="ldot" cx="' + (x2 + 9) + '" cy="' + (by + bh / 2) + '" r="4"/>');
+          if (r.duration > 0) { var pxm = x1 + (x2 - x1) * Math.min(100, r.percent) / 100; h.push('<path class="pmark" d="M' + (pxm - 4) + ',' + (by + bh + 5) + 'l4,-5l4,5z"/>'); }
+        }
+        if (r.names) h.push('<text class="m sm" x="' + (x2 + (o.edit ? 18 : 8)) + '" y="' + (by + bh - 2) + '">' + esc(trunc(r.names, 60)) + '</text>');
+        pos[r.task.uid] = { s: x1, e: x2, y: by + bh / 2, top: by, bot: by + bh, px: x1 + (x2 - x1) * Math.min(100, r.percent) / 100, leaf: true };
       }
       var dl = U.parseDate(r.task.deadline);
       if (dl != null) {
         var dx = X(dl) + ppd, dc = r.missedDeadline ? ' miss' : '';
         h.push('<path class="dl' + dc + '" d="M' + (dx - 4) + ',' + (y + 1) + 'h8l-4,6z"/><line class="dl' + dc + '" x1="' + dx + '" y1="' + (y + 6) + '" x2="' + dx + '" y2="' + (y + ROW - 2) + '"/>');
       }
-      h.push('<rect class="hit" x="' + x1 + '" y="' + y + '" width="' + Math.max(x2 - x1, 16) + '" height="' + ROW + '"/></g>');
+      h.push('<rect class="hit" x="' + (x1 - 3) + '" y="' + y + '" width="' + (Math.max(x2 - x1, 16) + 3 + (o.edit && !r.milestone && !r.summary ? 16 : 0)) + '" height="' + ROW + '"/></g>');
       pos[r.task.uid].row = k;
     });
 

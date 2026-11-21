@@ -5,6 +5,7 @@ import { activeCols, colDef, gridItems, menuData, type GroupItem } from '../lib/
 import * as ops from '../lib/taskOps';
 import Field, { DateField } from '../components/Field';
 import Icon from '../components/Icon';
+import { CURSORS, barZone, progressAt } from '../lib/ganttDrag';
 import type { Row } from '../types';
 
 const U = OP.util, M = OP.model, C = OP.charts;
@@ -234,14 +235,30 @@ function Grid({ st, list }: { st: Store; list: (Row | GroupItem)[] }) {
 
 let drag: any = {};
 
-function onChartPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+// Where the pointer is in the chart's own pixels, and which bar (if any) it is over.
+function barAt(e: { clientX: number; clientY: number; target: EventTarget | null }) {
   const gEl = (e.target as Element).closest('.gbar') as SVGGElement | null;
-  if (!gEl || e.button !== 0 || !chartGeom) return;
-  const uid = +gEl.dataset.uid!, r = rowByUid(uid), pos = chartGeom.pos[uid];
-  if (!r || !pos || r.summary) return;
-  const svg = chartEl!.querySelector('svg')!, rect = svg.getBoundingClientRect();
-  const sx = e.clientX - rect.left, ns = 'http://www.w3.org/2000/svg';
-  drag = { uid, r, x0: e.clientX, y0: e.clientY, mode: !r.milestone && sx > pos.e - 7 ? 'resize' : 'move', moved: false, svg, rect, pos, suppress: false };
+  if (!gEl || !chartGeom) return null;
+  const uid = +gEl.dataset.uid!, pos = chartGeom.pos[uid], svg = chartEl!.querySelector('svg')!, rect = svg.getBoundingClientRect();
+  if (!pos) return null;
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  return { gEl, uid, pos, svg, rect, sx, sy, zone: barZone(sx, sy, pos) };
+}
+
+// Show what a press here would do: a resize arrow on the edges, a hand in the middle, a cross on the link handle.
+function onChartPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+  if (drag.active) return;
+  const hit = barAt(e);
+  if (hit) hit.gEl.style.cursor = hit.zone && !rowByUid(hit.uid)?.summary ? CURSORS[hit.zone] : 'pointer';
+}
+
+function onChartPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+  const hit = barAt(e);
+  if (!hit || e.button !== 0) return;
+  const { uid, pos, svg, rect } = hit, r = rowByUid(uid), zone = hit.zone;
+  if (!r || r.summary || !zone) return;
+  const ns = 'http://www.w3.org/2000/svg';
+  drag = { active: true, uid, r, x0: e.clientX, y0: e.clientY, mode: zone, zone, moved: false, svg, rect, pos, suppress: false };
   drag.ghost = document.createElementNS(ns, 'rect');
   drag.ghost.setAttribute('class', 'ghost');
   drag.ghost.setAttribute('x', pos.s); drag.ghost.setAttribute('y', pos.y - 7);
@@ -258,69 +275,104 @@ function setTip(e: PointerEvent, text: string) {
   drag.tip.setAttribute('y', e.clientY - drag.rect.top - 10);
 }
 
+const plural = (n: number, w: string) => n + ' ' + w + (n === 1 ? '' : 's');
+
 function dragMove(e: PointerEvent) {
   const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
   if (!drag.moved && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
-  if (!drag.moved) { drag.moved = true; drag.svg.append(drag.ghost, drag.line, drag.tip); }
-  const g = chartGeom, pos = drag.pos, days = Math.round(dx / g.ppd);
-  if (drag.mode !== 'resize' && Math.abs(dy) > C.ROW * 0.7) drag.mode = 'link';
+  if (!drag.moved) {
+    drag.moved = true; drag.svg.append(drag.ghost, drag.line, drag.tip);
+    document.body.style.cursor = drag.zone === 'link' ? 'crosshair' : drag.zone === 'move' ? 'grabbing' : 'ew-resize';
+  }
+  const g = chartGeom, pos = drag.pos, cal = S().s.cal, days = Math.round(dx / g.ppd), r = drag.r;
+  if (drag.mode === 'move' && Math.abs(dy) > C.ROW * 0.7) drag.mode = 'link';   // dragging a bar up or down also links
   if (drag.mode === 'link') {
     drag.ghost.style.display = 'none';
     drag.line.setAttribute('x1', pos.e); drag.line.setAttribute('y1', pos.y);
     drag.line.setAttribute('x2', e.clientX - drag.rect.left); drag.line.setAttribute('y2', e.clientY - drag.rect.top);
-    setTip(e, 'Link to…');
+    // Light up the bar that would be linked.
+    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.gbar') as SVGGElement | null;
+    const tu = over ? +over.dataset.uid! : 0, ok = tu && tu !== drag.uid;
+    drag.svg.querySelectorAll('.gbar.link-to').forEach((n: Element) => n.classList.remove('link-to'));
+    if (ok) over!.classList.add('link-to');
+    setTip(e, ok ? 'Link to task ' + rowByUid(tu)!.id + ' (finish to start)' : 'Drop on a task to link it');
   } else if (drag.mode === 'move') {
-    const cal = S().s.cal;
     drag.ghost.setAttribute('x', pos.s + days * g.ppd);
-    setTip(e, 'Start ' + U.fmt(cal.date(cal.indexOf(drag.r.startDn + days))));
+    setTip(e, 'Start ' + U.fmt(cal.date(cal.indexOf(r.startDn + days))) + ' · pinned');
+  } else if (drag.mode === 'start') {
+    const w = Math.min(days, Math.round((pos.e - pos.s) / g.ppd) - 1);   // the bar always keeps at least a day
+    drag.ghost.setAttribute('x', pos.s + w * g.ppd); drag.ghost.setAttribute('width', Math.max(g.ppd, pos.e - pos.s - w * g.ppd));
+    const ns = cal.date(cal.indexOf(r.startDn + w)), d = Math.max(1, cal.finishIndex(r.finishDn) - cal.indexOf(ns));
+    setTip(e, 'Start ' + U.fmt(ns) + ' · ' + plural(d, 'day'));
+  } else if (drag.mode === 'progress') {
+    const pct = progressAt(e.clientX - drag.rect.left, pos.s, pos.e), px = pos.s + (pos.e - pos.s) * pct / 100;
+    drag.ghost.setAttribute('x', px - 1); drag.ghost.setAttribute('width', 2);
+    setTip(e, 'Complete ' + pct + '%');
   } else {
-    const cal = S().s.cal, nf = Math.max(drag.r.startDn, drag.r.finishDn + days);
+    const nf = Math.max(r.startDn, r.finishDn + days);
     drag.ghost.setAttribute('width', Math.max(g.ppd, pos.e - pos.s + days * g.ppd));
-    setTip(e, 'Finish ' + U.fmt(Math.max(drag.r.startDn, cal.date(Math.max(0, cal.finishIndex(nf) - 1)))));
+    const fin = Math.max(r.startDn, cal.date(Math.max(0, cal.finishIndex(nf) - 1)));
+    setTip(e, 'Finish ' + U.fmt(fin) + ' · ' + plural(Math.max(1, cal.finishIndex(nf) - cal.indexOf(r.startDn)), 'day'));
+  }
+}
+
+// Move a task's start to `ns`. The date is kept as a "start no earlier than" constraint (or moves the actual start
+// or a fixed date), and the toast says so. `extra` also changes the task in the same step (used when dragging the left edge).
+function pinStart(uid: number, ns: number, extra?: (t: any, p: any) => void) {
+  const st = S(), r = rowByUid(uid)!, cal = st.s.cal, t0 = r.task;
+  const shift = cal.indexOf(ns) - cal.indexOf(r.startDn);
+  const report = (msg: string) => {
+    const after = rowByUid(uid);
+    st.toast(after && after.startDn > ns ? msg + '. Its predecessors keep it from starting before ' + U.fmt(after.startDn) + '.' : msg + ' (Ctrl+Z undoes it)');
+  };
+  if (t0.actualStart) {
+    st.commit(p => { const t = ops.findTask(p, uid); t.actualStart = U.iso(ns); extra?.(t, p); });
+    report('Actual start moved to ' + U.fmt(ns));
+  } else if (t0.constraint === 'MSO' || t0.constraint === 'MFO') {
+    // Hard constraints move with the bar instead of being replaced.
+    st.commit(p => {
+      const t = ops.findTask(p, uid), cd = U.parseDate(t.constraintDate);
+      t.constraintDate = t.constraint === 'MSO' || cd == null ? U.iso(ns) : U.iso(cal.date(Math.max(0, cal.indexOf(cd) + shift)));
+      extra?.(t, p);
+    });
+    report(M.CONSTRAINTS[t0.constraint] + ' date moved');
+  } else {
+    const apply = () => {
+      S().commit(p => { const t = ops.findTask(p, uid); t.constraint = 'SNET'; t.constraintDate = U.iso(ns); extra?.(t, p); });
+      report('Start pinned: no earlier than ' + U.fmt(ns));
+    };
+    if (t0.constraint === 'ASAP' || t0.constraint === 'SNET') apply();
+    else ask('Replace the “' + M.CONSTRAINTS[t0.constraint] + '” constraint with “Start no earlier than ' + U.fmt(ns) + '”?', apply, 'Replace');
   }
 }
 
 function dragEnd(e: PointerEvent) {
   window.removeEventListener('pointermove', dragMove);
+  document.body.style.cursor = '';
+  drag.active = false;
   if (!drag.moved) return;
   drag.suppress = true;
   [drag.ghost, drag.line, drag.tip].forEach((n: Element) => n.remove());
+  drag.svg.querySelectorAll('.gbar.link-to').forEach((n: Element) => n.classList.remove('link-to'));
   const st = S(), r = drag.r, uid = drag.uid, cal = st.s.cal, days = Math.round((e.clientX - drag.x0) / chartGeom.ppd);
+  const gaps = (r.task.splits || []).reduce((a: number, sp: any) => a + (sp.at > 0 && sp.at < r.duration ? +sp.gap || 0 : 0), 0);
   if (drag.mode === 'link') {
     const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.gbar') as SVGGElement | null;
     const tu = target ? +target.dataset.uid! : 0;
-    if (tu && ops.addLink(uid, tu)) st.toast('Linked ' + r.id + ' → ' + rowByUid(tu)!.id + ' (finish-to-start)');
+    if (tu && ops.addLink(uid, tu)) st.toast('Linked ' + r.id + ' → ' + rowByUid(tu)!.id + ' (finish to start)');
+  } else if (drag.mode === 'progress') {
+    const pct = progressAt(e.clientX - drag.rect.left, drag.pos.s, drag.pos.e);
+    if (pct !== Math.round(+r.task.percent || 0)) ops.setPercent(uid, pct);
   } else if (drag.mode === 'move') {
-    if (!days) return;
-    const ns = cal.date(cal.indexOf(r.startDn + days)), t0 = r.task;
-    const shift = cal.indexOf(ns) - cal.indexOf(r.startDn);
-    // Report when links keep the task from moving as far as it was dropped.
-    const report = (msg: string) => {
-      const after = rowByUid(uid);
-      st.toast(after && after.startDn > ns ? msg + '. Its predecessors keep it from starting before ' + U.fmt(after.startDn) + '.' : msg);
-    };
-    if (t0.actualStart) {
-      st.commit(p => { ops.findTask(p, uid).actualStart = U.iso(ns); });
-      report('Actual start moved to ' + U.fmt(ns));
-    } else if (t0.constraint === 'MSO' || t0.constraint === 'MFO') {
-      // Hard constraints move with the bar instead of being replaced.
-      st.commit(p => {
-        const t = ops.findTask(p, uid), cd = U.parseDate(t.constraintDate);
-        t.constraintDate = t.constraint === 'MSO' || cd == null ? U.iso(ns) : U.iso(cal.date(Math.max(0, cal.indexOf(cd) + shift)));
-      });
-      report(M.CONSTRAINTS[t0.constraint] + ' date moved');
-    } else {
-      const apply = () => {
-        S().commit(p => { const t = ops.findTask(p, uid); t.constraint = 'SNET'; t.constraintDate = U.iso(ns); });
-        report('Start no earlier than ' + U.fmt(ns));
-      };
-      if (t0.constraint === 'ASAP' || t0.constraint === 'SNET') apply();
-      else ask('Replace the “' + M.CONSTRAINTS[t0.constraint] + '” constraint with “Start no earlier than ' + U.fmt(ns) + '”?', apply, 'Replace');
-    }
+    if (days) pinStart(uid, cal.date(cal.indexOf(r.startDn + days)));
+  } else if (drag.mode === 'start') {
+    const w = Math.min(days, Math.round((drag.pos.e - drag.pos.s) / chartGeom.ppd) - 1);
+    if (!w) return;
+    const ns = cal.date(cal.indexOf(r.startDn + w)), nd = Math.max(1, cal.finishIndex(r.finishDn) - cal.indexOf(ns) - gaps);
+    pinStart(uid, ns, (t, p) => { ops.setDuration(p, t, nd); });
   } else {
     if (!days) return;
     const nf = Math.max(r.startDn, r.finishDn + days);
-    const gaps = (r.task.splits || []).reduce((a: number, sp: any) => a + (sp.at > 0 && sp.at < r.duration ? +sp.gap || 0 : 0), 0);
     const nd = Math.max(1, cal.finishIndex(nf) - cal.indexOf(r.startDn) - gaps);
     st.commit(p => { ops.setDuration(p, ops.findTask(p, uid), nd); });
   }
@@ -337,7 +389,7 @@ export default function GanttView() {
   const syncing = useRef(false);
 
   const g = useMemo(() => C.gantt({
-    p: st.p, s: st.s, rows: list, zoom: st.zoom, critical: st.critical, baseline: st.showBaseline && !!st.p.baseline
+    p: st.p, s: st.s, rows: list, zoom: st.zoom, critical: st.critical, baseline: st.showBaseline && !!st.p.baseline, edit: true
   }), [st.p, st.s, list, st.zoom, st.critical, st.showBaseline]);
   chartGeom = g;
 
@@ -435,6 +487,7 @@ export default function GanttView() {
             if (b && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); clickSelect(+b.dataset.uid!, e); st.setUI({ drawer: true }); }
           }}
           onPointerDown={onChartPointerDown}
+          onPointerMove={onChartPointerMove}
           dangerouslySetInnerHTML={{ __html: g.svg + '<div style="height:' + C.ROW * 2 + 'px"></div>' }} />
       </div>
     </div>
