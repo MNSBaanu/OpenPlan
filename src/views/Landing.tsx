@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import '@fontsource-variable/archivo';
 import OP from '../core';
-import { useApp, S, ask } from '../store';
+import { S, ask } from '../store';
 import Icon from '../components/Icon';
 import type { Schedule } from '../types';
 
@@ -126,7 +126,6 @@ function Preview({ sample }: { sample: ReturnType<typeof useSample> }) {
       </div>
       <div className="lp-shot">
         <div className="lp-shot-bar">
-          <span className="lp-dots" aria-hidden="true"><i /><i /><i /></span>
           <img className="logo" src="./assets/OpenPlan.png" alt="" width={16} height={16} />
           <span className="lp-shot-title">Library Booking App (Sample) — {cur[1]}</span>
         </div>
@@ -155,7 +154,6 @@ function Cell({ v }: { v: boolean | string }) {
 }
 
 export default function Landing() {
-  const st = useApp();
   const sample = useSample();
   useEffect(() => { document.title = PAGE_TITLE; }, []);
   return (
@@ -170,9 +168,6 @@ export default function Landing() {
           <button onClick={() => scrollTo('compare')}>Compare</button>
           <button onClick={() => scrollTo('faq')}>FAQ</button>
         </nav>
-        <button className="lp-theme" aria-label="Toggle dark mode" title="Dark / light" onClick={() => st.setUI({ theme: st.theme === 'dark' ? 'light' : 'dark' })}>
-          <Icon name={st.theme === 'dark' ? 'sun' : 'moon'} />
-        </button>
         <button className="lp-btn" onClick={enterApp}>Open the app</button>
       </header>
 
