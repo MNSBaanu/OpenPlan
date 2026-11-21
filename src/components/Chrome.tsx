@@ -137,12 +137,13 @@ function hasPrevious() {
 
 export function Backstage() {
   const st = useApp();
+  const { backstage, setUI } = st;
   useEffect(() => {
-    if (!st.backstage) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') st.setUI({ backstage: false }); };
+    if (!backstage) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUI({ backstage: false }); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [st.backstage]);
+  }, [backstage, setUI]);
   if (!st.backstage) return null;
   const p = st.p, s = st.s, page = st.bsPage, img = hasImage(st), viewName = VIEW_NAMES[st.view];
   let body: JSX.Element;

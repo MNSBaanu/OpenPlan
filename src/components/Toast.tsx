@@ -8,6 +8,6 @@ export function Toast() {
     if (!msg) return;
     const t = setTimeout(() => setUI({ toastMsg: null }), msg.err ? 4200 : 2600);
     return () => clearTimeout(t);
-  }, [msg]);
+  }, [msg, setUI]);
   return <div className={'toast' + (msg ? ' show' : '') + (msg && msg.err ? ' err' : '')} role="status" aria-live="polite">{msg ? msg.text : ''}</div>;
 }

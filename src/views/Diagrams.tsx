@@ -54,6 +54,7 @@ const Empty = ({ title, text }: { title: string; text: string }) => (
 
 export function NetworkView() {
   const st = useApp();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- viewSvgString reads only the fields listed here
   const svg = useMemo(() => viewSvgString(st), [st.p, st.s, st.netScope, st.netDates, st.critical, st.view]);
   const tops = st.s.rows.filter((r: any) => r.summary && r.task.level === 1);
   return (
@@ -78,6 +79,7 @@ export function NetworkView() {
 
 export function WbsView() {
   const st = useApp();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- viewSvgString reads only the fields listed here
   const svg = useMemo(() => viewSvgString(st), [st.p, st.s, st.wbsDepth, st.view]);
   const maxLv = st.s.rows.reduce((a: number, r: any) => Math.max(a, r.task.level), 1);
   const levels: number[] = [];
@@ -98,6 +100,7 @@ export function WbsView() {
 
 export function OrgView() {
   const st = useApp();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- viewSvgString reads only the fields listed here
   const svg = useMemo(() => viewSvgString(st), [st.p, st.view]);
   return (
     <div className="view">

@@ -327,7 +327,8 @@ function dragEnd(e: PointerEvent) {
 
 export default function GanttView() {
   const st = useApp();
-  const list = useMemo(() => gridItems(st), [st.s, st.filter, st.group, st.sort, st.collapsed]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- gridItems reads only the fields listed here
+  const list = useMemo(() => gridItems(st), [st.p, st.s, st.filter, st.group, st.sort, st.collapsed]);
   const md = menuData(st);
   const gridRef = useRef<HTMLDivElement>(null);
   const syncing = useRef(false);
