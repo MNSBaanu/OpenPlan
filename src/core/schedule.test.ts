@@ -437,3 +437,36 @@ describe('charts', () => {
     expect(svg).toContain('&lt;img');
   });
 });
+
+describe('limits', () => {
+  const MAX = M.MAX_DAYS;
+  const two = () => plan([{ name: 'A', duration: 1 }, { name: 'B', duration: 1, preds: '1' }]).p;
+
+  it('rejects durations and lags beyond the limit', () => {
+    expect(M.parseDuration(String(MAX))).toBe(MAX);
+    expect(M.parseDuration(String(MAX + 1))).toBeNull();
+    expect(M.parseDuration('99999999')).toBeNull();
+    expect(M.parseDuration('9999w')).toBeNull();
+    const p = two();
+    expect(M.parsePreds(p, '1FS+99999999d', p.tasks[1].uid).errors).toEqual(['1FS+99999999d']);
+    expect(M.parsePreds(p, '1FS-' + MAX + 'd', p.tasks[1].uid).errors).toEqual([]);
+  });
+
+  it('clamps extreme values in loaded files so the schedule stays small and valid', () => {
+    const raw = two();
+    raw.tasks[0].duration = 5e7;
+    raw.tasks[1].preds[0].lag = 1e9;
+    raw.tasks[1].levelDelay = 1e9;
+    raw.tasks[1].splits = [{ at: 1, gap: 1e9 }];
+    const p = OP.io.fromJSON(JSON.stringify(raw));
+    expect(p.tasks[0].duration).toBe(MAX);
+    expect(p.tasks[1].preds[0].lag).toBe(MAX);
+    expect(p.tasks[1].levelDelay).toBe(MAX);
+    expect(p.tasks[1].splits[0].gap).toBe(MAX);
+    const t = Date.now(), s = OP.schedule(p);
+    expect(Date.now() - t).toBeLessThan(2000);
+    expect(U.iso(s.finishDn)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    raw.tasks[1].preds[0].lag = -1e9;
+    expect(OP.io.fromJSON(JSON.stringify(raw)).tasks[1].preds[0].lag).toBe(-MAX);
+  });
+});

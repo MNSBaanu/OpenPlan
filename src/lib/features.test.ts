@@ -81,3 +81,17 @@ describe('Excel export', () => {
     expect(text).toContain('Design &lt;1&gt;');
   });
 });
+
+describe('table import ids', () => {
+  it('keeps links when task IDs contain dashes or letters', () => {
+    for (const ids of [['T-1', 'T-2', 'T-3'], ['A1', 'A2', 'A3'], ['1', '2', '3']]) {
+      const res = projectFromTable(`ID,Task,Duration,Predecessors\n${ids[0]},Design,3,\n${ids[1]},Build,4,${ids[0]}\n${ids[2]},Test,2,"${ids[1]}FS+1d, ${ids[0]}SS"\n`);
+      expect(res.warnings).toEqual([]);
+      expect(res.project.tasks.map((t: any) => t.preds.length)).toEqual([0, 1, 2]);
+      expect(res.project.tasks[2].preds).toEqual([
+        { uid: res.project.tasks[1].uid, type: 'FS', lag: 1 },
+        { uid: res.project.tasks[0].uid, type: 'SS', lag: 0 }
+      ]);
+    }
+  });
+});

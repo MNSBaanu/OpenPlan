@@ -82,6 +82,9 @@ export function projectFromTable(text: string): ImportResult {
   if (!p.tasks.length) throw new Error('No task names were found. Put task names in the first column, or add a "Task Name" heading.');
   // Rewrite each predecessor's ID as the task's row number, keeping its link type and lag.
   const toRows = (text: string) => text.split(/[,;]/).map(part => {
+    // An ID may itself contain a dash or letters (T-1, A1), so try the whole entry before reading a link type or lag.
+    const whole = idToRow.get(part.trim());
+    if (whole != null) return String(whole);
     const m = /^\s*(.+?)\s*(FS|SS|FF|SF)?\s*([+-]\s*\d+(?:\.\d+)?\s*d?)?\s*$/i.exec(part);
     return m ? (idToRow.get(m[1]) ?? m[1]) + (m[2] || '') + (m[3] || '').replace(/\s/g, '') : part;
   }).join(',');

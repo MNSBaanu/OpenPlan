@@ -25,9 +25,23 @@ async function openSharedPlan() {
     S().toast('This share link is incomplete or damaged. Ask for the link again, or for the .openplan file.', true);
   }
 }
-const loadApp = () => import('./App');
-const App = lazy(loadApp);
-const Landing = lazy(() => import('./views/Landing'));
+// After a new version is deployed, an open tab may ask for a file that no longer exists.
+// Reload once to pick up the new version instead of showing the error screen.
+function loadChunk<T>(load: () => Promise<T>) {
+  return () => load().then(mod => {
+    try { sessionStorage.removeItem('openplan.chunk-reload'); } catch { /* storage unavailable */ }
+    return mod;
+  }, err => {
+    let tried = true;
+    try { tried = !!sessionStorage.getItem('openplan.chunk-reload'); sessionStorage.setItem('openplan.chunk-reload', '1'); } catch { /* storage unavailable */ }
+    if (tried) throw err;
+    location.reload();
+    return new Promise<T>(() => { /* wait for the reload */ });
+  });
+}
+const importApp = () => import('./App');
+const App = lazy(loadChunk(importApp));
+const Landing = lazy(loadChunk(() => import('./views/Landing')));
 
 function Root() {
   const [inApp, setInApp] = useState(location.hash === '#app');
@@ -39,7 +53,7 @@ function Root() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
   // Fetch the planner in the background so "Open the app" is instant.
-  useEffect(() => { if (!inApp) { const t = setTimeout(loadApp, 1500); return () => clearTimeout(t); } }, [inApp]);
+  useEffect(() => { if (!inApp) { const t = setTimeout(() => { importApp().catch(() => { /* retried when the app is opened */ }); }, 1500); return () => clearTimeout(t); } }, [inApp]);
   return <>
     <Suspense fallback={null}>{inApp ? <App /> : <Landing />}</Suspense>
     <DialogHost />

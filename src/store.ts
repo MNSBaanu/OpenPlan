@@ -191,6 +191,7 @@ export const useStore = create<Store>((set, get) => ({
     const before = JSON.stringify(get().p);
     const next: Project = JSON.parse(before);
     if (fn(next) === false) return false;
+    OP.model.clampLimits(next);
     const after = JSON.stringify(next);
     if (after === before) return false;
     const undo = capHistory(get().undo.concat([before]));

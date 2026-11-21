@@ -140,6 +140,22 @@ OP.model = (function () {
     };
   }
 
+  // Longest duration, lag or delay in working days (about 19 years). Larger values would make the
+  // scheduler build a calendar with millions of days, freeze the page and produce impossible dates.
+  var MAX_DAYS = 5000;
+  function limit(v) { return Math.max(-MAX_DAYS, Math.min(MAX_DAYS, v)); }
+
+  // Keep every duration-like value within MAX_DAYS. Called when a project is loaded and after every edit.
+  function clampLimits(p) {
+    p.tasks.forEach(function (t) {
+      t.duration = Math.max(0, Math.min(MAX_DAYS, +t.duration || 0));
+      t.levelDelay = Math.max(0, Math.min(MAX_DAYS, +t.levelDelay || 0));
+      (t.preds || []).forEach(function (l) { l.lag = limit(+l.lag || 0); });
+      (t.splits || []).forEach(function (x) { x.at = Math.max(0, Math.min(MAX_DAYS, +x.at || 0)); x.gap = Math.max(0, Math.min(MAX_DAYS, +x.gap || 0)); });
+    });
+    return p;
+  }
+
   var TASK_DEFAULTS = {
     name: '', level: 1, duration: 1, milestone: false, percent: 0, notes: '', preds: [], assignments: [],
     constraint: 'ASAP', constraintDate: '', deadline: '', type: 'FixedUnits', effortDriven: true, fixedCost: 0,
@@ -238,7 +254,7 @@ OP.model = (function () {
     else p.baseline.savedAt = str(p.baseline.savedAt);
     p.version = 2;
     normalizeLevels(p);
-    return p;
+    return clampLimits(p);
   }
 
   function isObj(o) { return o != null && typeof o === 'object' && !Array.isArray(o); }
@@ -275,6 +291,7 @@ OP.model = (function () {
       var t = p.tasks[+m[1] - 1];
       if (!t || t.uid === selfUid) { errors.push(part); return; }
       var lag = m[3] ? (m[3] === '-' ? -1 : 1) * +m[4] : 0;
+      if (Math.abs(lag) > MAX_DAYS) { errors.push(part); return; }
       out.push({ uid: t.uid, type: (m[2] || 'FS').toUpperCase(), lag: lag });
     });
     return { preds: out, errors: errors };
@@ -297,7 +314,8 @@ OP.model = (function () {
     var v = +m[1], u = (m[2] || 'd').toLowerCase();
     if (u[0] === 'w') v *= 5;
     else if (u[0] === 'h') v /= (hpd || 8);
-    return Math.round(v * 100) / 100;
+    v = Math.round(v * 100) / 100;
+    return v > MAX_DAYS ? null : v;
   }
 
   function fmtDuration(d) { return OP.util.num(d, 2) + 'd'; }
@@ -345,7 +363,7 @@ OP.model = (function () {
 
   return {
     LINK_TYPES: LINK_TYPES, RES_TYPES: RES_TYPES, RES_KINDS: RES_KINDS, CONSTRAINTS: CONSTRAINTS, TASK_TYPES: TASK_TYPES,
-    blank: blank, newTask: newTask, newResource: newResource, normalize: normalize,
+    MAX_DAYS: MAX_DAYS, clampLimits: clampLimits, blank: blank, newTask: newTask, newResource: newResource, normalize: normalize,
     isSummary: isSummary, subtreeEnd: subtreeEnd, indexByUid: indexByUid, parsePreds: parsePreds,
     formatPreds: formatPreds, parseDuration: parseDuration, fmtDuration: fmtDuration,
     removeTasks: removeTasks, normalizeLevels: normalizeLevels, initials: initials, rateOn: rateOn, workUnits: workUnits

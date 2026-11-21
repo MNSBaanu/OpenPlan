@@ -78,7 +78,7 @@ function DrawerBody({ st, t, r }: { st: Store; t: Task; r: Row }) {
           <div className="row3">
             <label className="field"><span>Duration</span><Field className="inp" fk="d:duration" value={M.fmtDuration(r.duration)} onCommit={v => {
               const d = M.parseDuration(v, p.hoursPerDay);
-              if (d == null) { st.toast('Enter a duration like 5, 5d, 2w or 16h.', true); return false; }
+              if (d == null) { st.toast('Enter a duration like 5, 5d, 2w or 16h (up to ' + M.MAX_DAYS + ' days).', true); return false; }
               edit((x, pp) => { ops.setDuration(pp, x, d); });
             }} /></label>
             <label className="field"><span>Work (hours)</span><Field className="inp" fk="d:work" value={U.num(r.work)} onCommit={v => {

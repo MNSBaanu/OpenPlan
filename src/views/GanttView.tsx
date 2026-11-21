@@ -52,7 +52,7 @@ function commitCell(k: string, uid: number, v: string): boolean | void {
   if (k === 'preds') return ops.setPreds(uid, v);
   if (k === 'duration') {
     const d = M.parseDuration(v, st.p.hoursPerDay);
-    if (d == null) { st.toast('Enter a duration like 5, 5d, 2w or 16h.', true); return false; }
+    if (d == null) { st.toast('Enter a duration like 5, 5d, 2w or 16h (up to ' + M.MAX_DAYS + ' days).', true); return false; }
     edit((t, p) => { ops.setDuration(p, t, d); });
     return;
   }
