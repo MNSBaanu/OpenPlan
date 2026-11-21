@@ -170,7 +170,6 @@ export default function Landing() {
           <button onClick={() => scrollTo('compare')}>Compare</button>
           <button onClick={() => scrollTo('faq')}>FAQ</button>
         </nav>
-        <a className="lp-star" href={REPO} target="_blank" rel="noreferrer"><Icon name="star" />Star on GitHub</a>
         <button className="lp-theme" aria-label="Toggle dark mode" title="Dark / light" onClick={() => st.setUI({ theme: st.theme === 'dark' ? 'light' : 'dark' })}>
           <Icon name={st.theme === 'dark' ? 'sun' : 'moon'} />
         </button>

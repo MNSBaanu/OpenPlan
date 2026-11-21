@@ -574,9 +574,6 @@ kbd { font: var(--fs-xs) Consolas, monospace; padding: 0 4px; border: 1px solid 
 .lp-links { display: flex; align-items: center; gap: 2px; margin-right: 8px; }
 .lp-links button { border: 0; background: none; padding: 7px 12px; border-radius: 8px; font-size: var(--fs-lg); color: var(--text-muted); cursor: pointer; transition: color 0.15s, background 0.15s; }
 .lp-links button:hover { color: var(--text); background: var(--surface-2); }
-.lp-star { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 999px; font-size: var(--fs-md); font-weight: 600; color: var(--text); text-decoration: none; transition: background 0.15s, border-color 0.15s; }
-.lp-star:hover { background: var(--surface-2); border-color: var(--accent); }
-.lp-star svg.i { width: 15px; height: 15px; color: #e3a008; fill: #f5b92b; }
 .lp-theme { width: 34px; height: 34px; border: 0; border-radius: 8px; background: none; color: var(--text-muted); cursor: pointer; display: grid; place-items: center; }
 .lp-theme:hover { background: var(--surface-2); color: var(--text); }
 
@@ -726,8 +723,7 @@ kbd { font: var(--fs-xs) Consolas, monospace; padding: 0 4px; border: 1px solid 
   .lp-block { padding-top: 80px; }
 }
 @media (max-width: 640px) {
-  .lp-links, .lp-star { display: none; }
-  .lp-hero { padding-top: 40px; }
+  .lp-links,   .lp-hero { padding-top: 40px; }
   .lp-lede { font-size: var(--fs-2xl); }
   .lp-actions.center .lp-btn { width: 100%; }
   .lp-shot-body { height: 260px; }
