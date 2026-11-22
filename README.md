@@ -23,7 +23,7 @@ Plan with a Gantt chart, the critical path, resources and a budget. No account, 
 - **Plan tasks** in an outline with links (FS, SS, FF, SF), lag, milestones and deadlines. Drag bars on the Gantt chart to move or link them.
 - **See the critical path** and the slack on every task. Set your own working week, hours per day, holidays and currency.
 - **Draw diagrams**: network diagram, WBS chart and team chart, as PNG or SVG.
-- **Manage people and money**: resources, workload, leveling, baselines, earned value, costs and 10 ready-made reports.
+- **Manage people and money**: resources, workload, leveling, baselines, earned value, costs and 11 ready-made reports.
 - **Use a task board** (Not started, In progress, Done) or start from a template.
 - **Move files in and out**: `.openplan`, Excel and CSV, and Microsoft Project XML (both ways). Send milestones and deadlines to your calendar (`.ics`). Print to PDF with paged Gantt charts.
 - **Edit together, live** (optional): names, colours and comments, end-to-end encrypted. See [below](#edit-together).

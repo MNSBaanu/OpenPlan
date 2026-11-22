@@ -24,7 +24,7 @@ const TRUST: [string, string][] = [
   ['save', 'Data stays on your computer']
 ];
 
-const STATS: [string, string][] = [['8', 'views of one plan'], ['10', 'ready-made reports'], ['4', 'dependency link types'], ['6', 'project templates']];
+const STATS: [string, string][] = [['8', 'views of one plan'], ['11', 'ready-made reports'], ['4', 'dependency link types'], ['6', 'project templates']];
 
 const STEPS: [string, string, string][] = [
   ['table', 'List the work', 'Type your tasks and durations, then indent them into phases. That outline becomes your WBS.'],
@@ -43,7 +43,7 @@ const FEATURES: [string, string, string, boolean?][] = [
   ['wallet', 'Budget', 'Cost by work package and by resource, with monthly and cumulative spend.'],
   ['columns', 'Task board', 'A Not started, In progress and Done board. Dragging a card updates its % complete.'],
   ['sparkle', 'Templates', 'Start from a final-year project, software sprint, event or research project.'],
-  ['report', '10 printable reports', 'Project overview, critical tasks, milestones, cost, earned value, baseline variance and more. Print them one by one or all at once, or save them as PDF.', true],
+  ['report', '11 printable reports', 'Project overview, critical tasks, milestones, cost, earned value, baseline variance and more. Print them one by one or all at once, or save them as PDF.', true],
   ['share', 'Share and versions', 'Share a copy of a plan as a link (nothing is uploaded) and keep named versions in your browser.']
 ];
 
@@ -85,7 +85,7 @@ const FAQ: [string, string][] = [
   ['Where is my project stored?', 'In this browser, saved automatically as you work, and in .openplan files you save to your computer. Your plan is not uploaded anywhere unless you start an optional live session, and then it is encrypted in your browser before it leaves.'],
   ['Can I move a task list in from a spreadsheet?', 'Yes. Paste rows from Excel, or choose a CSV file with File › Open, and OpenPlan turns them into tasks.'],
   ['Can I bring in a plan from Microsoft Project?', 'Yes, as XML. In Microsoft Project choose File › Save As and pick XML (ProjectLibre, which is free, can do the same and can also open .mpp files). Then use File › Open › Import from Microsoft Project XML in OpenPlan. Tasks, links with lag, constraints, resources, assignments and holidays come across, and anything that cannot is listed after the import. You can also export a plan as Microsoft Project XML, so plans move both ways. OpenPlan does not open .mpp files directly.'],
-  ['Can I put the charts in my report?', 'Yes. Every chart exports as PNG or SVG, and each of the 10 reports prints or saves as a PDF.'],
+  ['Can I put the charts in my report?', 'Yes. Every chart exports as PNG or SVG, and each of the 11 reports prints or saves as a PDF.'],
   ['Does it work on a phone?', 'This page does. The planner itself has a spreadsheet-style grid and a timeline, so it works best on a laptop or desktop screen.']
 ];
 
@@ -102,7 +102,7 @@ const TABS: [ShotKey, string, string, string, string][] = [
     'The OpenPlan work breakdown structure: the project at the top, four phases below it, and the tasks under each phase.'],
   ['budget', 'Budget', 'wallet', 'Cost and budget: planned spend against your approved budget.',
     'The OpenPlan budget view: budget, planned cost and remaining amount, with a monthly cost chart and a cumulative cost chart.'],
-  ['reports', 'Reports', 'report', 'Printable reports, such as this project overview. There are ten.',
+  ['reports', 'Reports', 'report', 'Printable reports, such as this project overview. There are eleven.',
     'An OpenPlan report: the project overview with start, finish, cost and task figures, and a table of work packages.']
 ];
 

@@ -10,8 +10,8 @@ const U = OP.util, M = OP.model;
 
 export const REPORTS: [string, string][] = [
   ['overview', 'Project overview'], ['critical', 'Critical tasks'], ['milestones', 'Milestones'], ['late', 'Late & slipping tasks'],
-  ['cost', 'Cost overview'], ['resources', 'Resource overview'], ['who', 'Who does what'], ['ev', 'Earned value'],
-  ['variance', 'Baseline variance'], ['tasks', 'Task list']
+  ['upcoming', 'Upcoming tasks'], ['cost', 'Cost overview'], ['resources', 'Resource overview'], ['who', 'Who does what'],
+  ['ev', 'Earned value'], ['variance', 'Baseline variance'], ['tasks', 'Task list']
 ];
 
 type Head = [string, boolean?];
@@ -85,6 +85,16 @@ const build: Record<string, (st: Store) => ReactNode> = {
         return [r.id, r.task.name, d(r.finishDn), r.percent + '%', r.base ? sd(r.finishVar) : '', why.join('; ')];
       })} />
   </>,
+  upcoming: st => {
+    const from = st.s.statusDn, to = from + 14;
+    return <>
+      <p className="muted">Unfinished tasks that start between {d(from)} and {d(to)} — the next two weeks from the status date.</p>
+      <Table head={[['ID'], ['Task'], ['Start'], ['Finish'], ['Resources']]}
+        rows={st.s.rows.filter((r: Row) => !r.summary && r.percent < 100 && r.startDn >= from && r.startDn <= to)
+          .sort((a: Row, b: Row) => a.startDn - b.startDn || a.finishDn - b.finishDn)
+          .map((r: Row) => [r.id, r.task.name, d(r.startDn), d(r.finishDn), r.names])} />
+    </>;
+  },
   cost: st => (
     <Table head={[['WBS'], ['Task'], ['Fixed cost', true], ['Total cost', true], ['Baseline', true], ['Variance', true], ['Actual', true], ['Remaining', true]]}
       rows={st.s.rows.filter((r: Row) => r.task.level <= 2).map((r: Row) => [r.wbs, r.task.level > 1 ? <span style={{ paddingLeft: 18 }}>{r.task.name}</span> : <b>{r.task.name}</b>,
