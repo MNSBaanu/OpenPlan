@@ -27,7 +27,10 @@ const frames = [];
     const d = Bp.locator('[aria-label="Task 4 Duration"]'); await d.fill('7d'); await d.press('Enter'); await until(async () => (await dur(A, 4)) === '7d', 5000, 'A sees duration'); });
   await step('schedule recalculates for both after a remote change (same finish date)', async () => { const fin = p => p.locator('table.grid tbody tr:nth-child(22) td.ro').nth(1).innerText(); await until(async () => (await fin(A)) === (await fin(Bp)), 4000, 'same finish'); return await fin(A); });
   await step('both add a task at the same moment → 24 tasks, same on both, no clashes', async () => {
-    const add = async (p, nm) => { await p.locator('.ribbon-tabs .rtab', { hasText: 'Task' }).click(); await p.locator('.ribbon button', { hasText: /^Task$/ }).first().click(); await p.keyboard.type(nm); await p.keyboard.press('Enter'); };
+    const add = async (p, nm) => { await p.locator('.ribbon-tabs .rtab', { hasText: 'Task' }).click(); await p.locator('.ribbon button', { hasText: /^Task$/ }).first().click();
+      // The app moves the cursor into the new row on the next frame; wait for that so no letters are typed too early (slow CI).
+      await until(() => p.evaluate(() => { const e = document.activeElement; return !!e && e.matches('input[aria-label$=" name"]') && e.value === 'New task'; }), 6000, 'cursor in the new task');
+      await p.keyboard.type(nm); await p.keyboard.press('Enter'); };
     await Promise.all([add(A, 'From A'), add(Bp, 'From B')]);
     await until(async () => (await rowCount(A)) === 24 && (await rowCount(Bp)) === 24, 8000, '24 rows');
     const names = async p => p.locator('table.grid tbody tr input[aria-label$=" name"]').evaluateAll(es => es.map(e => e.value).filter(Boolean)); await until(async () => JSON.stringify(await names(A)) === JSON.stringify(await names(Bp)), 8000, 'same task names on both'); const na = await names(A), nb = await names(Bp);
