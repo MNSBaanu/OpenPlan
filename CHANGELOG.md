@@ -4,6 +4,10 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-22
+
+Thanks to tanush326k, the first outside contributor, who wrote the guide to the `.openplan` file format.
+
 ### Added
 - **Live collaboration.** Several people can edit one plan at the same time, with a separate undo for each person. It is end-to-end encrypted, and the relay (`collab-server/`) runs free on Cloudflare Workers.
 - **Names, colours and comments in live sessions.** Each person chooses a name; the Share dialog and the title bar show who is here, a row someone else has selected carries their name, and comments on a task (in the details panel) merge cleanly when two people write at once. Redeploy the relay (`cd collab-server && npm run deploy`) to switch on names and colours; without it, the plan and comments still work.
