@@ -11,6 +11,13 @@
     { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ],
+  "screenshots": [
+    { "src": "assets/shots/gantt.webp", "sizes": "2400x1520", "type": "image/webp", "form_factor": "wide", "label": "Gantt chart with the task table" },
+    { "src": "assets/shots/network.webp", "sizes": "2400x1520", "type": "image/webp", "form_factor": "wide", "label": "Network diagram" },
+    { "src": "assets/shots/wbs.webp", "sizes": "2400x1520", "type": "image/webp", "form_factor": "wide", "label": "Work breakdown structure chart" },
+    { "src": "assets/shots/budget.webp", "sizes": "2400x1520", "type": "image/webp", "form_factor": "wide", "label": "Budget and earned value" },
+    { "src": "assets/shots/reports.webp", "sizes": "2400x1520", "type": "image/webp", "form_factor": "wide", "label": "Print-ready reports" }
+  ],
   "file_handlers": [
     {
       "action": "./",
