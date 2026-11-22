@@ -1005,7 +1005,7 @@ html, body { overscroll-behavior-y: none; }
 @media (prefers-reduced-motion: reduce) { .ptr[data-busy="1"] svg { animation: none; } .ptr.back { transition: none; } }
 @media print { .ptr { display: none; } }
 
-/* touch screens: bigger tap targets without changing the table rows */
+/* touch screens: bigger tap targets */
 @media (pointer: coarse) {
   .menu button { padding: 10px 12px; }
   .caret { width: 24px; height: 24px; }
@@ -1025,6 +1025,15 @@ html, body { overscroll-behavior-y: none; }
   .rtab, .rtab.file { height: 40px; }
   .rselect { height: auto; }
   .rselect select { height: 40px; }
+  /* when the chart is hidden the grid rows grow on touch, giving the collapse caret
+     a true 40 px target; while the chart is shown rows must stay 24 px so the grid
+     keeps aligning with the SVG chart it scrolls in sync with */
+  .split[data-hide="chart"] table.grid { --row: 41px; }
+  .split[data-hide="chart"] .caret { width: 40px; height: 40px; }
+  /* board card move arrows and the resource row buttons: 40 px hit areas, icons stay small */
+  .board-move .icon-btn, table.data td.nowrap .icon-btn { width: 40px; height: 40px; }
+  /* keep Delete clearly away from Details so a finger cannot hit the wrong one */
+  table.data td.nowrap .icon-btn + .icon-btn { margin-left: 12px; }
 }
 @media (pointer: coarse) and (max-width: 480px) {
   .sb-zoom input { display: none; }
