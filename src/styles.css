@@ -1009,12 +1009,22 @@ html, body { overscroll-behavior-y: none; }
 @media (pointer: coarse) {
   .menu button { padding: 10px 12px; }
   .caret { width: 24px; height: 24px; }
-  .rcheck { height: 30px; }
+  .rcheck { height: 40px; }
   /* status bar: 40 px tap targets; the bar wraps to a second line rather than overflow */
   .statusbar { flex-wrap: wrap; height: auto; min-height: 42px; padding-top: 3px; padding-bottom: 3px; row-gap: 2px; }
   .sb-views button { width: 40px; height: 40px; }
   .sb-zoom input { min-height: 40px; }
   .z-btn { width: 40px; height: 40px; line-height: 40px; }
+  /* ribbon buttons: at least 40 px so a thumb can hit them; the ribbon scrolls inside itself */
+  .rb.small { height: 40px; }
+  .rb.ico { width: 40px; height: 40px; }
+  .rb.pct { height: 40px; min-width: 40px; }
+  .rb-collapse { height: 40px; }
+  /* taller rows no longer fit the fixed 108px on tablets: let the ribbon grow */
+  .ribbon { height: auto; min-height: 112px; }
+  .rtab, .rtab.file { height: 40px; }
+  .rselect { height: auto; }
+  .rselect select { height: 40px; }
 }
 @media (pointer: coarse) and (max-width: 480px) {
   .sb-zoom input { display: none; }
