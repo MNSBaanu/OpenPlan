@@ -14,7 +14,7 @@ Plan with a Gantt chart, the critical path, resources and a budget. No account, 
 ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-5a3a22)
 
-![A short tour of OpenPlan](docs/screenshots/demo.gif)
+<img src="docs/openplan-overview.png" alt="Overview of OpenPlan: nine main areas, from planning and scheduling to live editing, files and how it is built" width="900">
 
 </div>
 
