@@ -44,6 +44,16 @@ export const TEMPLATES: Template[] = [
       [1, 'Data collection', 1], [2, 'Design survey or instruments', 5, '3'], [2, 'Collect data', 20, '4, 6'],
       [1, 'Analysis and writing', 1], [2, 'Analyse data', 10, '7'], [2, 'Write paper', 15, '9'], [2, 'Submit paper', 0, '10']
     ]
+  },
+  {
+    id: 'launch', name: 'Product launch', desc: 'Strategy, preparation, launch day and the weeks after',
+    tasks: [
+      [1, 'Strategy', 1], [2, 'Define goals and target audience', 3], [2, 'Set launch budget and date', 2, '2'], [2, 'Plan key messages and channels', 4, '3'],
+      [1, 'Preparation', 1], [2, 'Finish and test the product', 10, '3'], [2, 'Create website and promotion content', 8, '4'], [2, 'Train sales and support team', 3, '6'],
+      [2, 'Brief press and partners', 4, '7'],
+      [1, 'Launch', 1], [2, 'Final go / no-go check', 1, '6, 7, 8'], [2, 'Launch day', 0, '11'], [2, 'Announce on all channels', 1, '12'],
+      [1, 'After the launch', 1], [2, 'Collect feedback and sales figures', 10, '13'], [2, 'Fix the most reported problems', 5, '15'], [2, 'Launch review', 2, '16']
+    ]
   }
 ];
 
