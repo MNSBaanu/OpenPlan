@@ -68,6 +68,11 @@ const L = require('./lib.cjs'); const { step, eq, ok, proj, toast, row, tab, con
   await step('resources: add a person, name + rate, appears in sheet', async () => {
     await tab(pg, 'Resource'); await pg.locator('.ribbon button', { hasText: /Add\s*Resources/ }).click(); await pg.waitForTimeout(300); await pg.keyboard.type('QA Person'); await pg.keyboard.press('Enter');
     const p = await proj(pg); ok(p.resources.some(r => r.name === 'QA Person'), 'resource missing'); return p.resources.length + ' resources'; });
+  await step('resource sheet: every field has an accessible name', async () => {
+    await pg.locator('.statusbar button[title="Resource Sheet"], .statusbar button[aria-label="Resource Sheet"]').first().click(); await pg.waitForSelector('table.data tbody tr');
+    const unnamed = await pg.evaluate(() => [...document.querySelectorAll('input,select')].filter(e => !e.getAttribute('aria-label') && !e.closest('label')).map(e => e.getAttribute('data-fk') || e.className));
+    eq(unnamed.length, 0, 'unnamed fields: ' + unnamed.join(', '));
+    ok(await pg.locator('table.data [aria-label="Resource 1 Initials"]').count() === 1, 'no "Resource 1 Initials"'); });
   await step('assign a resource to a task from the ribbon, cost updates', async () => {
     await pg.locator('.statusbar button[title="Gantt Chart"], .statusbar button[aria-label="Gantt Chart"]').first().click(); await tab(pg, 'Task'); await row(pg, 3); const before = (await proj(pg)).tasks[2].assignments.length; await pg.locator('.ribbon button', { hasText: /Assign\s*Resources/ }).first().click(); await pg.waitForTimeout(400);
     return 'assignments before=' + before + ' · ' + (await L.state(pg)).dialog + ' · drawer=' + await pg.locator('aside.drawer').count(); });
