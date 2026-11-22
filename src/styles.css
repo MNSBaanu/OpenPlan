@@ -985,7 +985,22 @@ html, body { overscroll-behavior-y: none; }
 @media (pointer: coarse) {
   .menu button { padding: 10px 12px; }
   .caret { width: 24px; height: 24px; }
-  .rcheck { height: 30px; }
+  .rcheck { height: 40px; }
+  /* ribbon buttons: at least 40 px so a thumb can hit them; the ribbon scrolls inside itself */
+  .rb.small { height: 40px; }
+  .rb.ico { width: 40px; height: 40px; }
+  .rb.pct { height: 40px; min-width: 40px; }
+  .rb-collapse { height: 40px; }
+  /* taller rows no longer fit the fixed 108px on tablets: let the ribbon grow */
+  .ribbon { height: auto; min-height: 112px; }
+  .rtab, .rtab.file { height: 40px; }
+  .rselect { height: auto; }
+  .rselect select { height: 40px; }
+}
+@media (pointer: coarse) and (max-width: 480px) {
+  /* keep the status bar from overflowing: the zoom slider gives way to its buttons */
+  .statusbar { gap: 6px; }
+  .sb-zoom input { display: none; }
 }
 
 /* ---------- landing page ---------- */
