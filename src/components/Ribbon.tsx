@@ -351,7 +351,16 @@ export default function Ribbon() {
   const Body = { task: TaskTab, resource: ResourceTab, report: ReportTab, project: ProjectTab, view: ViewTab, format: FormatTab }[tab] || TaskTab;
   const [peek, setPeek] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
+  const tabs = useRef<HTMLElement>(null);
   useEffect(() => { if (!st.ribbonMin) setPeek(false); }, [st.ribbonMin]);
+  useEffect(() => {
+    const el = tabs.current; if (!el) return;
+    const check = () => { el.dataset.more = el.scrollWidth - el.scrollLeft - el.clientWidth > 4 ? '1' : '0'; };
+    check();
+    const ro = new ResizeObserver(check); ro.observe(el);
+    el.addEventListener('scroll', check, { passive: true });
+    return () => { ro.disconnect(); el.removeEventListener('scroll', check); };
+  }, [tools]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'F1') { e.preventDefault(); S().setUI({ ribbonMin: !S().ribbonMin }); }
@@ -371,11 +380,11 @@ export default function Ribbon() {
     if (peek && b && !b.classList.contains('drop')) setPeek(false);
   };
   return <div className="ribbon-wrap" ref={wrap}>
-    <nav className="ribbon-tabs" aria-label="Toolbar">
+    <nav className="ribbon-tabs" aria-label="Toolbar" ref={tabs}>
       <button className="rtab file" onClick={() => st.setUI({ backstage: true, bsPage: 'info', menu: null })}><Icon name="menu" />File</button>
       {TABS.filter(([k]) => k !== 'format' || tools).map(([k, label, icon]) => (
         <button key={k} aria-pressed={tab === k} className={'rtab' + (tab === k ? ' on' : '')}
-          onClick={() => onTab(k)} onDoubleClick={() => st.setUI({ ribbonMin: !st.ribbonMin })}><Icon name={icon} />{label}</button>
+          onClick={e => { onTab(k); e.currentTarget.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }} onDoubleClick={() => st.setUI({ ribbonMin: !st.ribbonMin })}><Icon name={icon} />{label}</button>
       ))}
       <span className="rtab-fill" />
       <button className="rb-collapse" title={(st.ribbonMin ? 'Show' : 'Hide') + ' the toolbar (Ctrl+F1)'} onClick={() => st.setUI({ ribbonMin: !st.ribbonMin })}>
