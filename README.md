@@ -75,6 +75,7 @@ To host your own copy, see [docs/deploy.md](docs/deploy.md).
 ## More
 
 - [File format](docs/file-format.md): what is inside a `.openplan` file
+- [How dates are calculated](docs/scheduling.md): working days, links and lag, slack and the critical path
 - [Contributing](CONTRIBUTING.md): how to help, and a map of the code
 - [Changelog](CHANGELOG.md): what changed in each version
 - [Security](SECURITY.md): how to report a problem
