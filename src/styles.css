@@ -641,10 +641,12 @@ kbd { font: var(--fs-xs) Consolas, monospace; border: 1px solid var(--border-str
   .lp-actions.center .lp-btn { width: 100%; }
   .lp-shot { overflow-x: auto; }
   .lp-shot img { min-width: 760px; }
-  .lp-tabs { flex-wrap: wrap; }
-  .lp-tabs { display: flex; }
-  .lp-tabs button { flex: 1; justify-content: center; padding: 0 8px; font-size: var(--fs-md); }
-  .lp-tabs svg.i { display: none; }
+  /* Five tabs as a 3 + 2 grid: short names (the second word is hidden), one line each, and big enough to tap. */
+  .lp-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .lp-tabs button { grid-column: span 2; justify-content: center; height: auto; min-height: 44px; padding: 0 6px; font-size: var(--fs-md); white-space: nowrap; }
+  .lp-tabs button:nth-child(n + 4) { grid-column: span 3; border-top: 1px solid var(--border); }
+  .lp-tabs button:nth-child(4) { border-left: 0; }
+  .lp-tabs svg.i, .lp-more { display: none; }
   .lp-steps { grid-template-columns: minmax(0, 1fr); }
   .lp-table th, .lp-table td { padding: 12px; }
   .lp-end { padding: 32px 24px; margin-bottom: 48px; }

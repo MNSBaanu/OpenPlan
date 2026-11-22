@@ -11,6 +11,7 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 
 ### Fixed
 - **Reports can be scrolled on phones.** The long reports (Project overview, Critical tasks, Cost overview, Task list) were cut off at the bottom and could not be scrolled with a finger.
+- **Landing page tabs on phones.** The five preview tabs no longer break into two lines: they sit in a neat 3 + 2 grid with short names and bigger tap targets.
 
 ## [2.1.0] - 2026-11-22
 

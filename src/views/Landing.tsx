@@ -118,8 +118,8 @@ function Preview() {
     <div className="lp-preview">
       <div className="lp-tabs" role="tablist" aria-label="Preview">
         {TABS.map(([k, label, icon]) => (
-          <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
-            <Icon name={icon} />{label}
+          <button key={k} role="tab" aria-selected={tab === k} aria-label={label} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>
+            <Icon name={icon} /><span>{label.split(' ')[0]}{label.includes(' ') && <span className="lp-more"> {label.split(' ').slice(1).join(' ')}</span>}</span>
           </button>
         ))}
       </div>

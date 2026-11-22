@@ -11,5 +11,13 @@ const L = require('./lib.cjs'); const { step, eq, ok } = L;
     const c = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true }); const p = await c.newPage(); await p.goto('http://localhost:4173/'); await p.waitForSelector('.landing'); await p.waitForTimeout(800);
     const r = await p.evaluate(() => { const l = document.querySelector('.landing'), s = document.querySelector('.lp-shot'); return { page: l.scrollWidth - l.clientWidth, shot: s.scrollWidth > s.clientWidth, img: document.querySelector('.lp-shot img').getBoundingClientRect().width }; });
     eq(r.page, 0); ok(r.shot && r.img >= 760, JSON.stringify(r)); await c.close(); });
+  await step('landing: on phones the preview tabs are one line each, at least 44 px tall, and fit the screen', async () => {
+    for (const w of [320, 360, 390, 430]) {
+      const c = await b.newContext({ viewport: { width: w, height: 844 }, isMobile: true, hasTouch: true }); const p = await c.newPage(); await p.goto('http://localhost:4173/'); await p.waitForSelector('.lp-tabs'); await p.waitForTimeout(500);
+      const r = await p.evaluate(() => [...document.querySelectorAll('.lp-tabs button')].map(x => { const q = x.getBoundingClientRect(), t = x.querySelector('span'), line = parseFloat(getComputedStyle(x).lineHeight) || 20; return { name: x.getAttribute('aria-label'), shown: x.innerText.trim(), h: Math.round(q.height), clipped: x.scrollWidth > x.clientWidth + 1, oneLine: t.getBoundingClientRect().height < line * 1.6, right: Math.round(q.right) }; }));
+      ok(r.length === 5, w + 'px: expected 5 tabs'); for (const x of r) { ok(x.h >= 44, w + 'px ' + x.name + ' only ' + x.h + ' px tall'); ok(!x.clipped, w + 'px ' + x.name + ' is cut off'); ok(x.oneLine, w + 'px ' + x.name + ' wraps'); ok(x.right <= w, w + 'px ' + x.name + ' is off screen'); }
+      eq(r.map(x => x.shown), ['Gantt', 'Network', 'WBS', 'Budget', 'Reports']); eq(r.map(x => x.name), ['Gantt chart', 'Network diagram', 'WBS', 'Budget', 'Reports']);
+      await c.close();
+    } });
   console.log('SUMMARY', JSON.stringify(L.counts())); await b.close();
 })();
