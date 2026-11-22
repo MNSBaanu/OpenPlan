@@ -24,7 +24,7 @@ const TRUST: [string, string][] = [
   ['save', 'Data stays on your computer']
 ];
 
-const STATS: [string, string][] = [['8', 'views of one plan'], ['10', 'ready-made reports'], ['4', 'dependency link types'], ['4', 'project templates']];
+const STATS: [string, string][] = [['8', 'views of one plan'], ['10', 'ready-made reports'], ['4', 'dependency link types'], ['6', 'project templates']];
 
 const STEPS: [string, string, string][] = [
   ['table', 'List the work', 'Type your tasks and durations, then indent them into phases. That outline becomes your WBS.'],

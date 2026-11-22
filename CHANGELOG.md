@@ -4,6 +4,9 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Added
+- **A Home renovation template** (File › New): plan and budget, permits, demolition, building work, finishes, final inspection and moving back in.
+
 ## [2.1.0] - 2026-11-22
 
 Thanks to tanush326k, the first outside contributor, who wrote the guide to the `.openplan` file format.

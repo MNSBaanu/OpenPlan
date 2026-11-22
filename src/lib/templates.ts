@@ -54,6 +54,17 @@ export const TEMPLATES: Template[] = [
       [1, 'Launch', 1], [2, 'Final go / no-go check', 1, '6, 7, 8'], [2, 'Launch day', 0, '11'], [2, 'Announce on all channels', 1, '12'],
       [1, 'After the launch', 1], [2, 'Collect feedback and sales figures', 10, '13'], [2, 'Fix the most reported problems', 5, '15'], [2, 'Launch review', 2, '16']
     ]
+  },
+  {
+    id: 'renovation', name: 'Home renovation', desc: 'Plan and budget, permits, demolition, building work, finishes and moving back in',
+    tasks: [
+      [1, 'Plan and budget', 1], [2, 'Measure the rooms and sketch the design', 5], [2, 'Set the budget and get quotes', 7, '2'], [2, 'Hire contractors', 5, '3'],
+      [1, 'Permits', 1], [2, 'Apply for building permits', 10, '4'], [2, 'Permits approved', 0, '6'],
+      [1, 'Demolition', 1], [2, 'Clear the rooms and protect the floors', 2, '7'], [2, 'Demolition and waste removal', 4, '9'],
+      [1, 'Building work', 1], [2, 'Structural and framing work', 8, '10'], [2, 'Plumbing and electrical rough-in', 6, '12'], [2, 'Plaster, walls and flooring', 10, '13'],
+      [1, 'Finishes and moving in', 1], [2, 'Paint and decorate', 6, '14'], [2, 'Fit the kitchen, bathroom and lights', 5, '14'], [2, 'Snag list and touch-ups', 3, '16, 17'],
+      [2, 'Final inspection and sign-off', 0, '18'], [2, 'Move back in', 2, '19']
+    ]
   }
 ];
 
