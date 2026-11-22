@@ -24,3 +24,23 @@ describe('currencies', () => {
     expect([keep('gbp'), keep(' usd '), keep('GB'), keep('GBPX'), keep(7), keep(undefined), keep('12A')]).toEqual(['GBP', 'USD', '', '', '', '', '']);
   });
 });
+
+describe('the longer currency list', () => {
+  it('includes the currencies people asked for, each with a unique code and a symbol', () => {
+    for (const code of ['EGP', 'THB', 'VND', 'IDR', 'PHP', 'TRY', 'PLN', 'CZK', 'HUF', 'ILS', 'NZD', 'KRW', 'SEK', 'NOK', 'DKK', 'HKD']) {
+      expect(CURRENCIES.some(c => c.code === code), code).toBe(true);
+    }
+    expect(CURRENCIES.length).toBeGreaterThanOrEqual(38);
+  });
+  it('finds a currency by a symbol that only it uses, and does not guess when two share one', () => {
+    expect(currencyOf(undefined, '₩')?.code).toBe('KRW');
+    expect(currencyOf(undefined, 'Kč')?.code).toBe('CZK');
+    expect(currencyOf(undefined, 'Rs.')).toBeUndefined();   // LKR, PKR and NPR all use it
+  });
+  it('gives every currency a different symbol unless the sharing is intended (the three rupee currencies)', () => {
+    const count = new Map<string, string[]>();
+    CURRENCIES.forEach(c => count.set(c.symbol, [...(count.get(c.symbol) || []), c.code]));
+    const shared = [...count.values()].filter(v => v.length > 1).map(v => v.join('/'));
+    expect(shared).toEqual(['LKR/PKR/NPR']);
+  });
+});

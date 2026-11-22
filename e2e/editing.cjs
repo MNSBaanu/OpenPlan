@@ -55,6 +55,12 @@ const L = require('./lib.cjs'); const { step, eq, ok, proj, toast, row, tab, con
     await tab(pg, 'Project'); await pg.locator('.ribbon button', { hasText: /Project\s*Information/ }).click(); await pg.waitForSelector('dialog[open]');
     eq(await pg.locator('dialog[open] select[name="currencyCode"]').inputValue(), 'GBP'); await pg.locator('dialog[open] input[name="currency"]').fill('GB£'); await pg.locator('dialog[open] .btn.primary').click();
     const p = await proj(pg); eq([p.currency, p.currencyCode], ['GB£', 'GBP']); });
+  await step('currency picker: the longer list has Korean won, Thai baht, Polish złoty and more, and choosing one fills its symbol', async () => {
+    await tab(pg, 'Project'); await pg.locator('.ribbon button', { hasText: /Project\s*Information/ }).click(); await pg.waitForSelector('dialog[open]');
+    const codes = await pg.locator('dialog[open] select[name="currencyCode"] option').evaluateAll(os => os.map(o => o.value)); for (const c of ['EGP', 'THB', 'VND', 'IDR', 'PHP', 'TRY', 'PLN', 'CZK', 'HUF', 'ILS', 'NZD', 'KRW', 'SEK', 'NOK', 'DKK', 'HKD']) ok(codes.includes(c), c + ' missing');
+    await pg.locator('dialog[open] select[name="currencyCode"]').selectOption('KRW'); eq(await pg.locator('dialog[open] input[name="currency"]').inputValue(), '₩');
+    await pg.locator('dialog[open] select[name="currencyCode"]').selectOption('PLN'); eq(await pg.locator('dialog[open] input[name="currency"]').inputValue(), 'zł');
+    await pg.locator('dialog[open] .btn.primary').click(); const p = await proj(pg); eq([p.currency, p.currencyCode], ['zł', 'PLN']); return codes.length + ' currencies'; });
   await step('custom field: add via project dialog and see it as a column', async () => {
     await pg.locator('.ribbon button[title="Custom Fields"]').click(); await pg.waitForSelector('dialog[open]'); const t = await pg.locator('dialog[open]').innerText(); ok(/[Cc]ustom/.test(t), 'no custom field section'); await pg.keyboard.press('Escape'); });
   // resources

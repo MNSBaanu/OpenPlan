@@ -24,7 +24,23 @@ export const CURRENCIES: Currency[] = [
   { code: 'NGN', symbol: '₦', name: 'Nigerian naira' },
   { code: 'KES', symbol: 'KSh', name: 'Kenyan shilling' },
   { code: 'BRL', symbol: 'R$', name: 'Brazilian real' },
-  { code: 'MXN', symbol: 'Mex$', name: 'Mexican peso' }
+  { code: 'MXN', symbol: 'Mex$', name: 'Mexican peso' },
+  { code: 'EGP', symbol: 'E£', name: 'Egyptian pound' },
+  { code: 'THB', symbol: '฿', name: 'Thai baht' },
+  { code: 'VND', symbol: '₫', name: 'Vietnamese dong' },
+  { code: 'IDR', symbol: 'Rp', name: 'Indonesian rupiah' },
+  { code: 'PHP', symbol: '₱', name: 'Philippine peso' },
+  { code: 'HKD', symbol: 'HK$', name: 'Hong Kong dollar' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean won' },
+  { code: 'NZD', symbol: 'NZ$', name: 'New Zealand dollar' },
+  { code: 'TRY', symbol: '₺', name: 'Turkish lira' },
+  { code: 'ILS', symbol: '₪', name: 'Israeli shekel' },
+  { code: 'PLN', symbol: 'zł', name: 'Polish złoty' },
+  { code: 'CZK', symbol: 'Kč', name: 'Czech koruna' },
+  { code: 'HUF', symbol: 'Ft', name: 'Hungarian forint' },
+  { code: 'SEK', symbol: 'SEK', name: 'Swedish krona' },
+  { code: 'NOK', symbol: 'NOK', name: 'Norwegian krone' },
+  { code: 'DKK', symbol: 'DKK', name: 'Danish krone' }
 ];
 
 // The currency a project is in: its saved code, or else the one currency that uses its symbol. A symbol shared by
