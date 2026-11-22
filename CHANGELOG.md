@@ -6,6 +6,8 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 
 ### Added
 - **A Home renovation template** (File › New): plan and budget, permits, demolition, building work, finishes, final inspection and moving back in.
+- **Pull down to reload on phones.** Pull down from the title bar or the tab row to reload the page, which the browser could not do because the app fills the screen. Pulling inside the chart or a table does nothing, so scrolling stays safe.
+- **The browser bar follows dark mode** on phones (thanks to Veeramanikandan R).
 
 ## [2.1.0] - 2026-11-22
 

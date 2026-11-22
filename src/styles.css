@@ -966,6 +966,17 @@ kbd { border-radius: 3px; padding: 1px 5px; }
   .guide { left: 8px; bottom: 54px; }
 }
 
+/* pull down to reload (touch screens); the logic is in components/PullToRefresh.tsx */
+html, body { overscroll-behavior-y: none; }
+.ptr { position: fixed; top: env(safe-area-inset-top, 0px); left: 50%; z-index: 90; display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); box-shadow: var(--shadow-lg); font-size: var(--fs-md); font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translate(-50%, -56px); }
+.ptr svg { transform: rotate(var(--turn, 0deg)); }
+.ptr[data-ready="1"] { border-color: var(--accent); color: var(--accent); }
+.ptr[data-busy="1"] svg { animation: ptr-spin 0.8s linear infinite; }
+.ptr.back { transition: transform 0.2s, opacity 0.2s; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ptr[data-busy="1"] svg { animation: none; } .ptr.back { transition: none; } }
+@media print { .ptr { display: none; } }
+
 /* touch screens: bigger tap targets without changing the table rows */
 @media (pointer: coarse) {
   .menu button { padding: 10px 12px; }

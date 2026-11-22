@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import OP from './core';
 import DialogHost from './components/Dialogs';
 import { Toast } from './components/Toast';
+import PullToRefresh from './components/PullToRefresh';
 import { useStore, S, ask } from './store';
 import { handleLaunchFiles } from './lib/actions';
 import { openCollabLink, resumeSession } from './collab/boot';
@@ -66,6 +67,7 @@ function Root() {
     <Suspense fallback={null}>{inApp ? <App /> : <Landing />}</Suspense>
     <DialogHost />
     <Toast />
+    <PullToRefresh />
   </>;
 }
 
