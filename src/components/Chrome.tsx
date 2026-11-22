@@ -188,6 +188,7 @@ export function Backstage() {
       <Tile icon="table" title="Excel workbook (.xlsx)" sub="Task table with real dates, costs and slack" act="xlsx" />
       <Tile icon="table" title="CSV (.csv)" sub="The same table as plain text, for any spreadsheet" act="csv" />
       <Tile icon="layers" title="Microsoft Project XML (.xml)" sub="The whole plan, for Microsoft Project, ProjectLibre and other planners" act="mspxml" />
+      <Tile icon="calendar" title="Calendar file (.ics)" sub="Milestones and deadlines as all-day events, for Google Calendar, Outlook and Apple Calendar" act="ics" />
       <Tile icon="image" title={'Picture of the ' + viewName + ' (.png)'} sub={img ? 'For Word reports' : 'Switch to Gantt, Network, WBS or Team Chart first'} act="png" disabled={!img} />
       <Tile icon="image" title="Vector picture (.svg)" sub="Sharp at any size" act="svg" disabled={!img} /></>;
   } else if (page === 'print') {

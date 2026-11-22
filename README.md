@@ -25,7 +25,7 @@ Plan with a Gantt chart, the critical path, resources and a budget. No account, 
 - **Draw diagrams**: network diagram, WBS chart and team chart, as PNG or SVG.
 - **Manage people and money**: resources, workload, leveling, baselines, earned value, costs and 10 ready-made reports.
 - **Use a task board** (Not started, In progress, Done) or start from a template.
-- **Move files in and out**: `.openplan`, Excel and CSV, and Microsoft Project XML (both ways). Print to PDF with paged Gantt charts.
+- **Move files in and out**: `.openplan`, Excel and CSV, and Microsoft Project XML (both ways). Send milestones and deadlines to your calendar (`.ics`). Print to PDF with paged Gantt charts.
 - **Edit together, live** (optional): names, colours and comments, end-to-end encrypted. See [below](#edit-together).
 - **Work offline.** After one visit the app runs without internet, in a light or dark theme.
 

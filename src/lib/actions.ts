@@ -4,6 +4,7 @@ import { gridItems } from './grid';
 import { toXlsx } from './xlsx';
 import { projectFromMspXml } from './importMsp';
 import { projectToMspXml } from './exportMsp';
+import { icsEventCount, projectToIcs } from './exportIcs';
 import { fromTemplate, type Template } from './templates';
 import type { Project } from '../types';
 
@@ -158,6 +159,13 @@ export function runAction(a: string) {
       U.download(name + '-tasks.xlsx', new Blob([toXlsx(IO.taskTable(st.p), 'Tasks')], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
       st.toast('Excel file downloaded');
       break;
+    case 'ics': {
+      const n = icsEventCount(st.p, st.s);
+      if (!n) { st.toast('There are no milestones or deadlines to export. Add a milestone, or give a task a deadline.', true); break; }
+      U.download(name + '.ics', projectToIcs(st.p, st.s), 'text/calendar');
+      st.toast('Calendar file downloaded (' + n + ' event' + (n === 1 ? '' : 's') + ')');
+      break;
+    }
     case 'mspxml': U.download(name + '.xml', projectToMspXml(st.p, st.s), 'application/xml'); st.toast('Microsoft Project XML downloaded'); break;
     case 'csv': U.download(name + '-tasks.csv', '﻿' + IO.toCSV(st.p), 'text/csv'); st.toast('CSV downloaded'); break;
     case 'png': case 'svg': {
