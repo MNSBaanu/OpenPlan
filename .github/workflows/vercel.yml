@@ -14,6 +14,8 @@ env:
   VERCEL_ENV: ${{ github.event_name == 'push' && 'production' || 'preview' }}
   VERCEL_PROD_FLAG: ${{ github.event_name == 'push' && '--prod' || '' }}
 
+# Only the newest commit should be deployed, so an older deploy is cancelled when a newer one starts.
+# (Otherwise a slow old deploy could finish last and replace a newer site.)
 concurrency:
   group: vercel-${{ github.ref }}
   cancel-in-progress: true

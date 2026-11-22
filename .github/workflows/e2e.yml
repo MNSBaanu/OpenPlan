@@ -1,16 +1,29 @@
 name: End-to-end tests
 
+# Changes that cannot break the app (text files, docs, issue and pull request templates) do not start the browser tests.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
   pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'LICENSE'
 
 permissions:
   contents: read
 
+# An older run of the same pull request is cancelled when its author pushes again.
+# Every commit on main keeps its own group, so each one finishes and none shows up as cancelled.
 concurrency:
-  group: e2e-${{ github.ref }}
-  cancel-in-progress: true
+  group: e2e-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   e2e:
