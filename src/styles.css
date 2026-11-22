@@ -471,6 +471,8 @@ kbd { font: var(--fs-xs) Consolas, monospace; border: 1px solid var(--border-str
 @media (max-width: 900px) {
   aside.drawer.open { z-index: 40; }
   .reports { flex-direction: column; }
+  /* In a column the report body must be allowed to shrink to the screen, or it grows to fit its content and nothing can scroll. */
+  .rpt-body { min-height: 0; }
   .rpt-nav { width: auto; flex-direction: row; overflow-x: auto; }
   .rpt-nav button { white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; }
 }

@@ -9,6 +9,9 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 - **Pull down to reload on phones.** Pull down from the title bar or the tab row to reload the page, which the browser could not do because the app fills the screen. Pulling inside the chart or a table does nothing, so scrolling stays safe.
 - **The browser bar follows dark mode** on phones (thanks to Veeramanikandan R).
 
+### Fixed
+- **Reports can be scrolled on phones.** The long reports (Project overview, Critical tasks, Cost overview, Task list) were cut off at the bottom and could not be scrolled with a finger.
+
 ## [2.1.0] - 2026-11-22
 
 Thanks to tanush326k, the first outside contributor, who wrote the guide to the `.openplan` file format.
