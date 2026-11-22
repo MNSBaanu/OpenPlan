@@ -970,6 +970,12 @@ kbd { border-radius: 3px; padding: 1px 5px; }
   .guide { left: 8px; bottom: 54px; }
 }
 
+/* the smallest screens: the zoom slider gives way to its buttons, or the status bar is wider than the screen */
+@media (max-width: 480px) {
+  .statusbar { gap: 6px; }
+  .sb-zoom input { display: none; }
+}
+
 /* pull down to reload (touch screens); the logic is in components/PullToRefresh.tsx */
 html, body { overscroll-behavior-y: none; }
 .ptr { position: fixed; top: env(safe-area-inset-top, 0px); left: 50%; z-index: 90; display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); box-shadow: var(--shadow-lg); font-size: var(--fs-md); font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translate(-50%, -56px); }
