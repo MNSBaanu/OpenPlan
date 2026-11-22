@@ -82,15 +82,6 @@ To host your own copy, see [docs/deploy.md](docs/deploy.md).
 
 Built with React, TypeScript, Vite, Zustand and Yjs. Scheduling and charts are plain JavaScript that draws SVG.
 
-## Contributors
-
-Thank you to everyone who helped build OpenPlan:
-
-- [MNS Baanu](https://github.com/MNSBaanu): author and maintainer
-- [tanush326k](https://github.com/tanush326k): wrote the guide to the [`.openplan` file format](docs/file-format.md), the first contribution from outside the project
-
-Want to be on this list? Pick an issue labelled [good first issue](https://github.com/MNSBaanu/OpenPlan/labels/good%20first%20issue) and read [CONTRIBUTING.md](CONTRIBUTING.md). Small fixes are very welcome.
-
 ## Author and license
 
 Made by [MNS Baanu](https://github.com/MNSBaanu). Released under the [MIT License](LICENSE).
