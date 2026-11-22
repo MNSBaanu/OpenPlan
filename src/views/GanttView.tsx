@@ -1,11 +1,12 @@
-import { useLayoutEffect, useMemo, useRef, type JSX, type MouseEvent as RMouseEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, type JSX, type MouseEvent as RMouseEvent } from 'react';
 import OP from '../core';
-import { useApp, S, ask, focusKey, rowByUid, type Store } from '../store';
+import { useApp, S, ask, focusKey, rowByUid, ZOOMS, type Store } from '../store';
 import { activeCols, colDef, gridItems, menuData, type GroupItem } from '../lib/grid';
 import * as ops from '../lib/taskOps';
 import Field, { DateField } from '../components/Field';
 import Icon from '../components/Icon';
 import { CURSORS, barZone, progressAt } from '../lib/ganttDrag';
+import { pinchZoomIndex } from '../lib/pinch';
 import type { Row } from '../types';
 
 const U = OP.util, M = OP.model, C = OP.charts;
@@ -235,6 +236,25 @@ function Grid({ st, list }: { st: Store; list: (Row | GroupItem)[] }) {
 
 let drag: any = {};
 
+/* ---------- pinch to zoom the timescale (two fingers on the chart) ---------- */
+
+// The pointers currently touching the chart, and the pinch's start distance and zoom.
+const pinchPtrs = new Map<number, { x: number; y: number }>();
+let pinch0: { d: number; zi: number } | null = null;
+
+const pinchDrop = (id: number) => { pinchPtrs.delete(id); if (pinchPtrs.size < 2) pinch0 = null; };
+
+// A second finger on the chart ends a bar drag: two fingers mean "zoom", not "edit".
+function abortDrag() {
+  window.removeEventListener('pointermove', dragMove);
+  window.removeEventListener('pointerup', dragEnd);
+  document.body.style.cursor = '';
+  if (drag.moved) [drag.ghost, drag.line, drag.tip].forEach((n: Element) => n.remove());
+  drag.svg?.querySelectorAll('.gbar.link-to').forEach((n: Element) => n.classList.remove('link-to'));
+  drag.suppress = true;
+  drag.active = false;
+}
+
 // Where the pointer is in the chart's own pixels, and which bar (if any) it is over.
 function barAt(e: { clientX: number; clientY: number; target: EventTarget | null }) {
   const gEl = (e.target as Element).closest('.gbar') as SVGGElement | null;
@@ -247,12 +267,35 @@ function barAt(e: { clientX: number; clientY: number; target: EventTarget | null
 
 // Show what a press here would do: a resize arrow on the edges, a hand in the middle, a cross on the link handle.
 function onChartPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+  if (pinchPtrs.has(e.pointerId)) {
+    const prev = pinchPtrs.get(e.pointerId)!;
+    pinchPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinchPtrs.size === 2 && pinch0) {
+      const [a, b] = [...pinchPtrs.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const zi = pinchZoomIndex(pinch0.zi, pinch0.d, d, ZOOMS.length);
+      if (ZOOMS[zi] !== S().zoom) S().setUI({ zoom: ZOOMS[zi] });
+    } else if (pinchPtrs.size === 1 && e.pointerType === 'touch' && !drag.active) {
+      // touch-action is off so the pinch reaches us; one finger still pans the chart.
+      e.currentTarget.scrollLeft += prev.x - e.clientX;
+      e.currentTarget.scrollTop += prev.y - e.clientY;
+    }
+    return;
+  }
   if (drag.active) return;
   const hit = barAt(e);
   if (hit) hit.gEl.style.cursor = hit.zone && !rowByUid(hit.uid)?.summary ? CURSORS[hit.zone] : 'pointer';
 }
 
 function onChartPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+  pinchPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinchPtrs.size === 2) {
+    const [a, b] = [...pinchPtrs.values()];
+    pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), zi: ZOOMS.indexOf(S().zoom as any) };
+    if (drag.active) abortDrag();
+    return;
+  }
+  if (pinchPtrs.size > 1) return;
   const hit = barAt(e);
   if (!hit || e.button !== 0) return;
   const { uid, pos, svg, rect } = hit, r = rowByUid(uid), zone = hit.zone;
@@ -388,6 +431,23 @@ export default function GanttView() {
   const gridRef = useRef<HTMLDivElement>(null);
   const syncing = useRef(false);
 
+  // A finger that lifts outside the pane still ends its pinch there.
+  useEffect(() => {
+    const drop = (e: PointerEvent) => pinchDrop(e.pointerId);
+    window.addEventListener('pointerup', drop);
+    window.addEventListener('pointercancel', drop);
+    return () => { window.removeEventListener('pointerup', drop); window.removeEventListener('pointercancel', drop); };
+  }, []);
+
+  // Safari fires its own gesture events for a pinch; without this it zooms the whole page.
+  useEffect(() => {
+    const noZoom = (e: Event) => e.preventDefault();
+    const pane = document.querySelector('.chart-pane');
+    pane?.addEventListener('gesturestart', noZoom);
+    pane?.addEventListener('gesturechange', noZoom);
+    return () => { pane?.removeEventListener('gesturestart', noZoom); pane?.removeEventListener('gesturechange', noZoom); };
+  }, []);
+
   const g = useMemo(() => C.gantt({
     p: st.p, s: st.s, rows: list, zoom: st.zoom, critical: st.critical, baseline: st.showBaseline && !!st.p.baseline, edit: true
   }), [st.p, st.s, list, st.zoom, st.critical, st.showBaseline]);
@@ -488,6 +548,8 @@ export default function GanttView() {
           }}
           onPointerDown={onChartPointerDown}
           onPointerMove={onChartPointerMove}
+          onPointerUp={e => pinchDrop(e.pointerId)}
+          onPointerCancel={e => pinchDrop(e.pointerId)}
           dangerouslySetInnerHTML={{ __html: g.svg + '<div style="height:' + C.ROW * 2 + 'px"></div>' }} />
       </div>
     </div>

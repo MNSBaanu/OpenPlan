@@ -197,7 +197,7 @@ select.sel:focus, input.inp:focus, textarea.inp:focus { outline: none; }
 /* ---------- gantt ---------- */
 .split { flex: 1; min-height: 0; display: flex; background: var(--surface); overflow: hidden; }
 .grid-pane { overflow: auto; flex: none; }
-.chart-pane { overflow: auto; flex: 1; min-width: 0; }
+.chart-pane { overflow: auto; flex: 1; min-width: 0; touch-action: none; }
 .chart-pane svg { display: block; }
 .splitter { position: relative; flex: none; cursor: col-resize; }
 .split[data-hide="table"] .grid-pane, .split[data-hide="chart"] .chart-pane { display: none; }
