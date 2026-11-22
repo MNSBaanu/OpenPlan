@@ -11,6 +11,8 @@ import '@fontsource-variable/source-sans-3';
 import '@fontsource-variable/source-sans-3/wght-italic.css';
 import './styles.css';
 
+const THEME_COLORS = { light: '#faf8f3', dark: '#171612' } as const;
+
 const W = window as any;
 
 // Opens a plan carried in a share link, after asking, and removes the plan data from the address bar.
@@ -49,7 +51,10 @@ const Landing = lazy(loadChunk(() => import('./views/Landing')));
 function Root() {
   const [inApp, setInApp] = useState(location.hash === '#app');
   const theme = useStore(s => s.theme);
-  useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[theme]);
+  }, [theme]);
   useEffect(() => {
     const onHash = () => { openSharedPlan(); openCollabLink(); setInApp(location.hash === '#app'); W.goatcounter?.count?.(); };
     window.addEventListener('hashchange', onHash);
