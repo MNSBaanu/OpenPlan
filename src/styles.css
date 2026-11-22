@@ -986,6 +986,14 @@ html, body { overscroll-behavior-y: none; }
   .menu button { padding: 10px 12px; }
   .caret { width: 24px; height: 24px; }
   .rcheck { height: 30px; }
+  /* status bar: 40 px tap targets; the bar wraps to a second line rather than overflow */
+  .statusbar { flex-wrap: wrap; height: auto; min-height: 42px; padding-top: 3px; padding-bottom: 3px; row-gap: 2px; }
+  .sb-views button { width: 40px; height: 40px; }
+  .sb-zoom input { min-height: 40px; }
+  .z-btn { width: 40px; height: 40px; line-height: 40px; }
+}
+@media (pointer: coarse) and (max-width: 480px) {
+  .sb-zoom input { display: none; }
 }
 
 /* ---------- landing page ---------- */
