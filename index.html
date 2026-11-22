@@ -12,15 +12,6 @@
   <link rel="apple-touch-icon" href="./assets/icon-192.png">
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#faf8f3">
-  <script>
-    try {
-      var t = JSON.parse(localStorage.getItem('openplan.ui') || '{}').theme;
-      if (t === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#171612');
-      }
-    } catch (e) {}
-  </script>
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="OpenPlan">
