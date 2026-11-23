@@ -32,7 +32,21 @@ exports.eq = (a, b, m) => { if (JSON.stringify(a) !== JSON.stringify(b)) throw n
 exports.ok = (c, m) => { if (!c) throw new Error(m); };
 // visible text must not contain broken numbers
 exports.clean = async pg => { const t = await pg.evaluate(() => document.body.innerText + ' ' + [...document.querySelectorAll('svg text')].map(e => e.textContent).join(' ')); const m = t.match(/NaN|undefined|Infinity|\[object|Invalid Date/g); if (m) throw new Error('broken text: ' + [...new Set(m)].join(',')); };
-exports.proj = async pg => { await pg.waitForTimeout(450); return pg.evaluate(() => JSON.parse(localStorage.getItem('openplan.project'))); };
+// Autosave is debounced (~300 ms) and timers/storage sync can run late on a loaded CI machine,
+// so keep reading until the stored project has stayed identical for a while — a single fixed
+// wait can race the flush and see the pre-save value.
+exports.proj = async pg => {
+  let last = null, quiet = 0;
+  for (const end = Date.now() + 10000; Date.now() < end;) {
+    const text = await pg.evaluate(() => localStorage.getItem('openplan.project'));
+    if (text === last) { if (++quiet >= 6) break; } else quiet = 0;
+    last = text;
+    await pg.waitForTimeout(140);
+  }
+  return JSON.parse(last);
+};
+// Poll fn until it returns truthy or the deadline passes; throws m (with the last value) on timeout.
+exports.until = async (fn, ms = 6000, m = 'condition') => { const end = Date.now() + ms; let v; while (Date.now() < end) { try { v = await fn(); if (v) return v; } catch {} await new Promise(r => setTimeout(r, 120)); } throw new Error(m + ' (last: ' + v + ')'); };
 exports.confirm = async pg => { await pg.waitForSelector('dialog[open]'); await pg.locator('dialog[open] .btn.primary').click(); await pg.waitForTimeout(250); };
 exports.toast = pg => pg.evaluate(() => (document.querySelector('.toast.show') || {}).textContent || '');
 exports.row = (pg, n) => pg.locator('table.grid tbody tr:nth-child(' + n + ') td.id').first().click();
