@@ -66,6 +66,7 @@ To host your own copy, see [docs/deploy.md](docs/deploy.md).
 | Keys | Action |
 |---|---|
 | Ctrl+S | Save |
+| Ctrl+P | Print |
 | Ctrl+Z / Ctrl+Y | Undo / redo |
 | Insert / Delete | Add / delete a task |
 | Alt+Shift+→ / ← | Indent / outdent |

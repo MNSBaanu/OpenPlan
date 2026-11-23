@@ -9,8 +9,10 @@ const L = require('./lib.cjs'); const { step, eq, ok, proj, toast, row, tab, con
     eq(p.tasks[22].duration, 3); eq(p.tasks[22].preds.length, 1);
     const f = await pg.locator('table.grid tbody tr:nth-child(23) td.ro').nth(1).innerText(); ok(/Feb/.test(f) && !/13 Feb 26/.test(f), 'finish=' + f); return 'finish ' + f; });
   await step('bad predecessor text → message; loop → refused', async () => {
-    const pr = pg.locator('[aria-label="Task 23 predecessors"]'); await pr.fill('zzz'); await pr.press('Enter'); await pg.waitForTimeout(200); const t1 = await toast(pg);
-    const p22 = pg.locator('[aria-label="Task 22 predecessors"]'); await p22.fill('23'); await p22.press('Enter'); await pg.waitForTimeout(200); const t2 = await toast(pg);
+    const pr = pg.locator('[aria-label="Task 23 predecessors"]'); await pr.fill('zzz'); await pr.press('Enter');
+    const t1 = await L.until(async () => { const t = await toast(pg); return /Could not read/.test(t) && t; }, 6000, 'no bad-text toast');
+    const p22 = pg.locator('[aria-label="Task 22 predecessors"]'); await p22.fill('23'); await p22.press('Enter');
+    const t2 = await L.until(async () => { const t = await toast(pg); return /loop/.test(t) && t; }, 6000, 'no loop toast');
     ok(/Could not read/.test(t1), t1); ok(/loop/.test(t2), t2); });
   await step('SS / FF / lag predecessor text "21SS+2d" is accepted', async () => {
     const pr = pg.locator('[aria-label="Task 23 predecessors"]'); await pr.fill('21SS+2d'); await pr.press('Enter'); const l = (await proj(pg)).tasks[22].preds[0]; eq([l.type, l.lag], ['SS', 2]); });

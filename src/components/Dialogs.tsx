@@ -215,6 +215,7 @@ const SHORTCUTS: [ReactNode, string][] = [
   [<kbd>Del</kbd>, 'Delete the selected tasks'],
   [<><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></>, 'Undo / redo'],
   [<><kbd>Ctrl</kbd>+<kbd>S</kbd></>, 'Save to a file'],
+  [<><kbd>Ctrl</kbd>+<kbd>P</kbd></>, 'Print'],
   [<><kbd>Ctrl</kbd>+<kbd>F1</kbd></>, 'Hide or show the toolbar']
 ];
 
