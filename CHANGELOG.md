@@ -8,10 +8,20 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 - **A Home renovation template** (File › New): plan and budget, permits, demolition, building work, finishes, final inspection and moving back in.
 - **Pull down to reload on phones.** Pull down from the title bar or the tab row to reload the page, which the browser could not do because the app fills the screen. Pulling inside the chart or a table does nothing, so scrolling stays safe.
 - **The browser bar follows dark mode** on phones (thanks to Veeramanikandan R).
+- **Upcoming tasks report**: unfinished tasks that start in the next two weeks. There are now 11 reports.
+- **Pinch to zoom** the Gantt timescale with two fingers.
+- **Table / Chart switch** for the Gantt view on phones.
+- **Ctrl+P** opens OpenPlan's own Print dialog.
+- **How dates are calculated**: a new guide in `docs/scheduling.md`.
+- **App screenshots** in the web app manifest, shown when you install OpenPlan.
 
 ### Fixed
 - **Reports can be scrolled on phones.** The long reports (Project overview, Critical tasks, Cost overview, Task list) were cut off at the bottom and could not be scrolled with a finger.
+- **Phones and tablets**: the status bar no longer runs off the screen; bigger tap targets on the toolbar, status bar, task board and resource sheet; dialogs stay inside the visible screen; the tab row shows that it scrolls.
+- **Rate changes**: the message now says which lines were ignored and how to write them.
 - **Landing page tabs on phones.** The five preview tabs no longer break into two lines: they sit in a neat 3 + 2 grid with short names and bigger tap targets.
+
+Thanks to Sanket Patel, who sent 14 pull requests for this release: the new report, pinch to zoom, the phone fixes, Ctrl+P, the scheduling guide and new tests.
 
 ## [2.1.0] - 2026-11-22
 

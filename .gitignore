@@ -11,6 +11,3 @@ OpenPlan.md
 !.env.example
 !.env.production
 e2e/.out/
-.vitest/
-nul
-node_modules_link/
