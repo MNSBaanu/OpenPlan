@@ -295,8 +295,14 @@ export function resByUid(uid: number) { return S().p.resources.find(r => r.uid =
 export function rowByUid(uid: number) { return S().s.rows.find((r: any) => r.task.uid === uid) || null; }
 
 // Focus an element by its data-fk key once React has rendered.
+let pendingFocusReq: { from: Element | null } | null = null;
 export function focusKey(fk: string, select = true) {
+  const req = { from: document.activeElement };
+  pendingFocusReq = req;
   requestAnimationFrame(() => {
+    // A newer request wins, and a field the user has already moved to keeps its focus.
+    if (pendingFocusReq !== req || document.activeElement !== req.from) return;
+    pendingFocusReq = null;
     const el = document.querySelector<HTMLInputElement>('[data-fk="' + fk + '"]');
     if (!el) return;
     el.focus();
