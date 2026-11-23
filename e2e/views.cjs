@@ -42,11 +42,11 @@ const fs = require('fs');
     await stat('Resource Sheet'); const inp = pg.locator('table.data input').first(); const v = await inp.inputValue(); await inp.fill(v + ' X'); await inp.press('Enter'); await pg.waitForTimeout(250); ok((await proj(pg)).resources.some(r => r.name.endsWith(' X')), 'rename not saved'); await clean(pg); });
   // ---- reports ----
   pg = await L.fresh(b); await L.open(pg);
-  await step('baseline + update, then all 10 reports render with real numbers', async () => {
+  await step('baseline + update, then all 11 reports render with real numbers', async () => {
     await tab(pg, 'Project'); await pg.locator('.ribbon button', { hasText: /Baseline/ }).first().click(); await pg.locator('.menu.open button').first().click(); await pg.waitForTimeout(250);
     await pg.locator('.ribbon button', { hasText: /Update Project/ }).click(); await pg.waitForTimeout(250); await pg.locator('.statusbar button[title="Reports"]').click();
     const names = await pg.locator('.rpt-nav button').allInnerTexts(); const out = [];
-    for (let i = 0; i < names.length; i++) { await pg.locator('.rpt-nav button').nth(i).click(); await pg.waitForTimeout(250); await clean(pg); const len = await pg.locator('.rpt-body').innerText().then(t => t.length); ok(len > 120, names[i] + ' is empty (' + len + ')'); out.push(names[i]); } eq(names.length, 10); return out.join(', '); });
+    for (let i = 0; i < names.length; i++) { await pg.locator('.rpt-nav button').nth(i).click(); await pg.waitForTimeout(250); await clean(pg); const len = await pg.locator('.rpt-body').innerText().then(t => t.length); ok(len > 120, names[i] + ' is empty (' + len + ')'); out.push(names[i]); } eq(names.length, 11); return out.join(', '); });
   await step('earned value report shows SPI / CPI / EAC numbers', async () => { await pg.locator('.rpt-nav button', { hasText: /Earned/ }).click(); const t = await pg.locator('.rpt-body').innerText(); ok(/SPI/.test(t) && /CPI/.test(t) && /EAC/.test(t), 'missing EVM'); ok(!/NaN|Infinity/.test(t), 'bad number'); });
   await step('reports: print all + print one', async () => { await pg.locator('.rpt-body .btn', { hasText: 'Print all reports' }).click(); await pg.waitForTimeout(500); const n = await pg.evaluate(() => window.__printed || 0); ok(n >= 1, 'print was not called'); await clean(pg); });
   // ---- themes ----
