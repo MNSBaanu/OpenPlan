@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useStore, S, VIEW_NAMES } from './store';
+import { useStore, S, VIEW_NAMES, focusKey } from './store';
 import { runAction } from './lib/actions';
 import * as ops from './lib/taskOps';
 import { TitleBar, StatusBar, Backstage } from './components/Chrome';
@@ -33,7 +33,7 @@ function onKeyDown(e: KeyboardEvent) {
     e.preventDefault();
     const fk = (document.activeElement as HTMLElement | null)?.dataset?.fk;
     ops.indent(e.key === 'ArrowRight' ? 1 : -1);
-    if (fk) requestAnimationFrame(() => (document.querySelector('[data-fk="' + fk + '"]') as HTMLElement | null)?.focus());
+    if (fk) focusKey(fk, false);
     return;
   }
   // Insert does nothing in a text box, so it can add a task even while the cursor is in a task cell.

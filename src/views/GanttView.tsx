@@ -522,6 +522,10 @@ export default function GanttView() {
         <div className="alert info"><Icon name="filter" />Showing: {md.filters[st.filter] || st.filter}{st.group !== 'none' ? ', grouped by ' + (md.groups[st.group] || st.group) : ''}{' '}
           <button className="linkbtn" onClick={() => st.setUI({ filter: 'all', group: 'none' })}>Show all tasks</button></div>
       )}
+      <div className="gswitch" role="group" aria-label="Show the task table or the chart">
+        <button className={hide !== 'table' ? 'on' : ''} aria-pressed={hide !== 'table'} onClick={() => st.setUI({ ganttHide: 'chart' })}>Table</button>
+        <button className={hide === 'table' ? 'on' : ''} aria-pressed={hide === 'table'} onClick={() => st.setUI({ ganttHide: 'table' })}>Chart</button>
+      </div>
       <div className="split" data-hide={hide}>
         <div className="grid-pane" ref={gridRef} style={{ width: st.gridW }} onScroll={e => sync(e.currentTarget, chartEl)}>
           <Grid st={st} list={list} />

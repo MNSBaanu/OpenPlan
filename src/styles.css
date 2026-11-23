@@ -831,6 +831,7 @@ table.grid input.cell:focus, table.grid select.cell:focus { box-shadow: inset 0 
 .caret { border-radius: 3px; }
 .splitter { width: 4px; border-left: 0; border-right: 0; background: var(--surface-3); }
 .splitter:hover, .splitter.drag { background: var(--accent); }
+.gswitch { display: none; }
 .split-btns button { border-radius: var(--r-sm); border-color: var(--border-strong); }
 
 /* other tables, cards, charts */
@@ -948,6 +949,16 @@ kbd { border-radius: 3px; padding: 1px 5px; }
   .sb-views button { width: 38px; height: 34px; }
   .sb-zoom input { width: 70px; }
   .grid-pane { max-width: 64%; }
+  /* a phone shows one Gantt pane at a time: the switch picks it, so 'both' shows the table and the splitter goes away */
+  .gswitch { flex: none; display: flex; padding: 6px 10px; gap: 0; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .gswitch button { flex: 1; height: 40px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font: inherit; font-size: var(--fs-md); font-weight: 600; cursor: pointer; }
+  .gswitch button:first-child { border-radius: var(--r-sm) 0 0 var(--r-sm); }
+  .gswitch button:last-child { border-radius: 0 var(--r-sm) var(--r-sm) 0; border-left: 0; }
+  .gswitch button.on { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .gantt-view .splitter { display: none; }
+  .gantt-view .split[data-hide="none"] .chart-pane { display: none; }
+  .gantt-view .split[data-hide] .grid-pane { max-width: none; }
+  .gantt-view .split[data-hide="none"] .grid-pane { flex: 1; width: auto !important; }
   .board, .scroll { padding: 10px; }
   .paper { padding: 18px; }
   .rpt-head h2 { font-size: 26px; }
@@ -970,6 +981,11 @@ kbd { border-radius: 3px; padding: 1px 5px; }
   .dlg-foot .btn { flex: 1; height: 40px; }
   .toast { left: 12px; right: 12px; bottom: 54px; max-width: none; }
   .guide { left: 8px; bottom: 54px; }
+}
+@media (pointer: coarse) and (max-width: 480px) {
+  /* keep the status bar from overflowing: the zoom slider gives way to its buttons */
+  .statusbar { gap: 6px; }
+  .sb-zoom input { display: none; }
 }
 
 /* the smallest screens: the zoom slider gives way to its buttons, or the status bar is wider than the screen */
