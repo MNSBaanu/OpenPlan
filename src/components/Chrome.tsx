@@ -1,10 +1,11 @@
-import { useEffect, useState, type JSX } from 'react';
+import { useEffect, useRef, useState, type JSX } from 'react';
 import OP from '../core';
 import { useApp, ask, VIEW_NAMES, ZOOMS, PREV_STORE } from '../store';
 import { hasImage, loadProject, openTemplate, runAction } from '../lib/actions';
 import { TEMPLATES } from '../lib/templates';
 import { deleteVersion, listVersions, saveVersion, type Version } from '../lib/versions';
 import Icon from './Icon';
+import { useScrollHint } from '../lib/useScrollHint';
 import type { ViewName } from '../types';
 import { initialsOf } from '../collab/presence';
 
@@ -145,6 +146,8 @@ function hasPrevious() {
 export function Backstage() {
   const st = useApp();
   const { backstage, setUI } = st;
+  const navRef = useRef<HTMLElement>(null);
+  useScrollHint(navRef, [backstage]);
   useEffect(() => {
     if (!backstage) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUI({ backstage: false }); };
@@ -217,7 +220,7 @@ export function Backstage() {
   }
   return (
     <div className="backstage">
-      <nav className="bs-nav">
+      <nav className="bs-nav" ref={navRef}>
         <button className="bs-back" aria-label="Back" onClick={() => st.setUI({ backstage: false })}><Icon name="up" /></button>
         {PAGES.map(([k, label]) => <button key={k} className={'bs-item' + (page === k ? ' on' : '')} onClick={() => st.setUI({ bsPage: k })}>{label}</button>)}
       </nav>

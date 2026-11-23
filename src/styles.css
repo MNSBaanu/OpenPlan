@@ -65,7 +65,7 @@ img.logo { object-fit: contain; }
 .rtab.file:hover { background: var(--accent-hover); color: var(--accent-text); }
 .rtab-fill { flex: 1; }
 /* hint that the tab row scrolls: fade the right edge while more tabs wait off-screen */
-.ribbon-tabs[data-more="1"] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
+.ribbon-tabs[data-more="1"], .bs-nav[data-more="1"] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
 .rb-collapse { border: 0; background: transparent; color: var(--text-muted); height: 30px; padding: 0 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-base); white-space: nowrap; }
 .rb-collapse:hover { background: var(--surface-2); color: var(--text); }
 

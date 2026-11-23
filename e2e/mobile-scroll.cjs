@@ -57,5 +57,10 @@ const L = require('./lib.cjs'); const { step, ok } = L;
     const r = await p.evaluate(() => ({ min: document.querySelector('.ribbon').classList.contains('min'), h: Math.round(document.querySelector('.split').getBoundingClientRect().height) }));
     await c.close(); ok(r.min && r.h >= 200, JSON.stringify(r)); return r.h + ' px for the plan';
   });
+  await step('File menu row on a phone shows that it scrolls', async () => {
+    await pg.setViewportSize({ width: 360, height: 640 }); await pg.locator('.rtab.file').click(); await pg.waitForSelector('.bs-nav');
+    const more = await L.until(() => pg.evaluate(() => document.querySelector('.bs-nav').dataset.more === '1'), 3000, 'no scroll hint');
+    await pg.locator('.bs-back').click(); ok(more, 'no hint');
+  });
   console.log('\nSUMMARY', JSON.stringify(L.counts()), 'errors', JSON.stringify(pg.errors)); await b.close();
 })().catch(e => { console.log('CRASH ' + e.message.split('\n')[0]); process.exit(1); });

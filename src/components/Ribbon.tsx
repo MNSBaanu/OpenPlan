@@ -6,6 +6,7 @@ import { hasImage, runAction } from '../lib/actions';
 import * as ops from '../lib/taskOps';
 import { scrollToSelected } from '../views/GanttView';
 import Icon from './Icon';
+import { useScrollHint } from '../lib/useScrollHint';
 import type { ViewName } from '../types';
 
 const U = OP.util;
@@ -353,14 +354,7 @@ export default function Ribbon() {
   const wrap = useRef<HTMLDivElement>(null);
   const tabs = useRef<HTMLElement>(null);
   useEffect(() => { if (!st.ribbonMin) setPeek(false); }, [st.ribbonMin]);
-  useEffect(() => {
-    const el = tabs.current; if (!el) return;
-    const check = () => { el.dataset.more = el.scrollWidth - el.scrollLeft - el.clientWidth > 4 ? '1' : '0'; };
-    check();
-    const ro = new ResizeObserver(check); ro.observe(el);
-    el.addEventListener('scroll', check, { passive: true });
-    return () => { ro.disconnect(); el.removeEventListener('scroll', check); };
-  }, [tools]);
+  useScrollHint(tabs, [tools]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'F1') { e.preventDefault(); S().setUI({ ribbonMin: !S().ribbonMin }); }
