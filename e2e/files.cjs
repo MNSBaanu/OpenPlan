@@ -67,6 +67,15 @@ const fs = require('fs'); const T = L.OUT;
     await pg.reload(); await pg.waitForSelector('.ribbon-tabs'); ctx = pg.context(); const p2 = await ctx.newPage(); p2.errors = []; p2.setDefaultTimeout(6000); await p2.goto('http://localhost:4173/#app'); await p2.waitForSelector('.ribbon-tabs');
     const inp = pg.locator('[aria-label="Task 3 name"]'); await inp.fill('Edited in tab one'); await inp.press('Enter'); await p2.waitForTimeout(900);
     eq(await p2.locator('[aria-label="Task 3 name"]').inputValue(), 'Edited in tab one'); ok(/another tab/.test(await toast(p2)) || true, ''); await p2.close(); });
+  await step('two tabs: Undo in one tab never wipes out a change saved by the other', async () => {
+    const p2 = await pg.context().newPage(); p2.setDefaultTimeout(6000); await p2.goto('http://localhost:4173/#app'); await p2.waitForSelector('.ribbon-tabs');
+    const b = p2.locator('[aria-label="Task 4 name"]'); await b.fill('Edited in tab two'); await b.press('Enter'); await pg.waitForTimeout(900);
+    const a = pg.locator('[aria-label="Task 5 name"]'); await a.fill('Edited in tab one again'); await a.press('Enter');
+    await L.until(async () => (await p2.locator('[aria-label="Task 5 name"]').inputValue()) === 'Edited in tab one again', 6000, 'tab two did not update');
+    await p2.evaluate(() => document.activeElement && document.activeElement.blur());
+    await p2.keyboard.press('Control+z'); await p2.waitForTimeout(900);
+    const names = (await proj(pg)).tasks.map(t => t.name);
+    ok(names.includes('Edited in tab one again'), 'tab one\'s change was lost'); ok(names.includes('Edited in tab two'), 'tab two\'s change was lost'); await p2.close(); });
   await step('corrupt autosave: opens the sample, keeps a copy, tells the user', async () => {
     const p3 = await L.fresh(b); await p3.addInitScript(() => { if (!localStorage.getItem('__seeded')) { localStorage.setItem('__seeded', '1'); localStorage.setItem('openplan.project', '{broken'); } });
     await L.open(p3); await p3.waitForTimeout(500); const keys = await p3.evaluate(() => Object.keys(localStorage)); ok(keys.some(k => k.includes('unreadable')), 'no copy kept: ' + keys); ok(/could not be read/.test(await toast(p3)), await toast(p3)); eq(await p3.locator('table.grid tbody tr').count(), 23); await p3.context().close(); });

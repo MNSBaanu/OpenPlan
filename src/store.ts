@@ -279,8 +279,10 @@ window.addEventListener('storage', e => {
     const p = OP.io.fromJSON(e.newValue);
     pending = null;
     clearTimeout(timer);
-    useStore.setState({ p, s: OP.schedule(p), sel: [] });
-    S().toast('Project updated from another tab');
+    // Undo keeps whole copies of the plan from before the other tab's change; undoing to one of them would wipe that
+    // change out (and save the result), so the history starts again from here.
+    useStore.setState({ p, s: OP.schedule(p), sel: [], undo: [], redo: [] });
+    S().toast('Project updated from another tab. Undo starts again from here.');
   } catch { /* ignore unreadable data */ }
 });
 

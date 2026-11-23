@@ -18,6 +18,9 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 ### Fixed
 - **Reports can be scrolled on phones.** The long reports (Project overview, Critical tasks, Cost overview, Task list) were cut off at the bottom and could not be scrolled with a finger.
 - **Phones and tablets**: the status bar no longer runs off the screen; bigger tap targets on the toolbar, status bar, task board and resource sheet; dialogs stay inside the visible screen; the tab row shows that it scrolls.
+- **Undo with two tabs open could delete work.** After one tab took in a change saved by another tab, pressing Undo there brought back an older copy of the plan and saved it, wiping out the other tab's change. Undo now starts again from the moment another tab's change arrives.
+- **Phone turned sideways**: the toolbar starts hidden and the summary strip gives way, so the plan gets most of the screen (251 px instead of 13 px).
+- **File menu on phones**: its top row now shows that it scrolls.
 - **Rate changes**: the message now says which lines were ignored and how to write them.
 - **Landing page tabs on phones.** The five preview tabs no longer break into two lines: they sit in a neat 3 + 2 grid with short names and bigger tap targets.
 
