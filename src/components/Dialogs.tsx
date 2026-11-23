@@ -169,15 +169,18 @@ function ResourceDialog({ uid }: { uid: number }) {
   const rates = (r.rates || []).map(e => e.from + ' ' + e.rate).join('\n');
   return (
     <Modal title={r.name || 'Resource'} onSubmit={fd => {
-      const bad: string[] = [];
-      const vac = parseDates(fd.get('vacations'), bad);
+      const badVac: string[] = [], badRate: string[] = [];
+      const vac = parseDates(fd.get('vacations'), badVac);
       const rateList: { from: string; rate: number }[] = [];
       String(fd.get('rates') || '').split('\n').forEach(line => {
         const m = /^\s*(\d{4}-\d{2}-\d{2})[\s,;]+(\d+(?:\.\d+)?)\s*$/.exec(line);
         if (m) rateList.push({ from: m[1], rate: +m[2] });
-        else if (line.trim()) bad.push(line.trim());
+        else if (line.trim()) badRate.push(line.trim());
       });
-      if (bad.length) st.toast('Ignored: ' + bad.join(', '), true);
+      const notes: string[] = [];
+      if (badVac.length) notes.push(badVac.length + ' bad vacation date(s): ' + badVac.join(', '));
+      if (badRate.length) notes.push(badRate.length + ' rate line(s): ' + badRate.join(', ') + ' — write "date rate" on each line, e.g. 2026-03-01 45');
+      if (notes.length) st.toast('Ignored ' + notes.join('; ') + '.', true);
       st.commit(p => {
         const x = p.resources.find(y => y.uid === uid)!;
         if (x.kind === 'Work') {
@@ -194,7 +197,7 @@ function ResourceDialog({ uid }: { uid: number }) {
           {[1, 2, 3, 4, 5, 6, 0].map(d => <label key={d} className="chk"><input type="checkbox" name="wd" value={d} defaultChecked={r.workDays.includes(d)} />{U.DAYS[d]}</label>)}
         </div></label>
         <label className="field"><span>Vacations / days off (one date per line, YYYY-MM-DD)</span><textarea className="inp" name="vacations" rows={3} defaultValue={r.vacations.join('\n')} /></label>
-        <label className="field"><span>Rate changes (one per line: effective date and new hourly rate)</span><textarea className="inp" name="rates" rows={3} placeholder="2026-04-01 8500" defaultValue={rates} /></label>
+        <label className="field"><span>Rate changes (one per line: effective date and new hourly rate)</span><textarea className="inp" name="rates" rows={3} placeholder={'YYYY-MM-DD rate, one per line, e.g.\n2026-04-01 45'} defaultValue={rates} /></label>
         <p className="muted small">Working days and vacations set when this person is available: they drive overallocation warnings and resource leveling.</p>
       </>}
       {r.kind === 'Material' && <F label="Material label (unit)" name="materialLabel" value={r.materialLabel} placeholder="e.g. licences, servers" />}
