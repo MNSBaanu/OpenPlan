@@ -49,5 +49,13 @@ const L = require('./lib.cjs'); const { step, ok } = L;
     for (const rep of ['Project overview', 'Critical tasks', 'Cost overview', 'Task list'])
       await step(orientation[2] + ': report "' + rep + '" scrolls with a finger', async () => { await pg.locator('.rpt-nav button', { hasText: rep }).first().click(); await pg.waitForTimeout(400); return scrollsOn('.paper', rep); });
   }
+  // A phone turned sideways: the toolbar starts hidden and the summary strip gives way, so the plan keeps most of the height.
+  await step('sideways phone opens with room for the plan (toolbar hidden, at least 200 px for the chart)', async () => {
+    const c = await b.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true }); const p = await c.newPage();
+    await p.addInitScript(() => localStorage.setItem('openplan.ui', JSON.stringify({ guide: false })));
+    await p.goto('http://localhost:4173/#app'); await p.waitForSelector('.ribbon-tabs'); await p.waitForTimeout(500);
+    const r = await p.evaluate(() => ({ min: document.querySelector('.ribbon').classList.contains('min'), h: Math.round(document.querySelector('.split').getBoundingClientRect().height) }));
+    await c.close(); ok(r.min && r.h >= 200, JSON.stringify(r)); return r.h + ' px for the plan';
+  });
   console.log('\nSUMMARY', JSON.stringify(L.counts()), 'errors', JSON.stringify(pg.errors)); await b.close();
 })().catch(e => { console.log('CRASH ' + e.message.split('\n')[0]); process.exit(1); });

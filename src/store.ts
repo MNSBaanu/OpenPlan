@@ -48,7 +48,7 @@ export interface UIState {
 const UI_DEFAULTS: UIState = {
   view: 'gantt', zoom: 'week', critical: true, gridW: 600, ganttHide: 'none', drawer: window.innerWidth > 1100, netScope: 'all', netDates: false,
   netZoom: 1, wbsDepth: 99, filter: 'all', group: 'none', sort: 'id', cols: DEFAULT_COLS.slice(), showBaseline: true,
-  report: 'overview', tab: 'task', timeline: true, ribbonMin: window.innerWidth <= 640, theme: 'light', bars: 'brown', fullYear: false, guide: true
+  report: 'overview', tab: 'task', timeline: true, ribbonMin: window.innerWidth <= 640 || window.innerHeight <= 500, theme: 'light', bars: 'brown', fullYear: false, guide: true
 };
 const PERSISTED_UI: (keyof UIState)[] = ['view', 'zoom', 'critical', 'gridW', 'ganttHide', 'drawer', 'netDates', 'wbsDepth', 'filter', 'group', 'sort', 'cols', 'showBaseline', 'report', 'tab', 'timeline', 'theme', 'bars', 'fullYear', 'guide'];
 

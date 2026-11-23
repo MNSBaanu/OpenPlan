@@ -487,6 +487,12 @@ kbd { font: var(--fs-xs) Consolas, monospace; border: 1px solid var(--border-str
   .rpt-head { flex-direction: column; align-items: flex-start; }
   .timeline .tl-date { width: 64px; }
 }
+/* short screens (a phone turned sideways): the toolbar starts hidden (store.ts) and the summary strip gives way,
+   so the chart or table keeps most of the height */
+@media (max-height: 500px) {
+  .timeline { display: none; }
+}
+
 /* ---------- landing page ---------- */
 /* The landing page is always light. It carries its own copy of the light colour tokens, so a dark app theme never reaches it. */
 .qat-btn.home { width: auto; padding: 0 2px; }
