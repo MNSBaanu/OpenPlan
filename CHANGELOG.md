@@ -21,6 +21,7 @@ All notable changes to OpenPlan are listed here. The format follows [Keep a Chan
 - **Undo with two tabs open could delete work.** After one tab took in a change saved by another tab, pressing Undo there brought back an older copy of the plan and saved it, wiping out the other tab's change. Undo now starts again from the moment another tab's change arrives.
 - **Phone turned sideways**: the toolbar starts hidden and the summary strip gives way, so the plan gets most of the screen (251 px instead of 13 px).
 - **File menu on phones**: its top row now shows that it scrolls.
+- **Updates reach installed copies on the next load.** The offline cache now gets a new name with every build and the old one is deleted, and files such as the app manifest come from the network first, so they no longer lag behind a new release. OpenPlan still opens offline, also straight after an update.
 - **Rate changes**: the message now says which lines were ignored and how to write them.
 - **Landing page tabs on phones.** The five preview tabs no longer break into two lines: they sit in a neat 3 + 2 grid with short names and bigger tap targets.
 
