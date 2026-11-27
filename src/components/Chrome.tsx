@@ -222,7 +222,7 @@ export function Backstage() {
     <div className="backstage">
       <nav className="bs-nav" ref={navRef}>
         <button className="bs-back" aria-label="Back" onClick={() => st.setUI({ backstage: false })}><Icon name="up" /></button>
-        {PAGES.map(([k, label]) => <button key={k} className={'bs-item' + (page === k ? ' on' : '')} onClick={() => st.setUI({ bsPage: k })}>{label}</button>)}
+        {PAGES.map(([k, label]) => <button key={k} className={'bs-item' + (page === k ? ' on' : '')} onClick={e => { st.setUI({ bsPage: k }); e.currentTarget.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }}>{label}</button>)}
       </nav>
       <div className="bs-body">{body}</div>
     </div>
