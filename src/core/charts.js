@@ -109,7 +109,7 @@ OP.charts = (function () {
       h.push('<rect x="0" y="0" width="' + tw + '" height="' + H + '" fill="var(--surface)"/><rect class="hdr" x="0" y="0" width="' + tw + '" height="' + HDR + '"/>');
       var cx = 0;
       cols.forEach(function (c) {
-        h.push('<text class="b sm" x="' + (cx + 6) + '" y="26"' + esc(c[0]) + '</text><line class="gls" x1="' + (cx + c[1]) + '" y1="0" x2="' + (cx + c[1]) + '" y2="' + H + '"/>');
+        h.push('<text class="b sm" x="' + (cx + 6) + '" y="26">' + esc(c[0]) + '</text><line class="gls" x1="' + (cx + c[1]) + '" y1="0" x2="' + (cx + c[1]) + '" y2="' + H + '"/>');
         cx += c[1];
       });
       rows.forEach(function (r, k) {
