@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { swVersion } from './scripts/sw-version.mjs';
 
 export default defineConfig({
+  envDir: 'config',
   base: './',
   plugins: [react(), swVersion()]
 });
