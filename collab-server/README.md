@@ -31,7 +31,7 @@ A very small server that lets people edit the same OpenPlan plan at the same tim
    ```
 
    It prints an address like `https://openplan-collab.YOUR-NAME.workers.dev`.
-5. Tell OpenPlan where the relay is. Put the address in `.env.production` in the main folder
+5. Tell OpenPlan where the relay is. Put the address in `config/.env.production`
    (`VITE_COLLAB_URL=wss://openplan-collab.YOUR-NAME.workers.dev`) and in the `connect-src` list in `vercel.json`, then push.
    The address is not a secret. Without it the "Start a live session" button stays hidden.
 
