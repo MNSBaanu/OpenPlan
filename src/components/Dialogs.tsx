@@ -5,7 +5,7 @@ import * as ops from '../lib/taskOps';
 import Icon from './Icon';
 import type { CustomField, Resource } from '../types';
 import { version } from '../../package.json';
-import { projectFromTable } from '../lib/importTable';
+import { projectFromTable } from '../lib/io/importTable';
 import { shareUrl } from '../lib/share';
 import { loadProject, printPrefs, printView } from '../lib/actions';
 import { COLLAB_URL } from '../collab/config';

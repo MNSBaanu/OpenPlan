@@ -1,4 +1,4 @@
-import OP from '../core';
+import OP from '../../core';
 import type { ImportResult } from './importTable';
 
 const M = OP.model, U = OP.util;

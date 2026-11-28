@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
-import OP from '../core';
+import OP from '../../core';
 import { projectToMspXml } from './exportMsp';
 import { projectFromMspXml } from './importMsp';
 

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import OP from '../core';
 import { TEMPLATES, fromTemplate } from './templates';
-import { parseTable, projectFromTable } from './importTable';
+import { parseTable, projectFromTable } from './io/importTable';
 import { decodePlan, encodePlan } from './share';
-import { toXlsx } from './xlsx';
+import { toXlsx } from './io/xlsx';
 
 describe('templates', () => {
   it.each(TEMPLATES.map(t => [t.name, t] as const))('%s schedules without loops or bad links', (_, t) => {
