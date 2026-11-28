@@ -109,7 +109,7 @@ OP.charts = (function () {
       h.push('<rect x="0" y="0" width="' + tw + '" height="' + H + '" fill="var(--surface)"/><rect class="hdr" x="0" y="0" width="' + tw + '" height="' + HDR + '"/>');
       var cx = 0;
       cols.forEach(function (c) {
-        h.push('<text class="b sm" x="' + (cx + 6) + '" y="26">' + c[0] + '</text><line class="gls" x1="' + (cx + c[1]) + '" y1="0" x2="' + (cx + c[1]) + '" y2="' + H + '"/>');
+        h.push('<text class="b sm" x="' + (cx + 6) + '" y="26">' + esc(c[0]) + '</text><line class="gls" x1="' + (cx + c[1]) + '" y1="0" x2="' + (cx + c[1]) + '" y2="' + H + '"/>');
         cx += c[1];
       });
       rows.forEach(function (r, k) {
@@ -119,7 +119,7 @@ OP.charts = (function () {
           return;
         }
         var cls = r.summary ? ' class="b"' : '', lvl = o.flat ? 1 : r.task.level;
-        h.push('<text class="m" x="6" y="' + y + '">' + r.id + '</text>');
+        h.push('<text class="m" x="6" y="' + y + '">' + esc(r.id) + '</text>');
         h.push('<text' + cls + ' x="' + (40 + (lvl - 1) * 14) + '" y="' + y + '">' + esc(trunc(r.task.name, 38 - lvl * 2)) + '</text>');
         h.push('<text x="320" y="' + y + '">' + OP.model.fmtDuration(r.duration) + '</text>');
         h.push('<text x="386" y="' + y + '">' + U.fmt(r.startDn) + '</text>');
@@ -307,8 +307,8 @@ OP.charts = (function () {
     });
     [[startN, 'Start', '0'], [endN, 'Finish', U.num(s.duration)]].forEach(function (n) {
       h.push('<rect class="node c" x="' + n[0].x + '" y="' + (n[0].y - 24) + '" width="' + SW + '" height="48"/>');
-      h.push('<text class="b" text-anchor="middle" x="' + (n[0].x + SW / 2) + '" y="' + (n[0].y - 2) + '">' + n[1] + '</text>');
-      h.push('<text class="m sm" text-anchor="middle" x="' + (n[0].x + SW / 2) + '" y="' + (n[0].y + 13) + '">day ' + n[2] + '</text>');
+      h.push('<text class="b" text-anchor="middle" x="' + (n[0].x + SW / 2) + '" y="' + (n[0].y - 2) + '">' + esc(n[1]) + '</text>');
+      h.push('<text class="m sm" text-anchor="middle" x="' + (n[0].x + SW / 2) + '" y="' + (n[0].y + 13) + '">' + 'day ' + esc(n[2]) + '</text>');
     });
 
     function v(n) { return o.dates ? n : U.num(n); }
@@ -534,7 +534,7 @@ OP.charts = (function () {
     }
     data.forEach(function (d, i) {
       var cx = L + step * i + step / 2;
-      h.push('<text class="m sm" text-anchor="middle" x="' + cx + '" y="' + (H - 10) + '">' + d.label + '</text>');
+      h.push('<text class="m sm" text-anchor="middle" x="' + cx + '" y="' + (H - 10) + '">' + esc(d.label) + '</text>');
     });
     if (o.kind === 'monthly') {
       data.forEach(function (d, i) {
