@@ -24,6 +24,8 @@ npm test             # unit tests (Vitest)
 npm run build        # production build
 ```
 
+CI also runs `npm audit --omit=dev --audit-level=high` on every pull request to report high or critical dependency vulnerabilities. That step is non-blocking for now, so read its output and update a dependency when it reports a problem.
+
 The browser tests drive the built app in a real browser. Install the browser once, then run them:
 
 ```bash

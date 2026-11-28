@@ -46,6 +46,10 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Audit dependencies
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
+
       # Deploying builds the app too; fork pull requests skip that, so check the build here.
       - name: Build check
         if: env.CAN_DEPLOY != 'true'
