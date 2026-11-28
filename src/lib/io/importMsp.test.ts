@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
-import OP from '../core';
+import OP from '../../core';
 import { projectFromMspXml } from './importMsp';
 
 const wrap = (body: string, head = '') => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

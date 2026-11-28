@@ -1,5 +1,5 @@
-import OP from '../core';
-import type { Project } from '../types';
+import OP from '../../core';
+import type { Project } from '../../types';
 
 const U = OP.util;
 

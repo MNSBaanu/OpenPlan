@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
-import OP from '../core';
+import OP from '../../core';
 import { fold, icsEventCount, icsText, projectToIcs } from './exportIcs';
 
 const NOW = new Date('2026-11-22T10:00:00Z');

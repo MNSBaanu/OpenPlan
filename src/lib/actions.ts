@@ -1,10 +1,10 @@
 import OP from '../core';
 import { S, VIEW_NAMES, ask, PREV_STORE, type Store } from '../store';
 import { gridItems } from './grid';
-import { toXlsx } from './xlsx';
-import { projectFromMspXml } from './importMsp';
-import { projectToMspXml } from './exportMsp';
-import { icsEventCount, projectToIcs } from './exportIcs';
+import { toXlsx } from './io/xlsx';
+import { projectFromMspXml } from './io/importMsp';
+import { projectToMspXml } from './io/exportMsp';
+import { icsEventCount, projectToIcs } from './io/exportIcs';
 import { fromTemplate, type Template } from './templates';
 import type { Project } from '../types';
 
